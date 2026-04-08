@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import {
   inMemoryPersistence,
   setPersistence,
@@ -8,6 +7,7 @@ import {
   signOut as firebaseSignOut,
   type User,
 } from 'firebase/auth';
+import { useEffect, useState } from 'react';
 
 import type { AppSession } from './auth';
 import { firebaseAuth } from './firebase';

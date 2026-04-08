@@ -1,11 +1,10 @@
+
 'use client';
 
-import { loadStripe } from '@stripe/stripe-js';
-import { CheckCircle2, Loader2, ShieldCheck } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { CheckCircle2, CreditCard, Loader2, ShieldCheck } from 'lucide-react';
 import { useAction } from 'next-safe-action/hooks';
 
-import { createStripeCheckout } from '@/actions/create-stripe-checkout';
+import { createAsaasCheckout } from '@/actions/create-asaas-checkout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -15,28 +14,21 @@ interface SubscriptionPlanProps {
   className?: string;
   userEmail: string;
   bypassSubscription?: boolean;
+  asaasSubscriptionId?: string | null;
+  subscriptionStatus?: string | null;
 }
 
 export function SubscriptionPlan({
   active = false,
   className,
-  userEmail,
   bypassSubscription = false,
+  asaasSubscriptionId,
+  subscriptionStatus,
 }: SubscriptionPlanProps) {
-  const router = useRouter();
-  const createStripeCheckoutAction = useAction(createStripeCheckout, {
-    onSuccess: async ({ data }) => {
-      if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-        throw new Error('Stripe publishable key not found');
-      }
-      const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-      if (!stripe) {
-        throw new Error('Stripe not found');
-      }
-      if (!data?.sessionId) {
-        throw new Error('Session ID not found');
-      }
-      await stripe.redirectToCheckout({ sessionId: data.sessionId });
+  const checkoutAction = useAction(createAsaasCheckout, {
+    onSuccess: ({ data }) => {
+      if (!data?.checkoutUrl) throw new Error('Link do checkout não encontrado.');
+      window.location.href = data.checkoutUrl;
     },
   });
 
@@ -49,21 +41,21 @@ export function SubscriptionPlan({
     'Suporte prioritário via e-mail',
   ];
 
-  const handleSubscribeClick = () => {
-    createStripeCheckoutAction.execute();
-  };
-
-  const handleManagePlanClick = () => {
-    router.push(`${process.env.NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL}?prefilled_email=${userEmail}`);
-  };
+  const statusLabel = active
+    ? 'Assinatura ativa'
+    : subscriptionStatus === 'overdue'
+      ? 'Pagamento em atraso'
+      : subscriptionStatus === 'checkout_pending'
+        ? 'Checkout em aberto'
+        : 'Plano Profissional';
 
   return (
     <Card className={className}>
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h3 className="text-2xl font-bold text-gray-900">Plano Profissional</h3>
-            <p className="mt-1 text-sm text-primary">Ideal para clínicas e consultórios em crescimento</p>
+            <h3 className="text-2xl font-bold text-gray-900">{statusLabel}</h3>
+            <p className="mt-1 text-sm text-primary">Cobrança recorrente via Asaas</p>
           </div>
           {bypassSubscription ? (
             <Badge className="gap-1 bg-blue-100 text-blue-700 hover:bg-blue-100">
@@ -71,7 +63,9 @@ export function SubscriptionPlan({
               Acesso Master
             </Badge>
           ) : active ? (
-            <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Atual</Badge>
+            <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Ativa</Badge>
+          ) : subscriptionStatus === 'checkout_pending' ? (
+            <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">Aguardando pagamento</Badge>
           ) : null}
         </div>
         <p className="text-gray-600">Tenha acesso completo ao sistema, com gestão clínica, agenda e métricas.</p>
@@ -94,32 +88,40 @@ export function SubscriptionPlan({
         </div>
 
         <div className="mt-8 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground">
-          <p className="font-medium text-foreground">Profissionais que usam o sistema economizam em média 15 horas por semana em tarefas administrativas.</p>
+          <p className="font-medium text-foreground">O acesso da clínica é liberado automaticamente quando o Asaas confirmar o pagamento da assinatura.</p>
         </div>
 
         <div className="mt-6 space-y-3">
           <Button
             className="w-full"
             variant={active || bypassSubscription ? 'outline' : 'default'}
-            onClick={active ? handleManagePlanClick : handleSubscribeClick}
-            disabled={createStripeCheckoutAction.isExecuting || bypassSubscription}
+            onClick={() => checkoutAction.execute()}
+            disabled={checkoutAction.isExecuting || bypassSubscription || active}
           >
-            {createStripeCheckoutAction.isExecuting ? (
+            {checkoutAction.isExecuting ? (
               <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-            ) : bypassSubscription ? (
-              'Plano não exigido para seu perfil'
-            ) : active ? (
-              'Gerenciar assinatura'
             ) : (
-              'Assinar plano por R$99/mês'
+              <CreditCard className="mr-1 h-4 w-4" />
             )}
+            {bypassSubscription
+              ? 'Plano não exigido para seu perfil'
+              : active
+                ? 'Assinatura ativa no Asaas'
+                : subscriptionStatus === 'checkout_pending'
+                  ? 'Gerar novo checkout Asaas'
+                  : 'Assinar plano pelo Asaas'}
           </Button>
+
+          {asaasSubscriptionId ? (
+            <p className="text-center text-xs text-muted-foreground">Assinatura vinculada: {asaasSubscriptionId}</p>
+          ) : null}
+
           {bypassSubscription ? (
             <p className="text-center text-xs text-muted-foreground">
               Seu perfil Master/Suporte ignora o bloqueio comercial e pode acessar o sistema sem assinatura ativa.
             </p>
           ) : (
-            <p className="text-center text-xs text-muted-foreground">Garantia de 30 dias. Cancele quando quiser.</p>
+            <p className="text-center text-xs text-muted-foreground">Cobrança recorrente mensal com confirmação e bloqueio automáticos via webhook do Asaas.</p>
           )}
         </div>
       </CardContent>

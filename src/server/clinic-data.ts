@@ -18,10 +18,10 @@ import {
   specialtiesTable,
   usersTable,
 } from '@/db/schema';
-import { resolvePrivilegedAccess } from '@/lib/access';
-import { invalidateServerCache, withServerCache } from '@/lib/server-cache';
 import { normalizeSearchText } from '@/helpers/format';
+import { resolvePrivilegedAccess } from '@/lib/access';
 import { getFirestoreDb } from '@/lib/firebase-admin';
+import { invalidateServerCache, withServerCache } from '@/lib/server-cache';
 
 type AppUser = typeof usersTable.$inferSelect;
 type Clinic = typeof clinicsTable.$inferSelect;
@@ -142,6 +142,26 @@ export const getUserProfileById = async (userId: string): Promise<AppUser | null
   });
 };
 
+export const findUserProfileByAsaasCustomerId = async (asaasCustomerId: string): Promise<AppUser | null> => {
+  const snapshot = await getFirestoreDb()
+    .collection(COLLECTIONS.users)
+    .where('asaasCustomerId', '==', asaasCustomerId)
+    .limit(1)
+    .get();
+  const [user] = fromQuery<AppUser>(snapshot);
+  return user ?? null;
+};
+
+export const findUserProfileByAsaasSubscriptionId = async (asaasSubscriptionId: string): Promise<AppUser | null> => {
+  const snapshot = await getFirestoreDb()
+    .collection(COLLECTIONS.users)
+    .where('asaasSubscriptionId', '==', asaasSubscriptionId)
+    .limit(1)
+    .get();
+  const [user] = fromQuery<AppUser>(snapshot);
+  return user ?? null;
+};
+
 export const findEmployeeByEmail = async (email: string): Promise<Employee | null> => {
   const normalizedEmail = email.trim().toLowerCase();
   const snapshot = await getFirestoreDb().collection(COLLECTIONS.employees).where('email', '==', normalizedEmail).where('active', '==', true).limit(1).get();
@@ -176,6 +196,10 @@ export const upsertUserProfile = async (params: {
     bypassSubscription: access.bypassSubscription,
     stripeCustomerId: existing?.stripeCustomerId ?? null,
     stripeSubscriptionId: existing?.stripeSubscriptionId ?? null,
+    asaasCustomerId: existing?.asaasCustomerId ?? null,
+    asaasSubscriptionId: existing?.asaasSubscriptionId ?? null,
+    asaasCheckoutId: existing?.asaasCheckoutId ?? null,
+    subscriptionStatus: existing?.subscriptionStatus ?? null,
     plan: existing?.plan ?? null,
     clinicId: existing?.clinicId ?? employee?.clinicId ?? null,
     createdAt: existing?.createdAt ?? now,
@@ -236,6 +260,10 @@ export const createClinicForUser = async (params: { userId: string; name: string
     cloudinaryPublicId: null,
     stripeCustomerId: null,
     stripeSubscriptionId: null,
+    asaasCustomerId: null,
+    asaasSubscriptionId: null,
+    asaasCheckoutId: null,
+    subscriptionStatus: null,
     plan: null,
     createdAt: now,
     updatedAt: now,
@@ -287,6 +315,60 @@ export const updateClinicSubscription = async (
   await ref.set(sanitizeFirestoreValue(clinic) as DocumentData);
   invalidateClinicScopedCache(clinicId);
   return clinic;
+};
+
+export const updateUserAsaasSubscription = async (
+  userId: string,
+  params: {
+    asaasCustomerId?: string | null;
+    asaasSubscriptionId?: string | null;
+    asaasCheckoutId?: string | null;
+    subscriptionStatus?: string | null;
+    plan?: string | null;
+  },
+) => {
+  const ref = getFirestoreDb().collection(COLLECTIONS.users).doc(userId);
+  const existing = fromDoc<AppUser>(await ref.get());
+  if (!existing) throw new Error('User not found');
+
+  const userProfile: AppUser = {
+    ...existing,
+    asaasCustomerId: params.asaasCustomerId === undefined ? existing.asaasCustomerId : params.asaasCustomerId,
+    asaasSubscriptionId:
+      params.asaasSubscriptionId === undefined ? existing.asaasSubscriptionId : params.asaasSubscriptionId,
+    asaasCheckoutId: params.asaasCheckoutId === undefined ? existing.asaasCheckoutId : params.asaasCheckoutId,
+    subscriptionStatus: params.subscriptionStatus === undefined ? existing.subscriptionStatus : params.subscriptionStatus,
+    plan: params.plan === undefined ? existing.plan : params.plan,
+    updatedAt: new Date(),
+  };
+
+  await ref.set(sanitizeFirestoreValue(userProfile) as DocumentData);
+
+  if (userProfile.clinicId) {
+    const clinicRef = getFirestoreDb().collection(COLLECTIONS.clinics).doc(userProfile.clinicId);
+    const existingClinic = fromDoc<Clinic>(await clinicRef.get());
+
+    if (existingClinic) {
+      const clinic: Clinic = {
+        ...existingClinic,
+        asaasCustomerId:
+          params.asaasCustomerId === undefined ? existingClinic.asaasCustomerId : params.asaasCustomerId,
+        asaasSubscriptionId:
+          params.asaasSubscriptionId === undefined ? existingClinic.asaasSubscriptionId : params.asaasSubscriptionId,
+        subscriptionStatus:
+          params.subscriptionStatus === undefined ? existingClinic.subscriptionStatus : params.subscriptionStatus,
+        plan: params.plan === undefined ? existingClinic.plan : params.plan,
+        updatedAt: new Date(),
+      };
+
+      await clinicRef.set(sanitizeFirestoreValue(clinic) as DocumentData);
+      invalidateClinicScopedCache(userProfile.clinicId);
+    }
+  }
+
+  invalidateUserScopedCache(userId);
+  invalidateClinicScopedCache(userProfile.clinicId);
+  return userProfile;
 };
 
 export const listDoctorsByClinicId = async (clinicId: string): Promise<Doctor[]> => {

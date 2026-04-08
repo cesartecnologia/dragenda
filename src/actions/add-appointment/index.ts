@@ -1,14 +1,20 @@
 'use server';
 
 import dayjs from 'dayjs';
-
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 
-import { auth } from '@/lib/auth';
 import { combineDateAndTime, isPastDate, isPastDateTime } from '@/helpers/time';
+import { auth } from '@/lib/auth';
 import { actionClient } from '@/lib/next-safe-action';
-import { createAppointmentRecord, getAppointmentById, getDoctorById, getPatientById, listAppointmentsByDoctorId, updateAppointmentRecord } from '@/server/clinic-data';
+import {
+  createAppointmentRecord,
+  getAppointmentById,
+  getDoctorById,
+  getPatientById,
+  listAppointmentsByDoctorId,
+  updateAppointmentRecord,
+} from '@/server/clinic-data';
 
 import { getAvailableTimes } from '../get-available-times';
 import { addAppointmentSchema } from './schema';

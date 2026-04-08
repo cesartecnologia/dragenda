@@ -1,5 +1,5 @@
-import { existsSync, readFileSync } from 'fs';
 import path from 'path';
+import { existsSync, readFileSync } from 'fs';
 
 import { applicationDefault, cert, getApps, initializeApp, type App } from 'firebase-admin/app';
 import { getAuth, type Auth } from 'firebase-admin/auth';

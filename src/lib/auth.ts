@@ -3,10 +3,10 @@ import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { getClinicById, getUserProfileById } from '@/server/clinic-data';
+import type { UserRole } from '@/db/schema';
 import { resolvePrivilegedAccess } from '@/lib/access';
 import { adminAuth } from '@/lib/firebase-admin';
-import type { UserRole } from '@/db/schema';
+import { getClinicById, getUserProfileById } from '@/server/clinic-data';
 
 export const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME ?? '__clinic_smart_session';
 
@@ -19,6 +19,9 @@ export interface AppSession {
     plan: string | null;
     stripeCustomerId: string | null;
     stripeSubscriptionId: string | null;
+    asaasCustomerId: string | null;
+    asaasSubscriptionId: string | null;
+    subscriptionStatus: string | null;
     role: UserRole;
     bypassSubscription: boolean;
     hasSubscriptionAccess: boolean;
@@ -56,6 +59,9 @@ export const getServerSession = cache(async (): Promise<AppSession | null> => {
         plan: clinic?.plan ?? userProfile.plan,
         stripeCustomerId: userProfile.stripeCustomerId,
         stripeSubscriptionId: userProfile.stripeSubscriptionId,
+        asaasCustomerId: clinic?.asaasCustomerId ?? userProfile.asaasCustomerId ?? null,
+        asaasSubscriptionId: clinic?.asaasSubscriptionId ?? userProfile.asaasSubscriptionId ?? null,
+        subscriptionStatus: clinic?.subscriptionStatus ?? userProfile.subscriptionStatus ?? null,
         role: access.role,
         bypassSubscription: access.bypassSubscription,
         hasSubscriptionAccess: Boolean(clinic?.plan || userProfile.plan || access.bypassSubscription),
@@ -88,6 +94,6 @@ export const requireSubscribedSession = cache(async () => {
 
 export const auth = {
   api: {
-    getSession: async (_options?: unknown) => getServerSession(),
+    getSession: async () => getServerSession(),
   },
 };

@@ -3,8 +3,8 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { createClinicForUser } from '@/server/clinic-data';
 import { auth } from '@/lib/auth';
+import { createClinicForUser } from '@/server/clinic-data';
 
 export const createClinic = async (name: string) => {
   const session = await auth.api.getSession({ headers: await headers() });

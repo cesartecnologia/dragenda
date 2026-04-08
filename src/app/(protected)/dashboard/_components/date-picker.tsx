@@ -3,7 +3,7 @@
 import { endOfMonth, format, setMonth, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import { parseAsIsoDate, useQueryState } from 'nuqs';
+import { parseAsIsoDate, useQueryStates } from 'nuqs';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -24,32 +24,38 @@ const capitalize = (value: string) =>
 export function DatePicker({
   className,
 }: React.HTMLAttributes<HTMLDivElement>) {
-  const [from, setFrom] = useQueryState(
-    'from',
-    parseAsIsoDate.withDefault(startOfMonth(new Date()))
+  const [filters, setFilters] = useQueryStates(
+    {
+      from: parseAsIsoDate.withDefault(startOfMonth(new Date())),
+      to: parseAsIsoDate.withDefault(endOfMonth(new Date())),
+    },
+    {
+      shallow: false,
+    }
   );
-  const [, setTo] = useQueryState(
-    'to',
-    parseAsIsoDate.withDefault(endOfMonth(new Date()))
-  );
-  const [displayYear, setDisplayYear] = React.useState(from.getFullYear());
+
+  const [selectedMonthDate, setSelectedMonthDate] = React.useState(filters.from);
+  const [displayYear, setDisplayYear] = React.useState(filters.from.getFullYear());
 
   React.useEffect(() => {
-    setDisplayYear(from.getFullYear());
-  }, [from]);
+    setSelectedMonthDate(filters.from);
+    setDisplayYear(filters.from.getFullYear());
+  }, [filters.from]);
 
   const handleMonthSelect = (monthIndex: number) => {
-    const selectedDate = setMonth(new Date(displayYear, 0, 1), monthIndex);
-    setFrom(startOfMonth(selectedDate), {
-      shallow: false,
-    });
-    setTo(endOfMonth(selectedDate), {
-      shallow: false,
+    const selectedDate = startOfMonth(
+      setMonth(new Date(displayYear, 0, 1), monthIndex)
+    );
+
+    setSelectedMonthDate(selectedDate);
+    setFilters({
+      from: selectedDate,
+      to: endOfMonth(selectedDate),
     });
   };
 
   const currentMonthLabel = capitalize(
-    format(from, 'MMMM', {
+    format(selectedMonthDate, 'MMMM', {
       locale: ptBR,
     })
   );
@@ -96,8 +102,8 @@ export function DatePicker({
             <div className="grid grid-cols-3 gap-2">
               {MONTH_NAMES.map((monthName, monthIndex) => {
                 const isActive =
-                  from.getFullYear() === displayYear &&
-                  from.getMonth() === monthIndex;
+                  selectedMonthDate.getFullYear() === displayYear &&
+                  selectedMonthDate.getMonth() === monthIndex;
 
                 return (
                   <Button

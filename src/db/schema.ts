@@ -18,6 +18,10 @@ export interface UserRecord {
   bypassSubscription: boolean;
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;
+  asaasCustomerId: string | null;
+  asaasSubscriptionId: string | null;
+  asaasCheckoutId: string | null;
+  subscriptionStatus: string | null;
   plan: string | null;
   clinicId: string | null;
   createdAt: Date;
@@ -34,6 +38,10 @@ export interface ClinicRecord {
   cloudinaryPublicId: string | null;
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;
+  asaasCustomerId: string | null;
+  asaasSubscriptionId: string | null;
+  asaasCheckoutId: string | null;
+  subscriptionStatus: string | null;
   plan: string | null;
   createdAt: Date;
   updatedAt: Date;
