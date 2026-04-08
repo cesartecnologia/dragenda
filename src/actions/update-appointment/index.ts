@@ -9,7 +9,7 @@ import { confirmAppointmentPayment, getAppointmentById, setAppointmentStatus } f
 
 const paymentMethodSchema = z.enum(['cash', 'pix', 'card', 'insurance', 'other']);
 
-const revalidateAppointments = () => ['/agendamentos', '/painel', '/appointments', '/dashboard'].forEach(revalidatePath);
+const revalidateAppointments = () => ['/agendamentos', '/painel', '/appointments', '/dashboard'].forEach((path) => revalidatePath(path));
 
 export const updateAppointmentPayment = actionClient
   .schema(z.object({ appointmentId: z.string().uuid(), paymentMethod: paymentMethodSchema.default('pix') }))

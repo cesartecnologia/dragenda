@@ -23,5 +23,5 @@ export const upsertPatient = actionClient.schema(upsertPatientSchema).action(asy
     sex: parsedInput.sex,
   });
 
-  ['/pacientes', '/agendamentos', '/painel', '/patients', '/appointments', '/dashboard'].forEach(revalidatePath);
+  ['/pacientes', '/agendamentos', '/painel', '/patients', '/appointments', '/dashboard'].forEach((path) => revalidatePath(path));
 });

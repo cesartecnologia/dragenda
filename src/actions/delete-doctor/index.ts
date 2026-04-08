@@ -27,5 +27,5 @@ export const deleteDoctor = actionClient
     }
 
     await deleteDoctorRecord(parsedInput.id);
-    ['/medicos','/agendamentos','/painel','/doctors','/appointments','/dashboard'].forEach(revalidatePath);
+    ['/medicos','/agendamentos','/painel','/doctors','/appointments','/dashboard'].forEach((path) => revalidatePath(path));
   });

@@ -19,5 +19,5 @@ export const deleteSpecialty = actionClient
     if (!specialty) throw new Error('Especialidade não encontrada.');
 
     await deleteSpecialtyRecord(parsedInput.id);
-    ['/especialidades', '/medicos', '/agendamentos', '/painel'].forEach(revalidatePath);
+    ['/especialidades', '/medicos', '/agendamentos', '/painel'].forEach((path) => revalidatePath(path));
   });

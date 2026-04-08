@@ -108,5 +108,5 @@ export const addAppointment = actionClient.schema(addAppointmentSchema).action(a
     });
   }
 
-  ['/agendamentos', '/painel', '/appointments', '/dashboard'].forEach(revalidatePath);
+  ['/agendamentos', '/painel', '/appointments', '/dashboard'].forEach((path) => revalidatePath(path));
 });

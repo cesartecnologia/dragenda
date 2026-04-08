@@ -27,5 +27,5 @@ export const deleteAppointment = actionClient
     }
 
     await deleteAppointmentRecord(parsedInput.id);
-    ['/agendamentos','/painel','/appointments','/dashboard'].forEach(revalidatePath);
+    ['/agendamentos','/painel','/appointments','/dashboard'].forEach((path) => revalidatePath(path));
   });

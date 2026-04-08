@@ -19,5 +19,5 @@ export const upsertSpecialty = actionClient.schema(upsertSpecialtySchema).action
     name: parsedInput.name,
   });
 
-  ['/especialidades', '/medicos', '/agendamentos', '/painel'].forEach(revalidatePath);
+  ['/especialidades', '/medicos', '/agendamentos', '/painel'].forEach((path) => revalidatePath(path));
 });

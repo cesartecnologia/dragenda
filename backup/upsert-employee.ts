@@ -17,5 +17,5 @@ export const upsertEmployee = actionClient.schema(z.object({
   const session = await auth.api.getSession();
   if (!session?.user?.clinic?.id) throw new Error('Clinic not found');
   await upsertEmployeeRecord({ ...parsedInput, clinicId: session.user.clinic.id });
-  ['/funcionarios'].forEach(revalidatePath);
+  ['/funcionarios'].forEach((path) => revalidatePath(path));
 });

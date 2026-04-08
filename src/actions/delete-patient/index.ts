@@ -27,5 +27,5 @@ export const deletePatient = actionClient
     }
 
     await deletePatientRecord(parsedInput.id);
-    ['/pacientes','/agendamentos','/painel','/patients','/appointments','/dashboard'].forEach(revalidatePath);
+    ['/pacientes','/agendamentos','/painel','/patients','/appointments','/dashboard'].forEach((path) => revalidatePath(path));
   });

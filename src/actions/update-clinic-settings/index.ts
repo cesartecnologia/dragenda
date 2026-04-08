@@ -30,5 +30,5 @@ export const updateClinicSettingsAction = actionClient.schema(z.object({
   const session = await auth.api.getSession();
   if (!session?.user?.clinic?.id) throw new Error('Clinic not found');
   await updateClinicSettings(session.user.clinic.id, parsedInput);
-  ['/configuracoes/clinica', '/clinic-form', '/painel', '/dashboard'].forEach(revalidatePath);
+  ['/configuracoes/clinica', '/clinic-form', '/painel', '/dashboard'].forEach((path) => revalidatePath(path));
 });

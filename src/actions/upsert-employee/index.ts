@@ -37,7 +37,7 @@ export const upsertEmployee = actionClient.schema(z.object({
     });
   }
 
-  ['/funcionarios'].forEach(revalidatePath);
+  ['/funcionarios'].forEach((path) => revalidatePath(path));
 
   return {
     employeeId: employee.id,

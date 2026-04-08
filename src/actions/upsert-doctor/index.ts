@@ -29,5 +29,5 @@ export const upsertDoctor = actionClient.schema(upsertDoctorSchema).action(async
     })),
   });
 
-  ['/medicos', '/agendamentos', '/painel', '/doctors', '/appointments', '/dashboard'].forEach(revalidatePath);
+  ['/medicos', '/agendamentos', '/painel', '/doctors', '/appointments', '/dashboard'].forEach((path) => revalidatePath(path));
 });
