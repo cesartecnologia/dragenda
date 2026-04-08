@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { headers } from 'next/headers';
 import { z } from 'zod';
 
 import { auth } from '@/lib/auth';
@@ -15,7 +14,7 @@ export const upsertEmployee = actionClient.schema(z.object({
   role: z.enum(['admin', 'attendant']),
   active: z.boolean().default(true),
 })).action(async ({ parsedInput }) => {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await auth.api.getSession();
   if (!session?.user?.clinic?.id) throw new Error('Clinic not found');
   await upsertEmployeeRecord({ ...parsedInput, clinicId: session.user.clinic.id });
   ['/funcionarios'].forEach(revalidatePath);

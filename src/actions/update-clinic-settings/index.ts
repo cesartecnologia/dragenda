@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { headers } from 'next/headers';
 import { z } from 'zod';
 
 import { auth } from '@/lib/auth';
@@ -28,7 +27,7 @@ export const updateClinicSettingsAction = actionClient.schema(z.object({
   logoUrl: optionalUrl,
   cloudinaryPublicId: optionalText,
 })).action(async ({ parsedInput }) => {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await auth.api.getSession();
   if (!session?.user?.clinic?.id) throw new Error('Clinic not found');
   await updateClinicSettings(session.user.clinic.id, parsedInput);
   ['/configuracoes/clinica', '/clinic-form', '/painel', '/dashboard'].forEach(revalidatePath);

@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { headers } from 'next/headers';
 import { z } from 'zod';
 
 import { auth } from '@/lib/auth';
@@ -15,7 +14,7 @@ const revalidateAppointments = () => ['/agendamentos', '/painel', '/appointments
 export const updateAppointmentPayment = actionClient
   .schema(z.object({ appointmentId: z.string().uuid(), paymentMethod: paymentMethodSchema.default('pix') }))
   .action(async ({ parsedInput }) => {
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await auth.api.getSession();
     if (!session?.user) throw new Error('Unauthorized');
 
     const appointment = await getAppointmentById(parsedInput.appointmentId);
@@ -33,7 +32,7 @@ export const updateAppointmentPayment = actionClient
 export const changeAppointmentStatus = actionClient
   .schema(z.object({ appointmentId: z.string().uuid(), status: z.enum(['scheduled', 'cancelled']) }))
   .action(async ({ parsedInput }) => {
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await auth.api.getSession();
     if (!session?.user) throw new Error('Unauthorized');
 
     const appointment = await getAppointmentById(parsedInput.appointmentId);

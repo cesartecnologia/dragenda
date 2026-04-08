@@ -2,7 +2,6 @@
 
 import dayjs from 'dayjs';
 import { revalidatePath } from 'next/cache';
-import { headers } from 'next/headers';
 
 import { combineDateAndTime, isPastDate, isPastDateTime } from '@/helpers/time';
 import { auth } from '@/lib/auth';
@@ -20,7 +19,7 @@ import { getAvailableTimes } from '../get-available-times';
 import { addAppointmentSchema } from './schema';
 
 export const addAppointment = actionClient.schema(addAppointmentSchema).action(async ({ parsedInput }) => {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await auth.api.getSession();
   if (!session?.user) throw new Error('Unauthorized');
   if (!session.user.clinic?.id) throw new Error('Clinic not found');
 
