@@ -1,0 +1,136 @@
+'use client';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { CopyIcon } from 'lucide-react';
+import { useAction } from 'next-safe-action/hooks';
+import { useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
+
+import { upsertEmployee } from '@/actions/upsert-employee';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { employeesTable } from '@/db/schema';
+
+const formSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+  role: z.enum(['admin', 'attendant']),
+  createAccessNow: z.boolean().default(false),
+  temporaryPassword: z.string().optional(),
+}).superRefine((value, ctx) => {
+  if (value.createAccessNow && (!value.temporaryPassword || value.temporaryPassword.length < 8)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['temporaryPassword'],
+      message: 'Informe uma senha temporária com pelo menos 8 caracteres.',
+    });
+  }
+});
+
+export default function EmployeeForm({ employee }: { employee?: typeof employeesTable.$inferSelect }) {
+  const [open, setOpen] = useState(false);
+  const [generatedAccess, setGeneratedAccess] = useState<{ email: string; password: string } | null>(null);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: employee?.name ?? '',
+      email: employee?.email ?? '',
+      role: employee?.role ?? 'attendant',
+      createAccessNow: false,
+      temporaryPassword: '',
+    },
+  });
+
+  const shouldProvisionAccess = form.watch('createAccessNow');
+  const credentialsText = useMemo(() => {
+    if (!generatedAccess) return '';
+    return `Acesso ao sistema da clínica\nEmail: ${generatedAccess.email}\nSenha temporária: ${generatedAccess.password}\nEntrada: /autenticacao`;
+  }, [generatedAccess]);
+
+  const action = useAction(upsertEmployee, {
+    onSuccess: ({ data }) => {
+      toast.success('Funcionário salvo com sucesso.');
+      if (data?.createdAccess && data.temporaryPassword && data.loginEmail) {
+        setGeneratedAccess({ email: data.loginEmail, password: data.temporaryPassword });
+        toast.success('Acesso do funcionário atualizado com sucesso.');
+        return;
+      }
+      setGeneratedAccess(null);
+      setOpen(false);
+    },
+    onError: ({ error }) => toast.error(error.serverError ?? 'Erro ao salvar funcionário.'),
+  });
+
+  const handleCopy = async () => {
+    if (!credentialsText) return;
+    await navigator.clipboard.writeText(credentialsText);
+    toast.success('Credenciais copiadas.');
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(nextOpen) => {
+      setOpen(nextOpen);
+      if (!nextOpen) setGeneratedAccess(null);
+    }}>
+      <DialogTrigger asChild><Button>{employee ? 'Editar' : 'Novo funcionário'}</Button></DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{employee ? 'Editar funcionário' : 'Novo funcionário'}</DialogTitle>
+          <DialogDescription>Preencha os dados do colaborador e defina o perfil de acesso.</DialogDescription>
+        </DialogHeader>
+
+        {generatedAccess ? (
+          <div className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+            <div>
+              <h4 className="font-medium">Acesso configurado</h4>
+              <p className="text-sm text-muted-foreground">Compartilhe estes dados com o colaborador para o primeiro acesso.</p>
+            </div>
+            <div className="space-y-1 text-sm">
+              <p><strong>Email:</strong> {generatedAccess.email}</p>
+              <p><strong>Senha temporária:</strong> {generatedAccess.password}</p>
+            </div>
+            <div className="flex gap-2">
+              <Button type="button" onClick={handleCopy}><CopyIcon className="mr-2 h-4 w-4" />Copiar credenciais</Button>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Concluir</Button>
+            </div>
+          </div>
+        ) : (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit((values) => action.execute({
+              ...values,
+              email: values.email.trim().toLowerCase(),
+              id: employee?.id,
+              active: true,
+              temporaryPassword: values.temporaryPassword?.trim() || undefined,
+            }))} className="space-y-4">
+              <FormField control={form.control} name="name" render={({ field }) => <FormItem><FormLabel>Nome</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+              <FormField control={form.control} name="email" render={({ field }) => <FormItem><FormLabel>Email</FormLabel><FormControl><Input {...field} type="email" /></FormControl><FormMessage /></FormItem>} />
+              <FormField control={form.control} name="role" render={({ field }) => <FormItem><FormLabel>Perfil</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="admin">Admin</SelectItem><SelectItem value="attendant">Atendente</SelectItem></SelectContent></Select><FormMessage /></FormItem>} />
+              <label className="flex items-center gap-3 rounded-lg border p-3 text-sm">
+                <input type="checkbox" checked={shouldProvisionAccess} onChange={(event) => form.setValue('createAccessNow', event.target.checked)} />
+                <span>Liberar acesso deste colaborador agora</span>
+              </label>
+              {shouldProvisionAccess ? (
+                <FormField control={form.control} name="temporaryPassword" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Senha temporária</FormLabel>
+                    <FormControl><Input {...field} type="text" placeholder="Ex.: Clinica@2026" /></FormControl>
+                    <p className="text-xs text-muted-foreground">Defina uma senha temporária para o primeiro acesso do colaborador.</p>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              ) : null}
+              <DialogFooter><Button type="submit">Salvar</Button></DialogFooter>
+            </form>
+          </Form>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
