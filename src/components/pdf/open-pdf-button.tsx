@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
 import { Button, type ButtonProps } from '@/components/ui/button';
 
 interface Props extends ButtonProps {
+  children?: ReactNode;
   fileName: string;
   generator: () => Promise<{ output: (type: 'bloburl' | 'blob') => string | Blob }>;
 }
