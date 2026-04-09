@@ -7,7 +7,7 @@ import { CalendarIcon, Check, Clock3, CreditCard, Search, Stethoscope, X } from 
 import { useAction } from 'next-safe-action/hooks';
 import { useEffect, useMemo, useRef, useState, type SelectHTMLAttributes } from 'react';
 import { createPortal } from 'react-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, type DefaultValues } from 'react-hook-form';
 import { NumericFormat } from 'react-number-format';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -44,6 +44,8 @@ interface AddAppointmentFormProps {
   onClose?: () => void;
 }
 
+type FormInput = z.input<typeof formSchema>;
+type FormOutput = z.output<typeof formSchema>;
 type SearchableItem = { id: string; name: string };
 
 const cardClass = 'rounded-xl border border-slate-200 bg-white p-5';
@@ -208,7 +210,7 @@ function getDateInputValue(date?: Date) {
 export default function AddAppointmentForm({ patients, doctors, appointment, onSuccess, onClose, isOpen }: AddAppointmentFormProps) {
   const [mounted, setMounted] = useState(false);
 
-  const defaultValues = useMemo(
+  const defaultValues = useMemo<DefaultValues<FormInput>>(
     () => ({
       patientId: appointment?.patientId ?? '',
       doctorId: appointment?.doctorId ?? '',
@@ -222,7 +224,7 @@ export default function AddAppointmentForm({ patients, doctors, appointment, onS
     [appointment],
   );
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormInput, unknown, FormOutput>({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
@@ -333,7 +335,7 @@ export default function AddAppointmentForm({ patients, doctors, appointment, onS
     form.setValue('time', '', { shouldDirty: true, shouldValidate: true });
   }
 
-  function handleSubmit(values: z.infer<typeof formSchema>) {
+  function handleSubmit(values: FormOutput) {
     appointmentAction.execute({
       id: appointment?.id,
       patientId: values.patientId,
