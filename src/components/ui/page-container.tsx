@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 
 type WithChildren = {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
 };
 
