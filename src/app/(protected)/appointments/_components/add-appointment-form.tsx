@@ -272,6 +272,7 @@ export default function AddAppointmentForm({ patients, doctors, appointment, onS
 
   const selectedDoctor = useMemo(() => doctors.find((doctor) => doctor.id === selectedDoctorId), [doctors, selectedDoctorId]);
   const selectedDateKey = selectedDate ? dayjs(selectedDate).format('YYYY-MM-DD') : '';
+  const minimumBookableTime = useMemo(() => (selectedDate ? getMinimumBookableTimeForDate(selectedDate) : null), [selectedDate]);
 
   useEffect(() => {
     if (!selectedDoctor) return;
@@ -532,8 +533,8 @@ export default function AddAppointmentForm({ patients, doctors, appointment, onS
                       <Clock3 className="size-4 text-primary" />
                       <h3 className={titleClass}>Horários disponíveis</h3>
                     </div>
-                    {selectedDate && dayjs(selectedDate).isSame(dayjs(), 'day') ? (
-                      <p className="mt-1 text-xs text-slate-500">Hoje são exibidos apenas horários a partir de {getMinimumBookableTimeForDate(selectedDate).slice(0, 5)}.</p>
+                    {selectedDate && minimumBookableTime && dayjs(selectedDate).isSame(dayjs(), 'day') ? (
+                      <p className="mt-1 text-xs text-slate-500">Hoje são exibidos apenas horários a partir de {minimumBookableTime.slice(0, 5)}.</p>
                     ) : null}
                   </div>
 
