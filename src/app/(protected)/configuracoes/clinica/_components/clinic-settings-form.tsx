@@ -18,17 +18,25 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { clinicsTable } from '@/db/schema';
 
-const optionalText = z.preprocess((value) => {
-  if (typeof value !== 'string') return value;
-  const normalized = value.trim();
-  return normalized === '' ? null : normalized;
-}, z.string().nullable().optional());
+const optionalText = z
+  .string()
+  .optional()
+  .transform((value) => {
+    const normalized = value?.trim() ?? '';
+    return normalized === '' ? null : normalized;
+  });
 
-const optionalUrl = z.preprocess((value) => {
-  if (typeof value !== 'string') return value;
-  const normalized = value.trim();
-  return normalized === '' ? null : normalized;
-}, z.string().url().nullable().optional());
+const optionalUrl = z
+  .string()
+  .optional()
+  .refine((value) => {
+    const normalized = value?.trim() ?? '';
+    return normalized === '' || z.string().url().safeParse(normalized).success;
+  }, 'Informe uma URL válida.')
+  .transform((value) => {
+    const normalized = value?.trim() ?? '';
+    return normalized === '' ? null : normalized;
+  });
 
 const formSchema = z.object({
   name: z.string().trim().min(1, { message: 'Nome é obrigatório.' }),
@@ -39,7 +47,15 @@ const formSchema = z.object({
   cloudinaryPublicId: optionalText,
 });
 
-type ClinicSettingsFormInput = z.input<typeof formSchema>;
+type ClinicSettingsFormInput = {
+  name: string;
+  cnpj?: string;
+  address?: string;
+  phoneNumber?: string;
+  logoUrl?: string;
+  cloudinaryPublicId?: string;
+};
+
 type ClinicSettingsFormOutput = z.output<typeof formSchema>;
 
 export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsTable.$inferSelect | null }) {
