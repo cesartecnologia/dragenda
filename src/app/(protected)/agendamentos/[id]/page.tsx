@@ -27,7 +27,7 @@ interface Props {
 }
 
 const statusBadgeClassName = (appointment: AppointmentWithRelations) =>
-  currentAppointment.status === 'cancelled'
+  appointment.status === 'cancelled'
     ? 'border-red-200 bg-red-50 text-red-700'
     : 'border-emerald-200 bg-emerald-50 text-emerald-700';
 
