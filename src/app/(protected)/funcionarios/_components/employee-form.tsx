@@ -33,10 +33,13 @@ const formSchema = z.object({
 });
 
 export default function EmployeeForm({ employee }: { employee?: typeof employeesTable.$inferSelect }) {
+  type EmployeeFormInput = z.input<typeof formSchema>;
+  type EmployeeFormOutput = z.output<typeof formSchema>;
+
   const [open, setOpen] = useState(false);
   const [generatedAccess, setGeneratedAccess] = useState<{ email: string; password: string } | null>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<EmployeeFormInput, unknown, EmployeeFormOutput>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: employee?.name ?? '',
