@@ -29,7 +29,7 @@ const formSchema = z
     patientId: z.string().min(1, { message: 'Paciente é obrigatório.' }),
     doctorId: z.string().min(1, { message: 'Médico é obrigatório.' }),
     appointmentPrice: z.number().min(1, { message: 'Valor da consulta é obrigatório.' }),
-    date: z.date().optional(),
+    date: z.date().nullable().optional(),
     time: z.string().min(1, { message: 'Horário é obrigatório.' }),
     notes: z.string().optional(),
     paymentConfirmed: z.boolean().default(false),
@@ -213,7 +213,7 @@ function NativeSelect(props: SelectHTMLAttributes<HTMLSelectElement>) {
   );
 }
 
-function getDateInputValue(date?: Date) {
+function getDateInputValue(date?: Date | null) {
   return date ? dayjs(date).format('YYYY-MM-DD') : '';
 }
 
@@ -225,7 +225,7 @@ export default function AddAppointmentForm({ patients, doctors, appointment, onS
       patientId: appointment?.patientId ?? '',
       doctorId: appointment?.doctorId ?? '',
       appointmentPrice: appointment?.appointmentPriceInCents ? appointment.appointmentPriceInCents / 100 : 0,
-      date: appointment?.date ? new Date(appointment.date) : undefined,
+      date: appointment?.date ? new Date(appointment.date) : null,
       time: appointment?.date ? dayjs(appointment.date).format('HH:mm') : '',
       notes: appointment?.notes ?? '',
       paymentConfirmed: appointment?.paymentConfirmed ?? false,
@@ -286,7 +286,7 @@ export default function AddAppointmentForm({ patients, doctors, appointment, onS
 
     const currentDate = form.getValues('date');
     if (currentDate && !isDateAllowedForDoctor(currentDate, selectedDoctor)) {
-      form.setValue('date', undefined, { shouldDirty: true, shouldValidate: true });
+      form.setValue('date', null, { shouldDirty: true, shouldValidate: true });
       form.setValue('time', '', { shouldDirty: true, shouldValidate: true });
       toast.error('A data escolhida não está dentro da agenda deste médico.');
     }
@@ -325,9 +325,9 @@ export default function AddAppointmentForm({ patients, doctors, appointment, onS
     },
   });
 
-  function handleDateSelection(nextDate: Date | undefined) {
+  function handleDateSelection(nextDate: Date | null | undefined) {
     if (!nextDate) {
-      form.setValue('date', undefined, { shouldDirty: true, shouldValidate: true });
+      form.setValue('date', null, { shouldDirty: true, shouldValidate: true });
       form.setValue('time', '', { shouldDirty: true, shouldValidate: true });
       return;
     }

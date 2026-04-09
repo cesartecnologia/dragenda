@@ -39,12 +39,15 @@ const formSchema = z.object({
   cloudinaryPublicId: optionalText,
 });
 
+type ClinicSettingsFormInput = z.input<typeof formSchema>;
+type ClinicSettingsFormOutput = z.output<typeof formSchema>;
+
 export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsTable.$inferSelect | null }) {
   const [uploading, setUploading] = useState(false);
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<ClinicSettingsFormInput, unknown, ClinicSettingsFormOutput>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: clinic?.name ?? '',
