@@ -17,7 +17,8 @@ type FirebaseAdminCredential = {
   privateKey: string;
 };
 
-const normalizeMultiline = (value?: string | null) => value?.replace(/\\n/g, '\n').trim();
+const normalizeMultiline = (value?: string | null) =>
+  value?.replace(/\\n/g, '\n').trim();
 
 const buildCredentialFromJson = (rawJson: string): FirebaseAdminCredential => {
   let parsed: ServiceAccountShape;
