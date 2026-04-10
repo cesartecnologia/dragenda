@@ -100,7 +100,7 @@ export default async function AgendamentosPage({ searchParams }: Props) {
           </div>
         </div>
 
-        <AppointmentsDataTable data={filteredAppointments} patients={patients} doctors={doctors} role={role} clinic={clinic} />
+        <AppointmentsDataTable data={filteredAppointments} patients={patients} doctors={doctors} role={role} clinic={clinic} variant="cards" />
       </PageContent>
     </PageContainer>
   );

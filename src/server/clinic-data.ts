@@ -438,6 +438,7 @@ export const upsertDoctorRecord = async (params: {
   name: string;
   specialty: string;
   crm: string;
+  sex?: Doctor['sex'];
   appointmentPriceInCents: number;
   availableFromWeekDay?: number | null;
   availableToWeekDay?: number | null;
@@ -456,6 +457,7 @@ export const upsertDoctorRecord = async (params: {
     clinicId: params.clinicId,
     name: params.name,
     avatarImageUrl: params.avatarImageUrl ?? existing?.avatarImageUrl ?? null,
+    sex: params.sex ?? existing?.sex ?? 'male',
     crm: params.crm,
     specialty: params.specialty,
     appointmentPriceInCents: params.appointmentPriceInCents,

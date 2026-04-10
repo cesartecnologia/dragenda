@@ -49,7 +49,7 @@ const roleLabel: Record<AppSession['user']['role'], string> = {
 };
 
 const navButtonClass =
-  'py-2.5 text-[14.5px] transition-all duration-200 hover:bg-primary/5 hover:text-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:shadow-[0_10px_24px_rgba(37,99,235,0.18)] [&>svg]:size-[17px]';
+  'min-h-12 gap-3 rounded-xl px-3 py-3 text-[16px] font-medium transition-all duration-200 hover:bg-primary/5 hover:text-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:shadow-[0_10px_24px_rgba(37,99,235,0.18)] [&>svg]:size-[18px]';
 
 export function AppSidebar({ session }: { session: AppSession }) {
   const router = useRouter();
@@ -85,7 +85,7 @@ export function AppSidebar({ session }: { session: AppSession }) {
       <SidebarContent>
         <SidebarGroup className="pt-2">
           <SidebarGroupContent>
-            <SidebarMenu className="gap-1.5 px-2">
+            <SidebarMenu className="gap-2 px-2.5">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url} className={navButtonClass}>
@@ -103,7 +103,7 @@ export function AppSidebar({ session }: { session: AppSession }) {
         {canAccessFinancial(role) ? (
           <SidebarGroup className="pt-3">
             <SidebarGroupContent>
-              <SidebarMenu className="gap-1.5 px-2">
+              <SidebarMenu className="gap-2 px-2.5">
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={pathname === '/assinatura'} className={navButtonClass}>
                     <Link href="/assinatura" prefetch>
@@ -122,19 +122,19 @@ export function AppSidebar({ session }: { session: AppSession }) {
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton size="lg" className="h-auto py-3">
+                <SidebarMenuButton size="lg" className="h-auto px-3 py-3.5">
                   <Avatar className="size-10">
                     <AvatarFallback>{session.user.name?.charAt(0)?.toUpperCase() ?? 'U'}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1 text-left leading-tight">
                     <div className="flex items-center gap-2">
-                      <p className="truncate text-sm font-semibold" title={session.user.name}>{session.user.name}</p>
+                      <p className="truncate text-[15px] font-semibold" title={session.user.name}>{session.user.name}</p>
                       {session.user.role === 'master' ? <ShieldCheck className="size-4 shrink-0 text-primary" /> : null}
                       {session.user.role === 'support' ? <LifeBuoy className="size-4 shrink-0 text-primary" /> : null}
                       {session.user.role === 'admin' ? <BriefcaseMedical className="size-4 shrink-0 text-primary" /> : null}
                     </div>
-                    {session.user.clinic?.name ? <p className="text-muted-foreground truncate text-xs" title={session.user.clinic.name}>{session.user.clinic.name}</p> : null}
-                    <p className="text-muted-foreground truncate text-xs" title={session.user.email}>{session.user.email}</p>
+                    {session.user.clinic?.name ? <p className="text-muted-foreground truncate text-[13px]" title={session.user.clinic.name}>{session.user.clinic.name}</p> : null}
+                    <p className="text-muted-foreground truncate text-[13px]" title={session.user.email}>{session.user.email}</p>
                     <div className="mt-1 flex items-center gap-2">
                       <Badge variant="secondary">{roleLabel[session.user.role]}</Badge>
                       {session.user.bypassSubscription ? <Badge className="bg-primary/10 text-primary hover:bg-primary/10">Sem bloqueio</Badge> : null}

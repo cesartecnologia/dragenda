@@ -55,11 +55,14 @@ export interface DoctorAvailabilityRange {
   toTime: string;
 }
 
+export type DoctorSex = 'male' | 'female';
+
 export interface DoctorRecord {
   id: string;
   clinicId: string;
   name: string;
   avatarImageUrl: string | null;
+  sex: DoctorSex | null;
   crm: string;
   specialty: string;
   appointmentPriceInCents: number;

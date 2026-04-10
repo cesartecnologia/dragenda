@@ -3,24 +3,27 @@
 import { useMemo, useState } from 'react';
 
 import { useAction } from 'next-safe-action/hooks';
-import { Ban, CalendarRange, EditIcon, MessageCircle, Printer, Receipt, RotateCcw, TrashIcon } from 'lucide-react';
+import { Ban, CalendarRange, EditIcon, MessageCircle, Printer, Receipt, RotateCcw, Stethoscope, TrashIcon, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { deleteAppointment } from '@/actions/delete-appointment';
 import { changeAppointmentStatus, updateAppointmentPayment } from '@/actions/update-appointment';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { appointmentsTable, clinicsTable, doctorsTable, patientsTable, type AppointmentPaymentMethod, type UserRole } from '@/db/schema';
 import { buildAppointmentWhatsappText } from '@/helpers/appointment-message';
+import { formatCurrencyInCents } from '@/helpers/currency';
 import { openAppointmentPrintPopup } from '@/helpers/open-appointment-print-popup';
-import { getAppointmentsTableColumns } from './table-columns';
+import { formatDateTimeBr } from '@/helpers/time';
 import { canDeleteRecords, canManageFinancialActions } from '@/lib/access';
 
 import AddAppointmentForm from './add-appointment-form';
 import AppointmentRowActions from './appointment-row-actions';
+import { getAppointmentsTableColumns } from './table-columns';
 
 type AppointmentWithRelations = typeof appointmentsTable.$inferSelect & {
   patient: typeof patientsTable.$inferSelect;
@@ -35,12 +38,14 @@ export default function AppointmentsDataTable({
   doctors,
   role,
   clinic,
+  variant = 'table',
 }: {
   data: AppointmentWithRelations[];
   patients: (typeof patientsTable.$inferSelect)[];
   doctors: (typeof doctorsTable.$inferSelect)[];
   role?: UserRole | null;
   clinic?: ClinicSummary | null;
+  variant?: 'table' | 'cards';
 }) {
   const [editingAppointment, setEditingAppointment] = useState<AppointmentWithRelations | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AppointmentWithRelations | null>(null);
@@ -148,9 +153,68 @@ export default function AppointmentsDataTable({
     [clinic, role],
   );
 
+  const renderCards = () => {
+    if (!data.length) {
+      return (
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
+          Nenhum agendamento encontrado com os filtros selecionados.
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {data.map((appointment) => {
+          const statusBadge = appointment.status === 'cancelled'
+            ? <span className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-medium text-red-700">Cancelado</span>
+            : <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">Confirmado</span>;
+
+          return (
+            <Card key={appointment.id} className="overflow-hidden border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+              <CardHeader className="border-b border-slate-100 bg-slate-50/60 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 space-y-2">
+                    <div>
+                      <h3 className="truncate text-sm font-semibold text-slate-800">{appointment.patient.name}</h3>
+                      <p className="truncate text-sm text-slate-500">{appointment.doctor.name}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700">
+                        <Stethoscope className="mr-1 size-3" />
+                        {appointment.doctor.specialty}
+                      </span>
+                      {statusBadge}
+                    </div>
+                  </div>
+                  <div onClick={(event) => event.stopPropagation()}>
+                    <AppointmentRowActions patientName={appointment.patient.name} actions={getRowActions(appointment)} />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3 p-4 text-sm text-slate-600">
+                <div className="flex items-center gap-2"><CalendarRange className="size-4 text-slate-400" /><span>{formatDateTimeBr(appointment.date)}</span></div>
+                <div className="flex items-center gap-2"><Wallet className="size-4 text-slate-400" /><span>{formatCurrencyInCents(appointment.appointmentPriceInCents)}</span></div>
+                <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                  {appointment.paymentConfirmed ? 'Pagamento confirmado' : 'Pagamento pendente'}
+                </div>
+              </CardContent>
+              <CardFooter className="border-t border-slate-100 px-4 py-3 text-xs text-slate-500">
+                {appointment.notes ? (
+                  <p className="line-clamp-2">{appointment.notes}</p>
+                ) : (
+                  <p>Nenhuma observação registrada.</p>
+                )}
+              </CardFooter>
+            </Card>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <>
-      <DataTable data={data} columns={columns} />
+      {variant === 'cards' ? renderCards() : <DataTable data={data} columns={columns} />}
 
       <AddAppointmentForm isOpen={!!editingAppointment} appointment={editingAppointment ?? undefined} patients={patients} doctors={doctors} onSuccess={() => setEditingAppointment(null)} onClose={() => setEditingAppointment(null)} />
 

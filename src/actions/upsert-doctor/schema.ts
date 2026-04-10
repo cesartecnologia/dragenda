@@ -8,11 +8,15 @@ export const availabilityRangeSchema = z.object({
   toTime: z.string().min(1, { message: 'Hora final é obrigatória.' }),
 });
 
+const optionalUrl = z.string().trim().url({ message: 'Informe uma URL válida.' }).or(z.literal('')).optional();
+
 export const upsertDoctorSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().trim().min(1, { message: 'Nome é obrigatório.' }),
   specialty: z.string().trim().min(1, { message: 'Especialidade é obrigatória.' }),
   crm: z.string().trim().min(1, { message: 'CRM é obrigatório.' }),
+  sex: z.enum(['male', 'female'], { required_error: 'Sexo é obrigatório.' }),
+  avatarImageUrl: optionalUrl,
   appointmentPriceInCents: z.number().min(1, { message: 'Preço da consulta é obrigatório.' }),
   availabilityRanges: z.array(availabilityRangeSchema).min(1, { message: 'Adicione ao menos um período de atendimento.' }),
 });

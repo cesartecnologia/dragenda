@@ -1,12 +1,10 @@
 'use client';
 
-import { Filter, MapPin, Plus, Search, Stethoscope, ArrowUpDown, CalendarRange, Clock3, Pencil } from 'lucide-react';
+import { ArrowUpDown, CalendarRange, Clock3, Filter, Pencil, Search, Stethoscope, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
-import { normalizeSearchText } from '@/helpers/format';
-import { formatCurrencyInCents } from '@/helpers/currency';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import DoctorAvatar from '@/components/common/doctor-avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
@@ -14,6 +12,8 @@ import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { doctorsTable } from '@/db/schema';
+import { formatCurrencyInCents } from '@/helpers/currency';
+import { normalizeSearchText } from '@/helpers/format';
 
 import AddDoctorButton from '../../doctors/_components/add-doctor-button';
 import UpsertDoctorForm from '../../doctors/_components/upsert-doctor-form';
@@ -95,7 +95,7 @@ export default function MedicosCatalogo({
 
       <Card className="border-slate-200/80 shadow-sm">
         <CardContent className="p-4">
-          <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px_220px]">
+          <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_240px_220px]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
               <Input value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" placeholder="Buscar por nome, CRM ou especialidade" />
@@ -132,15 +132,17 @@ export default function MedicosCatalogo({
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {filteredDoctors.map((doctor) => {
           const summary = getDoctorSummary(doctor);
-          const initials = doctor.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
 
           return (
             <Card key={doctor.id} className="overflow-hidden border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
               <CardHeader className="border-b border-slate-100 bg-slate-50/60 p-4">
                 <div className="flex items-start gap-3">
-                  <Avatar className="h-14 w-14 border border-slate-200 bg-white">
-                    <AvatarFallback className="bg-slate-100 text-slate-700">{initials}</AvatarFallback>
-                  </Avatar>
+                  <DoctorAvatar
+                    name={doctor.name}
+                    imageUrl={doctor.avatarImageUrl}
+                    sex={doctor.sex}
+                    className="h-16 w-14 rounded-lg"
+                  />
                   <div className="min-w-0 flex-1">
                     <h3 className="truncate text-sm font-semibold text-slate-800">{doctor.name}</h3>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -156,7 +158,7 @@ export default function MedicosCatalogo({
               <CardContent className="space-y-3 p-4 text-sm text-slate-600">
                 <div className="flex items-center gap-2"><CalendarRange className="size-4 text-slate-400" /><span className="truncate">{summary.period}</span></div>
                 <div className="flex items-center gap-2"><Clock3 className="size-4 text-slate-400" /><span>{summary.hours}</span></div>
-                <div className="flex items-center gap-2"><MapPin className="size-4 text-slate-400" /><span>{formatCurrencyInCents(doctor.appointmentPriceInCents)}</span></div>
+                <div className="flex items-center gap-2"><Wallet className="size-4 text-slate-400" /><span>{formatCurrencyInCents(doctor.appointmentPriceInCents)}</span></div>
               </CardContent>
               <CardFooter className="border-t border-slate-100 p-4">
                 <Dialog open={selectedDoctor?.id === doctor.id} onOpenChange={(open) => setSelectedDoctor(open ? doctor : null)}>

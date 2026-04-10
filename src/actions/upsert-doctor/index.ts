@@ -19,6 +19,8 @@ export const upsertDoctor = actionClient.schema(upsertDoctorSchema).action(async
     name: parsedInput.name,
     specialty: parsedInput.specialty,
     crm: parsedInput.crm,
+    sex: parsedInput.sex,
+    avatarImageUrl: parsedInput.avatarImageUrl || null,
     appointmentPriceInCents: parsedInput.appointmentPriceInCents,
     availabilityRanges: parsedInput.availabilityRanges.map((range, index) => ({
       id: range.id ?? `${index + 1}`,

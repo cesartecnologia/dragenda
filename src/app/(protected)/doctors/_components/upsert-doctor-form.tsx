@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Check, Plus, Search, Trash2 } from 'lucide-react';
+import { Check, Loader2, Plus, Search, Trash2 } from 'lucide-react';
 import { useAction } from 'next-safe-action/hooks';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
@@ -11,10 +11,12 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { upsertDoctor } from '@/actions/upsert-doctor';
+import DoctorAvatar from '@/components/common/doctor-avatar';
 import { Button } from '@/components/ui/button';
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { normalizeSearchText } from '@/helpers/format';
 import { doctorsTable } from '@/db/schema';
 
@@ -32,6 +34,8 @@ const formSchema = z.object({
   name: z.string().trim().min(1, { message: 'Nome é obrigatório.' }),
   crm: z.string().trim().min(1, { message: 'CRM é obrigatório.' }),
   specialty: z.string().trim().min(1, { message: 'Especialidade é obrigatória.' }),
+  sex: z.enum(['male', 'female'], { required_error: 'Sexo é obrigatório.' }),
+  avatarImageUrl: z.string().trim().url({ message: 'Imagem inválida.' }).or(z.literal('')).optional(),
   appointmentPrice: z.number().min(1, { message: 'Preço da consulta é obrigatório.' }),
   availabilityRanges: z.array(rangeSchema).min(1, { message: 'Adicione ao menos um período.' }),
 });
@@ -46,12 +50,17 @@ const defaultRange = { startDate: '', endDate: '', fromTime: '08:00:00', toTime:
 
 export default function UpsertDoctorForm({ doctor, specialties = [], onSuccess }: UpsertDoctorFormProps) {
   const router = useRouter();
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+  const [uploadingImage, setUploadingImage] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: doctor?.name ?? '',
       crm: doctor?.crm ?? '',
       specialty: doctor?.specialty ?? '',
+      sex: doctor?.sex ?? 'male',
+      avatarImageUrl: doctor?.avatarImageUrl ?? '',
       appointmentPrice: doctor?.appointmentPriceInCents ? doctor.appointmentPriceInCents / 100 : 0,
       availabilityRanges: doctor?.availabilityRanges?.length ? doctor.availabilityRanges : [defaultRange],
     },
@@ -64,6 +73,8 @@ export default function UpsertDoctorForm({ doctor, specialties = [], onSuccess }
       name: doctor?.name ?? '',
       crm: doctor?.crm ?? '',
       specialty: doctor?.specialty ?? '',
+      sex: doctor?.sex ?? 'male',
+      avatarImageUrl: doctor?.avatarImageUrl ?? '',
       appointmentPrice: doctor?.appointmentPriceInCents ? doctor.appointmentPriceInCents / 100 : 0,
       availabilityRanges: doctor?.availabilityRanges?.length ? doctor.availabilityRanges : [defaultRange],
     });
@@ -97,70 +108,151 @@ export default function UpsertDoctorForm({ doctor, specialties = [], onSuccess }
     onError: ({ error }) => toast.error(error.serverError ?? 'Erro ao salvar médico.'),
   });
 
+  const handleUpload = async (file?: File) => {
+    if (!file) return;
+    if (!cloudName || !uploadPreset) {
+      toast.error('Configure o Cloudinary antes de enviar a foto do médico.');
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      const body = new FormData();
+      body.append('file', file);
+      body.append('upload_preset', uploadPreset);
+
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: 'POST',
+        body,
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error?.message ?? 'Falha no upload');
+
+      form.setValue('avatarImageUrl', data.secure_url ?? '', { shouldDirty: true, shouldValidate: true });
+      toast.success('Foto enviada com sucesso.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Falha ao enviar foto.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     upsertDoctorAction.execute({
       id: doctor?.id,
       name: values.name,
       crm: values.crm,
       specialty: values.specialty,
+      sex: values.sex,
+      avatarImageUrl: values.avatarImageUrl || '',
       appointmentPriceInCents: Math.round(values.appointmentPrice * 100),
       availabilityRanges: values.availabilityRanges,
     });
   };
 
+  const avatarImageUrl = form.watch('avatarImageUrl');
+  const selectedSex = form.watch('sex');
+  const previewName = form.watch('name') || 'Médico';
+
   return (
-    <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[760px]">
+    <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-[840px]">
       <DialogHeader>
         <DialogTitle>{doctor ? 'Editar médico' : 'Novo médico'}</DialogTitle>
       </DialogHeader>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <FormField control={form.control} name="name" render={({ field }) => <FormItem><FormLabel>Nome</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-            <FormField control={form.control} name="crm" render={({ field }) => <FormItem><FormLabel>CRM</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-            <FormField
-              control={form.control}
-              name="specialty"
-              render={({ field }) => (
-                <FormItem className="md:col-span-2">
-                  <FormLabel>Especialidade</FormLabel>
-                  <FormControl>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 rounded-md border px-3">
-                        <Search className="size-4 text-muted-foreground" />
-                        <Input
-                          value={specialtySearch}
-                          onChange={(event) => {
-                            setSpecialtySearch(event.target.value);
-                            field.onChange(event.target.value);
-                          }}
-                          className="border-0 shadow-none"
-                          placeholder="Buscar ou digitar especialidade"
-                        />
-                      </div>
-                      <div className="grid gap-2 rounded-md border p-2 sm:grid-cols-2">
-                        {filteredSpecialties.length ? filteredSpecialties.map((option) => (
-                          <button
-                            key={option}
-                            type="button"
-                            onClick={() => {
-                              setSpecialtySearch(option);
-                              field.onChange(option);
-                            }}
-                            className="flex items-center justify-between rounded-md px-3 py-2 text-left text-sm transition hover:bg-muted"
-                          >
-                            <span>{option}</span>
-                            {field.value === option ? <Check className="size-4 text-primary" /> : null}
-                          </button>
-                        )) : <p className="col-span-full px-3 py-2 text-sm text-muted-foreground">Nenhuma sugestão encontrada. Você pode cadastrar uma nova especialidade.</p>}
-                      </div>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField control={form.control} name="appointmentPrice" render={({ field }) => <FormItem><FormLabel>Preço da consulta</FormLabel><NumericFormat value={field.value} onValueChange={(v) => field.onChange(v.floatValue)} decimalScale={2} fixedDecimalScale decimalSeparator="," thousandSeparator="." prefix="R$ " customInput={Input} /><FormMessage /></FormItem>} />
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
+            <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <DoctorAvatar name={previewName} imageUrl={avatarImageUrl} sex={selectedSex} className="h-28 w-24 rounded-lg" />
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">Foto 3x4</p>
+                  <p className="text-xs text-slate-500">PNG ou JPG com boa nitidez.</p>
+                </div>
+              </div>
+              <Input type="file" accept="image/*" onChange={(event) => handleUpload(event.target.files?.[0])} />
+              {uploadingImage ? (
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <Loader2 className="size-4 animate-spin" /> Enviando imagem...
+                </div>
+              ) : null}
+              {!avatarImageUrl ? (
+                <p className="text-xs text-slate-500">Sem foto, o sistema exibirá um ícone padrão conforme o sexo selecionado.</p>
+              ) : null}
+              <input type="hidden" {...form.register('avatarImageUrl')} />
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <FormField control={form.control} name="name" render={({ field }) => <FormItem><FormLabel>Nome</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                <FormField control={form.control} name="crm" render={({ field }) => <FormItem><FormLabel>CRM</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                <FormField
+                  control={form.control}
+                  name="sex"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sexo</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o sexo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="male">Masculino</SelectItem>
+                          <SelectItem value="female">Feminino</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField control={form.control} name="appointmentPrice" render={({ field }) => <FormItem><FormLabel>Preço da consulta</FormLabel><NumericFormat value={field.value} onValueChange={(v) => field.onChange(v.floatValue)} decimalScale={2} fixedDecimalScale decimalSeparator="," thousandSeparator="." prefix="R$ " customInput={Input} /><FormMessage /></FormItem>} />
+                <FormField
+                  control={form.control}
+                  name="specialty"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Especialidade</FormLabel>
+                      <FormControl>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 rounded-md border px-3">
+                            <Search className="size-4 text-muted-foreground" />
+                            <Input
+                              value={specialtySearch}
+                              onChange={(event) => {
+                                setSpecialtySearch(event.target.value);
+                                field.onChange(event.target.value);
+                              }}
+                              className="border-0 shadow-none"
+                              placeholder="Buscar ou digitar especialidade"
+                            />
+                          </div>
+                          <div className="grid gap-2 rounded-md border p-2 sm:grid-cols-2">
+                            {filteredSpecialties.length ? filteredSpecialties.map((option) => (
+                              <button
+                                key={option}
+                                type="button"
+                                onClick={() => {
+                                  setSpecialtySearch(option);
+                                  field.onChange(option);
+                                }}
+                                className="flex items-center justify-between rounded-md px-3 py-2 text-left text-sm transition hover:bg-muted"
+                              >
+                                <span>{option}</span>
+                                {field.value === option ? <Check className="size-4 text-primary" /> : null}
+                              </button>
+                            )) : <p className="col-span-full px-3 py-2 text-sm text-muted-foreground">Nenhuma sugestão encontrada. Você pode cadastrar uma nova especialidade.</p>}
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="space-y-3 rounded-lg border p-4">
@@ -187,7 +279,9 @@ export default function UpsertDoctorForm({ doctor, specialties = [], onSuccess }
           </div>
 
           <DialogFooter>
-            <Button type="submit" disabled={upsertDoctorAction.isExecuting}>{doctor ? 'Salvar alterações' : 'Cadastrar médico'}</Button>
+            <Button type="submit" disabled={upsertDoctorAction.isExecuting || uploadingImage}>
+              {doctor ? 'Salvar alterações' : 'Cadastrar médico'}
+            </Button>
           </DialogFooter>
         </form>
       </Form>
