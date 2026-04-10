@@ -198,7 +198,7 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
             <AlertDialogDescription>
               {appointment.status === 'cancelled'
                 ? 'O agendamento voltará a ficar disponível normalmente no sistema.'
-                : 'O agendamento será mantido no histórico, mas deixará de contar como ativo.'}
+                : 'Deseja mesmo cancelar este agendamento? O cancelamento é irreversível.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -49,7 +49,7 @@ const roleLabel: Record<AppSession['user']['role'], string> = {
 };
 
 const navButtonClass =
-  'min-h-[54px] gap-3.5 rounded-xl px-4 py-3.5 text-[16px] font-medium leading-none transition-all duration-200 hover:bg-primary/5 hover:text-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:shadow-[0_10px_24px_rgba(37,99,235,0.18)] [&>svg]:size-[18px]';
+  'min-h-[56px] gap-3.5 rounded-xl px-4 py-4 text-[16px] font-medium leading-tight transition-all duration-200 hover:bg-primary/5 hover:text-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:shadow-[0_10px_24px_rgba(37,99,235,0.18)] [&>svg]:size-[18px] [&>span:last-child]:whitespace-normal [&>span:last-child]:leading-tight';
 
 export function AppSidebar({ session }: { session: AppSession }) {
   const router = useRouter();

@@ -135,17 +135,17 @@ export default function MedicosCatalogo({
 
           return (
             <Card key={doctor.id} className="overflow-hidden border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-              <CardHeader className="border-b border-slate-100 bg-slate-50/60 p-4">
-                <div className="flex items-start gap-3">
+              <CardHeader className="border-b border-slate-100 bg-slate-50/60 p-5">
+                <div className="flex items-center gap-4">
                   <DoctorAvatar
                     name={doctor.name}
                     imageUrl={doctor.avatarImageUrl}
                     sex={doctor.sex}
-                    className="h-16 w-14 rounded-lg"
+                    className="h-24 w-20 rounded-2xl"
                   />
-                  <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-sm font-semibold text-slate-800">{doctor.name}</h3>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <div className="min-w-0 flex-1 self-center">
+                    <h3 className="truncate text-lg font-semibold leading-tight text-slate-800">{doctor.name}</h3>
+                    <div className="mt-2.5 flex flex-wrap items-center gap-2">
                       <Badge variant="secondary" className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700 hover:bg-blue-50">
                         <Stethoscope className="mr-1 size-3" />
                         {doctor.specialty}

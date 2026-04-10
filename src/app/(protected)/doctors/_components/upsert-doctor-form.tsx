@@ -164,9 +164,9 @@ export default function UpsertDoctorForm({ doctor, specialties = [], onSuccess }
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
-            <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+            <div className="space-y-3 rounded-2xl bg-slate-50/50 p-4">
               <div className="flex flex-col items-center gap-3 text-center">
-                <DoctorAvatar name={previewName} imageUrl={avatarImageUrl} sex={selectedSex} className="h-28 w-24 rounded-lg" />
+                <DoctorAvatar name={previewName} imageUrl={avatarImageUrl} sex={selectedSex} className="h-32 w-24 rounded-2xl" />
               </div>
               <input
                 ref={fileInputRef}
