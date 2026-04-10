@@ -18,7 +18,7 @@ type FirebaseAdminCredential = {
 };
 
 const normalizeMultiline = (value?: string | null) =>
-  value?.replace(/\\n/g, '\n').trim();
+  value?.replace(/\\n/g, '\n');
 
 const buildCredentialFromJson = (rawJson: string): FirebaseAdminCredential => {
   let parsed: ServiceAccountShape;
@@ -49,39 +49,12 @@ const buildCredentialFromJson = (rawJson: string): FirebaseAdminCredential => {
   };
 };
 
-const buildCredentialFromEnv = (): FirebaseAdminCredential | null => {
-  const projectId =
-    process.env.FIREBASE_PROJECT_ID ?? process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = normalizeMultiline(process.env.FIREBASE_PRIVATE_KEY);
-
-  if (!projectId && !clientEmail && !privateKey) {
-    return null;
-  }
-
-  if (!projectId || !clientEmail || !privateKey) {
-    throw new Error('FIREBASE_ADMIN_ENV_INCOMPLETE');
-  }
-
-  return {
-    projectId,
-    clientEmail,
-    privateKey,
-  };
-};
-
 const getFirebaseAdminCredential = (): FirebaseAdminCredential => {
-  if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-    return buildCredentialFromJson(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
-  }
-
-  const envCredential = buildCredentialFromEnv();
-
-  if (!envCredential) {
+  if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
     throw new Error('FIREBASE_ADMIN_MISSING_CREDENTIALS');
   }
 
-  return envCredential;
+  return buildCredentialFromJson(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
 };
 
 let cachedApp: App | null = null;
