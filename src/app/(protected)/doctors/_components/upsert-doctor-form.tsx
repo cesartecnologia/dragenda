@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Check, Loader2, Plus, Search, Trash2 } from 'lucide-react';
 import { useAction } from 'next-safe-action/hooks';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { NumericFormat } from 'react-number-format';
 import { toast } from 'sonner';
@@ -53,6 +53,7 @@ export default function UpsertDoctorForm({ doctor, specialties = [], onSuccess }
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
   const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -166,19 +167,21 @@ export default function UpsertDoctorForm({ doctor, specialties = [], onSuccess }
             <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
               <div className="flex flex-col items-center gap-3 text-center">
                 <DoctorAvatar name={previewName} imageUrl={avatarImageUrl} sex={selectedSex} className="h-28 w-24 rounded-lg" />
-                <div>
-                  <p className="text-sm font-semibold text-slate-800">Foto 3x4</p>
-                  <p className="text-xs text-slate-500">PNG ou JPG com boa nitidez.</p>
-                </div>
               </div>
-              <Input type="file" accept="image/*" onChange={(event) => handleUpload(event.target.files?.[0])} />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => handleUpload(event.target.files?.[0])}
+              />
+              <Button type="button" variant="outline" className="w-full" onClick={() => fileInputRef.current?.click()}>
+                Anexar arquivo
+              </Button>
               {uploadingImage ? (
-                <div className="flex items-center gap-2 text-xs text-slate-500">
+                <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
                   <Loader2 className="size-4 animate-spin" /> Enviando imagem...
                 </div>
-              ) : null}
-              {!avatarImageUrl ? (
-                <p className="text-xs text-slate-500">Sem foto, o sistema exibirá um ícone padrão conforme o sexo selecionado.</p>
               ) : null}
               <input type="hidden" {...form.register('avatarImageUrl')} />
             </div>
