@@ -1,7 +1,4 @@
-import path from 'path';
-import { existsSync, readFileSync } from 'fs';
-
-import { applicationDefault, cert, getApps, initializeApp, type App } from 'firebase-admin/app';
+import { cert, getApps, initializeApp, type App } from 'firebase-admin/app';
 import { getAuth, type Auth } from 'firebase-admin/auth';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 
@@ -14,97 +11,100 @@ type ServiceAccountShape = {
   privateKey?: string;
 };
 
-const normalizeMultiline = (value?: string | null) => value?.replace(/\\n/g, '\n');
-
-const readJsonFile = (filePath: string): ServiceAccountShape => {
-  const fileContent = readFileSync(filePath, 'utf-8');
-
-  if (!fileContent.trim()) {
-    throw new Error(`Firebase service account file is empty: ${filePath}`);
-  }
-
-  return JSON.parse(fileContent) as ServiceAccountShape;
+type FirebaseAdminCredential = {
+  projectId: string;
+  clientEmail: string;
+  privateKey: string;
 };
 
-const toCredential = (serviceAccount: ServiceAccountShape) => ({
-  projectId: serviceAccount.projectId ?? serviceAccount.project_id ?? process.env.FIREBASE_PROJECT_ID,
-  clientEmail: serviceAccount.clientEmail ?? serviceAccount.client_email,
-  privateKey: normalizeMultiline(serviceAccount.privateKey ?? serviceAccount.private_key),
-});
+const normalizeMultiline = (value?: string | null) => value?.replace(/\\n/g, '\n').trim();
 
-const getServiceAccountFromEnv = () => {
+const buildCredentialFromJson = (rawJson: string): FirebaseAdminCredential => {
+  let parsed: ServiceAccountShape;
+
+  try {
+    parsed = JSON.parse(rawJson) as ServiceAccountShape;
+  } catch {
+    throw new Error('FIREBASE_SERVICE_ACCOUNT_JSON_INVALID');
+  }
+
+  const projectId =
+    parsed.projectId ??
+    parsed.project_id ??
+    process.env.FIREBASE_PROJECT_ID ??
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+
+  const clientEmail = parsed.clientEmail ?? parsed.client_email;
+  const privateKey = normalizeMultiline(parsed.privateKey ?? parsed.private_key);
+
+  if (!projectId || !clientEmail || !privateKey) {
+    throw new Error('FIREBASE_SERVICE_ACCOUNT_JSON_INCOMPLETE');
+  }
+
+  return {
+    projectId,
+    clientEmail,
+    privateKey,
+  };
+};
+
+const buildCredentialFromEnv = (): FirebaseAdminCredential | null => {
+  const projectId =
+    process.env.FIREBASE_PROJECT_ID ?? process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = normalizeMultiline(process.env.FIREBASE_PRIVATE_KEY);
+
+  if (!projectId && !clientEmail && !privateKey) {
+    return null;
+  }
+
+  if (!projectId || !clientEmail || !privateKey) {
+    throw new Error('FIREBASE_ADMIN_ENV_INCOMPLETE');
+  }
+
+  return {
+    projectId,
+    clientEmail,
+    privateKey,
+  };
+};
+
+const getFirebaseAdminCredential = (): FirebaseAdminCredential => {
   if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-    return toCredential(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON) as ServiceAccountShape);
+    return buildCredentialFromJson(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
   }
 
-  if (
-    process.env.FIREBASE_PROJECT_ID &&
-    process.env.FIREBASE_CLIENT_EMAIL &&
-    process.env.FIREBASE_PRIVATE_KEY
-  ) {
-    return {
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: normalizeMultiline(process.env.FIREBASE_PRIVATE_KEY),
-    };
+  const envCredential = buildCredentialFromEnv();
+
+  if (!envCredential) {
+    throw new Error('FIREBASE_ADMIN_MISSING_CREDENTIALS');
   }
 
-  return null;
-};
-
-const getServiceAccountFromFile = () => {
-  const candidatePaths = [
-    process.env.GOOGLE_APPLICATION_CREDENTIALS,
-    path.resolve(process.cwd(), 'firebase-adminsdk.json'),
-    path.resolve(process.cwd(), 'serviceAccountKey.json'),
-    path.resolve(process.cwd(), 'clinicasmart-19d40-firebase-adminsdk-fbsvc-40f80a8dbc.json'),
-  ].filter((value): value is string => Boolean(value));
-
-  for (const candidatePath of candidatePaths) {
-    const absolutePath = path.isAbsolute(candidatePath)
-      ? candidatePath
-      : path.resolve(process.cwd(), candidatePath);
-
-    if (existsSync(absolutePath)) {
-      return toCredential(readJsonFile(absolutePath));
-    }
-  }
-
-  return null;
+  return envCredential;
 };
 
 let cachedApp: App | null = null;
-let cachedError: Error | null = null;
 
-const createFirebaseAdminApp = () => {
-  const serviceAccount = getServiceAccountFromEnv() ?? getServiceAccountFromFile();
+const createFirebaseAdminApp = (): App => {
+  const existingApp = getApps()[0];
+  if (existingApp) return existingApp;
 
-  return (
-    getApps()[0] ??
-    initializeApp({
-      credential:
-        serviceAccount?.projectId && serviceAccount?.clientEmail && serviceAccount?.privateKey
-          ? cert(serviceAccount)
-          : applicationDefault(),
-      projectId:
-        serviceAccount?.projectId ??
-        process.env.FIREBASE_PROJECT_ID ??
-        process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    })
-  );
+  const credential = getFirebaseAdminCredential();
+
+  return initializeApp({
+    credential: cert({
+      projectId: credential.projectId,
+      clientEmail: credential.clientEmail,
+      privateKey: credential.privateKey,
+    }),
+    projectId: credential.projectId,
+  });
 };
 
-export const getFirebaseAdminApp = () => {
+export const getFirebaseAdminApp = (): App => {
   if (cachedApp) return cachedApp;
-  if (cachedError) throw cachedError;
-
-  try {
-    cachedApp = createFirebaseAdminApp();
-    return cachedApp;
-  } catch (error) {
-    cachedError = error instanceof Error ? error : new Error('Unable to initialize Firebase Admin');
-    throw cachedError;
-  }
+  cachedApp = createFirebaseAdminApp();
+  return cachedApp;
 };
 
 export const adminAuth = (): Auth => getAuth(getFirebaseAdminApp());
