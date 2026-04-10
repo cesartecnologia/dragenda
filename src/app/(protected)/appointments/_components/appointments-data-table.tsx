@@ -173,10 +173,16 @@ export default function AppointmentsDataTable({
             <Card key={appointment.id} className="overflow-hidden border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
               <CardHeader className="border-b border-slate-100 bg-slate-50/60 p-4">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 space-y-2">
-                    <div>
-                      <h3 className="truncate text-sm font-semibold text-slate-800">{appointment.patient.name}</h3>
-                      <p className="truncate text-sm text-slate-500">{appointment.doctor.name}</p>
+                  <div className="min-w-0 space-y-2.5">
+                    <div className="space-y-1.5">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500">Paciente:</span>
+                        <h3 className="truncate text-lg font-semibold text-slate-800">{appointment.patient.name}</h3>
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500">Médico:</span>
+                        <p className="truncate text-sm font-medium text-slate-700">{appointment.doctor.name}</p>
+                      </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700">

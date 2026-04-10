@@ -141,16 +141,16 @@ export default function MedicosCatalogo({
                     name={doctor.name}
                     imageUrl={doctor.avatarImageUrl}
                     sex={doctor.sex}
-                    className="h-24 w-20 rounded-2xl"
+                    className="h-28 w-24 rounded-2xl"
                   />
                   <div className="min-w-0 flex-1 self-center">
-                    <h3 className="truncate text-lg font-semibold leading-tight text-slate-800">{doctor.name}</h3>
-                    <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                    <h3 className="truncate text-[1.4rem] font-semibold leading-tight text-slate-800">{doctor.name}</h3>
+                    <div className="mt-2.5 flex items-center gap-2 whitespace-nowrap">
                       <Badge variant="secondary" className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700 hover:bg-blue-50">
                         <Stethoscope className="mr-1 size-3" />
                         {doctor.specialty}
                       </Badge>
-                      <Badge variant="outline" className="rounded-full text-[11px]">CRM {doctor.crm}</Badge>
+                      <Badge variant="outline" className="rounded-full px-2.5 py-1 text-[10px] font-medium">CRM {doctor.crm}</Badge>
                     </div>
                   </div>
                 </div>

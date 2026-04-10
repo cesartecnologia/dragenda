@@ -34,12 +34,12 @@ export default function ClinicBrandHeader({ clinic }: Props) {
           ) : null}
           <div className="space-y-0.5">
             <h1 className="text-[1.32rem] font-semibold leading-tight text-slate-800 md:text-[1.48rem]">{clinic.name}</h1>
-            <div className="text-[0.76rem] font-normal leading-tight text-slate-500 md:text-[0.8rem]">
-              <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
+            <div className="space-y-0.5 text-[0.76rem] font-normal leading-tight text-slate-500 md:text-[0.8rem]">
+              <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5">
                 {clinic.cnpj ? <span>CNPJ: {formatCnpj(clinic.cnpj)}</span> : null}
                 {clinic.phoneNumber ? <span>Telefone: {formatPhoneNumber(clinic.phoneNumber)}</span> : null}
-                {clinic.address ? <span>{clinic.address}</span> : null}
               </div>
+              {clinic.address ? <div>{clinic.address}</div> : null}
             </div>
           </div>
         </div>
