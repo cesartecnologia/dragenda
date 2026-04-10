@@ -164,9 +164,20 @@ export const findUserProfileByAsaasSubscriptionId = async (asaasSubscriptionId: 
 
 export const findEmployeeByEmail = async (email: string): Promise<Employee | null> => {
   const normalizedEmail = email.trim().toLowerCase();
-  const snapshot = await getFirestoreDb().collection(COLLECTIONS.employees).where('email', '==', normalizedEmail).where('active', '==', true).limit(1).get();
-  const [employee] = fromQuery<Employee>(snapshot);
-  return employee ?? null;
+
+  try {
+    const snapshot = await getFirestoreDb()
+      .collection(COLLECTIONS.employees)
+      .where('email', '==', normalizedEmail)
+      .where('active', '==', true)
+      .limit(1)
+      .get();
+    const [employee] = fromQuery<Employee>(snapshot);
+    return employee ?? null;
+  } catch (error) {
+    console.error('EMPLOYEE_LOOKUP_FAILED', error);
+    return null;
+  }
 };
 
 export const upsertUserProfile = async (params: {
