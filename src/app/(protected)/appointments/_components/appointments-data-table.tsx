@@ -21,6 +21,7 @@ import { appointmentsTable, clinicsTable, doctorsTable, patientsTable, type Appo
 import { buildAppointmentWhatsappText } from '@/helpers/appointment-message';
 import { formatCurrencyInCents } from '@/helpers/currency';
 import { openAppointmentPrintPopup } from '@/helpers/open-appointment-print-popup';
+import { formatPhoneNumber } from '@/helpers/format';
 import { formatDateTimeBr } from '@/helpers/time';
 import { canManageFinancialActions, isAdminRole } from '@/lib/access';
 
@@ -202,25 +203,23 @@ export default function AppointmentsDataTable({
             <Card key={appointment.id} className="overflow-hidden border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
               <CardHeader className="border-b border-slate-100 bg-slate-50/60 px-5 py-6">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0 flex-1 pt-1">
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-28 w-24 shrink-0 items-center justify-center overflow-hidden">
-                        <Image
-                          src={getSexAvatarIcon(appointment.patient.sex)}
-                          alt={appointment.patient.sex === 'female' ? 'Ícone paciente feminina' : 'Ícone paciente masculino'}
-                          width={140}
-                          height={168}
-                          className="h-full w-full object-contain"
-                        />
+                  <div className="flex min-w-0 flex-1 items-start gap-4">
+                    <div className="flex h-28 w-24 shrink-0 items-center justify-center overflow-hidden">
+                      <Image
+                        src={getSexAvatarIcon(appointment.patient.sex)}
+                        alt={appointment.patient.sex === 'female' ? 'Ícone paciente feminina' : 'Ícone paciente masculino'}
+                        width={140}
+                        height={168}
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1 space-y-4 pt-1">
+                      <div className="space-y-1.5">
+                        <h3 className="truncate text-[2rem] font-semibold leading-none tracking-[-0.02em] text-slate-800">{appointment.patient.name}</h3>
+                        <p className="truncate text-sm font-medium text-slate-500">{formatPhoneNumber(appointment.patient.phoneNumber)}</p>
                       </div>
-                      <div className="min-w-0 flex-1 space-y-3">
-                        <div className="space-y-1.5">
-                          <h3 className="truncate text-[2rem] font-semibold leading-none tracking-[-0.02em] text-slate-800">{appointment.patient.name}</h3>
-                          <div className="flex items-baseline gap-2 text-sm text-slate-600">
-                            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Médico:</span>
-                            <p className="truncate text-lg font-medium text-slate-700">{appointment.doctor.name}</p>
-                          </div>
-                        </div>
+                      <div className="space-y-3">
+                        <p className="truncate text-base font-medium text-slate-700">Médico: {appointment.doctor.name}</p>
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="inline-flex min-h-9 items-center rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
                             {appointment.doctor.specialty}
