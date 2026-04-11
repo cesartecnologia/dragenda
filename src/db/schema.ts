@@ -90,7 +90,7 @@ export interface PatientRecord {
 }
 
 export type AppointmentPaymentMethod = 'cash' | 'pix' | 'card' | 'insurance' | 'other';
-export type AppointmentStatus = 'scheduled' | 'cancelled';
+export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled';
 
 export interface AppointmentRecord {
   id: string;

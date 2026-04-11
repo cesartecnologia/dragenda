@@ -831,6 +831,7 @@ export const getDashboardData = async (params: { clinicId: string; from: string;
   const chartAppointments = activeAppointments.filter((appointment) => inDateRange(appointment.date, chartStartDate, chartEndDate));
   const todayAppointments = activeAppointments.filter((appointment) => inDateRange(appointment.date, todayStart, todayEnd));
   const paidAppointmentsInRange = appointmentsInRange.filter((appointment) => appointment.paymentConfirmed && appointment.paymentDate && inDateRange(appointment.paymentDate, fromDate, toDate));
+  const completedAppointmentsInRange = appointmentsInRange.filter((appointment) => appointment.status === 'completed');
 
   const doctorAppointmentCount = appointmentsInRange.reduce<Record<string, number>>((acc, appointment) => {
     acc[appointment.doctorId] = (acc[appointment.doctorId] ?? 0) + 1;
@@ -887,6 +888,7 @@ export const getDashboardData = async (params: { clinicId: string; from: string;
     totalAppointments: { total: appointmentsInRange.length },
     totalPatients: { total: patients.length },
     totalDoctors: { total: doctors.length },
+    completedAppointments: { total: completedAppointmentsInRange.length },
     topDoctors,
     topSpecialties,
     todayAppointments: sortByDateDesc(todayAppointments),

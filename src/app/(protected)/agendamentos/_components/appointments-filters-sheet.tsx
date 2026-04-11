@@ -16,6 +16,7 @@ interface AppointmentsFiltersSheetProps {
   q: string;
   doctor: string;
   payment: string;
+  status: string;
   from: string;
   to: string;
 }
@@ -25,10 +26,11 @@ export default function AppointmentsFiltersSheet({
   q,
   doctor,
   payment,
+  status,
   from,
   to,
 }: AppointmentsFiltersSheetProps) {
-  const activeFiltersCount = [doctor !== 'all', payment !== 'all', Boolean(from), Boolean(to)].filter(Boolean).length;
+  const activeFiltersCount = [doctor !== 'all', payment !== 'all', status !== 'all', Boolean(from), Boolean(to)].filter(Boolean).length;
   const clearHref = q ? `/agendamentos?q=${encodeURIComponent(q)}` : '/agendamentos';
 
   return (
@@ -81,6 +83,21 @@ export default function AppointmentsFiltersSheet({
                 <option value="all">Todos os status</option>
                 <option value="confirmed">Pagamento confirmado</option>
                 <option value="pending">Pagamento pendente</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="status">Situação da consulta</Label>
+              <select
+                id="status"
+                name="status"
+                defaultValue={status}
+                className="flex h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
+              >
+                <option value="all">Todas as situações</option>
+                <option value="scheduled">Agendada</option>
+                <option value="completed">Consulta concluída</option>
+                <option value="cancelled">Cancelada</option>
               </select>
             </div>
 

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 import { useAction } from 'next-safe-action/hooks';
-import { Ban, CalendarRange, EditIcon, MessageCircle, Printer, Receipt, RotateCcw, TrashIcon } from 'lucide-react';
+import { Ban, CalendarRange, CheckCircle2, EditIcon, MessageCircle, Printer, Receipt, RotateCcw, TrashIcon, Undo2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { deleteAppointment } from '@/actions/delete-appointment';
@@ -39,6 +39,7 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
   const [editingOpen, setEditingOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
+  const [completionOpen, setCompletionOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<AppointmentPaymentMethod>(appointment.paymentMethod ?? 'pix');
 
@@ -63,6 +64,7 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
     onSuccess: () => {
       toast.success('Status do agendamento atualizado com sucesso.');
       setStatusOpen(false);
+      setCompletionOpen(false);
     },
     onError: () => toast.error('Não foi possível atualizar o status do agendamento.'),
   });
@@ -97,6 +99,14 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
       label: 'Remarcar horário',
       icon: CalendarRange,
       onClick: () => setEditingOpen(true),
+    },
+    {
+      key: 'complete',
+      label: appointment.status === 'completed' ? 'Reabrir como agendada' : 'Consulta concluída',
+      icon: appointment.status === 'completed' ? Undo2 : CheckCircle2,
+      className: 'border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800',
+      hidden: appointment.status === 'cancelled',
+      onClick: () => setCompletionOpen(true),
     },
     {
       key: 'status',
@@ -190,6 +200,25 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={completionOpen} onOpenChange={setCompletionOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{appointment.status === 'completed' ? 'Reabrir consulta' : 'Concluir consulta'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {appointment.status === 'completed'
+                ? 'A consulta voltará a ficar como agendada para acompanhamento no sistema.'
+                : 'Deseja marcar esta consulta como concluída? Ela continuará no histórico da clínica.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Fechar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => changeStatusAction.execute({ appointmentId: appointment.id, status: appointment.status === 'completed' ? 'scheduled' : 'completed' })}>
+              {appointment.status === 'completed' ? 'Reabrir' : 'Concluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={statusOpen} onOpenChange={setStatusOpen}>
         <AlertDialogContent>

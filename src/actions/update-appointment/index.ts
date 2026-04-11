@@ -30,7 +30,7 @@ export const updateAppointmentPayment = actionClient
   });
 
 export const changeAppointmentStatus = actionClient
-  .schema(z.object({ appointmentId: z.string().uuid(), status: z.enum(['scheduled', 'cancelled']) }))
+  .schema(z.object({ appointmentId: z.string().uuid(), status: z.enum(['scheduled', 'completed', 'cancelled']) }))
   .action(async ({ parsedInput }) => {
     const session = await auth.api.getSession();
     if (!session?.user) throw new Error('Unauthorized');

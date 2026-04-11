@@ -3,6 +3,7 @@ import {
   DollarSignIcon,
   PercentIcon,
   ReceiptIcon,
+  Stethoscope,
   UserIcon,
   UsersIcon,
 } from 'lucide-react';
@@ -15,6 +16,7 @@ interface StatsCardsProps {
   totalAppointments: number;
   totalPatients: number;
   totalDoctors: number;
+  completedAppointments?: number;
   pendingRevenue?: number | null;
   collectionRate?: number | null;
 }
@@ -24,6 +26,7 @@ const StatsCards = ({
   totalAppointments,
   totalPatients,
   totalDoctors,
+  completedAppointments = 0,
   pendingRevenue,
   collectionRate,
 }: StatsCardsProps) => {
@@ -52,6 +55,11 @@ const StatsCards = ({
       title: 'Em aberto',
       value: pendingRevenue ? formatCurrencyInCents(pendingRevenue) : 'R$ 0,00',
       icon: ReceiptIcon,
+    },
+    {
+      title: 'Consultas concluídas',
+      value: completedAppointments.toString(),
+      icon: Stethoscope,
     },
     {
       title: 'Taxa de recebimento',

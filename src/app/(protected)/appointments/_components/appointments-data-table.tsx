@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 
 import { useAction } from 'next-safe-action/hooks';
-import { Ban, CalendarRange, EditIcon, MessageCircle, Printer, Receipt, RotateCcw, Stethoscope, TrashIcon, Wallet } from 'lucide-react';
+import { Ban, CalendarRange, CheckCircle2, EditIcon, MessageCircle, Printer, Receipt, RotateCcw, Stethoscope, TrashIcon, Undo2, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { deleteAppointment } from '@/actions/delete-appointment';
@@ -50,6 +50,7 @@ export default function AppointmentsDataTable({
   const [editingAppointment, setEditingAppointment] = useState<AppointmentWithRelations | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AppointmentWithRelations | null>(null);
   const [statusTarget, setStatusTarget] = useState<AppointmentWithRelations | null>(null);
+  const [completionTarget, setCompletionTarget] = useState<AppointmentWithRelations | null>(null);
   const [paymentTarget, setPaymentTarget] = useState<AppointmentWithRelations | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<AppointmentPaymentMethod>('pix');
 
@@ -73,6 +74,7 @@ export default function AppointmentsDataTable({
     onSuccess: () => {
       toast.success('Status do agendamento atualizado com sucesso.');
       setStatusTarget(null);
+      setCompletionTarget(null);
     },
     onError: () => toast.error('Não foi possível atualizar o status do agendamento.'),
   });
@@ -105,6 +107,13 @@ export default function AppointmentsDataTable({
       label: 'Remarcar horário',
       icon: CalendarRange,
       onClick: () => setEditingAppointment(appointment),
+    },
+    {
+      key: 'complete',
+      label: appointment.status === 'completed' ? 'Reabrir como agendada' : 'Consulta concluída',
+      icon: appointment.status === 'completed' ? Undo2 : CheckCircle2,
+      hidden: appointment.status === 'cancelled',
+      onClick: () => setCompletionTarget(appointment),
     },
     {
       key: 'status',
@@ -172,7 +181,9 @@ export default function AppointmentsDataTable({
         {orderedAppointments.map((appointment) => {
           const statusBadge = appointment.status === 'cancelled'
             ? <span className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-medium text-red-700">Cancelado</span>
-            : <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">Confirmado</span>;
+            : appointment.status === 'completed'
+              ? <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700">Consulta concluída</span>
+              : <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">Agendado</span>;
 
           return (
             <Card key={appointment.id} className="overflow-hidden border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
@@ -269,6 +280,25 @@ export default function AppointmentsDataTable({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!completionTarget} onOpenChange={(open) => !open && setCompletionTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{completionTarget?.status === 'completed' ? 'Reabrir consulta' : 'Concluir consulta'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {completionTarget?.status === 'completed'
+                ? 'A consulta voltará a ficar como agendada para acompanhamento no sistema.'
+                : 'Deseja marcar esta consulta como concluída? Ela continuará no histórico da clínica.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Fechar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => completionTarget && changeStatusAction.execute({ appointmentId: completionTarget.id, status: completionTarget.status === 'completed' ? 'scheduled' : 'completed' })}>
+              {completionTarget?.status === 'completed' ? 'Reabrir' : 'Concluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!statusTarget} onOpenChange={(open) => !open && setStatusTarget(null)}>
         <AlertDialogContent>

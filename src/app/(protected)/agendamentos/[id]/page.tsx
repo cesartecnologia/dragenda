@@ -29,7 +29,9 @@ interface Props {
 const statusBadgeClassName = (appointment: AppointmentWithRelations) =>
   appointment.status === 'cancelled'
     ? 'border-red-200 bg-red-50 text-red-700'
-    : 'border-emerald-200 bg-emerald-50 text-emerald-700';
+    : appointment.status === 'completed'
+      ? 'border-blue-200 bg-blue-50 text-blue-700'
+      : 'border-emerald-200 bg-emerald-50 text-emerald-700';
 
 export default async function AgendamentoDetalhesPage({ params }: Props) {
   const session = await requireSubscribedSession();
@@ -167,6 +169,11 @@ export default async function AgendamentoDetalhesPage({ params }: Props) {
                       {cancelledBy?.name ?? 'Usuário da clínica'}
                       {currentAppointment.cancelledAt ? ` em ${formatDateTimeBr(currentAppointment.cancelledAt)}` : ''}.
                     </p>
+                  </div>
+                ) : currentAppointment.status === 'completed' ? (
+                  <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-blue-700">
+                    <p className="font-medium">Consulta concluída</p>
+                    <p className="mt-1 text-sm">Este atendimento foi marcado como concluído e segue disponível no histórico.</p>
                   </div>
                 ) : null}
               </CardContent>

@@ -27,7 +27,9 @@ export const getAppointmentsTableColumns = (params: {
     header: 'Status',
     cell: ({ row }) => row.original.status === 'cancelled'
       ? <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">Cancelado</Badge>
-      : <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">Confirmado</Badge>,
+      : row.original.status === 'completed'
+        ? <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">Consulta concluída</Badge>
+        : <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">Agendado</Badge>,
   },
   {
     id: 'actions',

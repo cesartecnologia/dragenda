@@ -46,6 +46,7 @@ export default async function PainelPage({ searchParams }: DashboardPageProps) {
           totalPatients={dashboard.totalPatients.total}
           totalDoctors={dashboard.totalDoctors.total}
           pendingRevenue={dashboard.pendingRevenue?.total ? Number(dashboard.pendingRevenue.total) : 0}
+          completedAppointments={dashboard.completedAppointments?.total ?? 0}
           collectionRate={dashboard.collectionRate ?? 0}
         />
         <div className="grid gap-4 xl:grid-cols-[2.25fr_1fr]">

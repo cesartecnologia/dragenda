@@ -14,7 +14,7 @@ import AddAppointmentButton from '../appointments/_components/add-appointment-bu
 import AppointmentsDataTable from '../appointments/_components/appointments-data-table';
 
 interface Props {
-  searchParams: Promise<{ q?: string; doctor?: string; payment?: string; from?: string; to?: string }>;
+  searchParams: Promise<{ q?: string; doctor?: string; payment?: string; status?: string; from?: string; to?: string }>;
 }
 
 export default async function AgendamentosPage({ searchParams }: Props) {
@@ -22,7 +22,7 @@ export default async function AgendamentosPage({ searchParams }: Props) {
   const clinicId = session.user.clinic!.id;
   const role = session.user.role;
   const rawSearchParams = await searchParams;
-  const { q = '', doctor = 'all', payment = 'all', from = '', to = '' } = rawSearchParams;
+  const { q = '', doctor = 'all', payment = 'all', status = 'all', from = '', to = '' } = rawSearchParams;
   const [clinic, patients, doctors, allAppointments] = await Promise.all([
     getClinicById(clinicId),
     listPatientsByClinicId(clinicId),
@@ -31,7 +31,8 @@ export default async function AgendamentosPage({ searchParams }: Props) {
   ]);
 
   const normalizedQuery = normalizeSearchText(q);
-  const hasAdvancedFilters = doctor !== 'all' || payment !== 'all' || Boolean(from) || Boolean(to);
+  const hasAdvancedFilters = doctor !== 'all' || payment !== 'all' || status !== 'all' || Boolean(from) || Boolean(to);
+  const showResultsSummary = Boolean(normalizedQuery) || hasAdvancedFilters;
 
   const filteredAppointments = allAppointments.filter((appointment) => {
     const matchesQuery = !normalizedQuery
@@ -40,10 +41,11 @@ export default async function AgendamentosPage({ searchParams }: Props) {
       || normalizeSearchText(appointment.doctor.specialty).includes(normalizedQuery);
     const matchesDoctor = doctor === 'all' || appointment.doctorId === doctor;
     const matchesPayment = payment === 'all' ? true : payment === 'confirmed' ? appointment.paymentConfirmed : !appointment.paymentConfirmed;
+    const matchesStatus = status === 'all' || appointment.status === status;
     const matchesFrom = from ? dayjs(appointment.date).isAfter(dayjs(from).subtract(1, 'day')) : true;
     const matchesTo = to ? dayjs(appointment.date).isBefore(dayjs(to).add(1, 'day')) : true;
 
-    return matchesQuery && matchesDoctor && matchesPayment && matchesFrom && matchesTo;
+    return matchesQuery && matchesDoctor && matchesPayment && matchesStatus && matchesFrom && matchesTo;
   });
 
   const selectedDoctor = doctors.find((item) => item.id === doctor);
@@ -66,12 +68,12 @@ export default async function AgendamentosPage({ searchParams }: Props) {
               <DebouncedSearchForm
                 placeholder="Buscar paciente, médico ou especialidade"
                 initialValue={q}
-                preserveParams={['doctor', 'payment', 'from', 'to']}
+                preserveParams={['doctor', 'payment', 'status', 'from', 'to']}
               />
             </div>
 
             <div className="flex items-center gap-2">
-              <AppointmentsFiltersSheet doctors={doctors} q={q} doctor={doctor} payment={payment} from={from} to={to} />
+              <AppointmentsFiltersSheet doctors={doctors} q={q} doctor={doctor} payment={payment} status={status} from={from} to={to} />
               {hasAdvancedFilters ? (
                 <Button type="button" variant="ghost" className="rounded-xl" asChild>
                   <Link href={q ? `/agendamentos?q=${encodeURIComponent(q)}` : '/agendamentos'}>Limpar filtros</Link>
@@ -80,12 +82,12 @@ export default async function AgendamentosPage({ searchParams }: Props) {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-col gap-3 border-t pt-4 text-sm text-muted-foreground lg:flex-row lg:items-center lg:justify-between">
-            <span>
-              {filteredAppointments.length} {filteredAppointments.length === 1 ? 'agendamento encontrado' : 'agendamentos encontrados'}
-            </span>
+          {showResultsSummary ? (
+            <div className="mt-4 flex flex-col gap-3 border-t pt-4 text-sm text-muted-foreground lg:flex-row lg:items-center lg:justify-between">
+              <span>
+                {filteredAppointments.length} {filteredAppointments.length === 1 ? 'agendamento encontrado' : 'agendamentos encontrados'}
+              </span>
 
-            {hasAdvancedFilters ? (
               <div className="flex flex-wrap gap-2">
                 {selectedDoctor ? <Badge variant="secondary">Médico: {selectedDoctor.name}</Badge> : null}
                 {payment !== 'all' ? (
@@ -93,11 +95,16 @@ export default async function AgendamentosPage({ searchParams }: Props) {
                     {payment === 'confirmed' ? 'Pagamento confirmado' : 'Pagamento pendente'}
                   </Badge>
                 ) : null}
+                {status !== 'all' ? (
+                  <Badge variant="secondary">
+                    {status === 'scheduled' ? 'Agendada' : status === 'completed' ? 'Consulta concluída' : 'Cancelada'}
+                  </Badge>
+                ) : null}
                 {from ? <Badge variant="secondary">De: {dayjs(from).format('DD/MM/YYYY')}</Badge> : null}
                 {to ? <Badge variant="secondary">Até: {dayjs(to).format('DD/MM/YYYY')}</Badge> : null}
               </div>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
         </div>
 
         <AppointmentsDataTable data={filteredAppointments} patients={patients} doctors={doctors} role={role} clinic={clinic} variant="cards" />

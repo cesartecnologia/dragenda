@@ -37,7 +37,7 @@ export type AppointmentPdfData = {
   paymentConfirmed: boolean;
   paymentMethod?: string | null;
   paymentDate?: string | null;
-  status: 'scheduled' | 'cancelled';
+  status: 'scheduled' | 'completed' | 'cancelled';
   notes?: string | null;
   cancelledAt?: string | null;
 };
@@ -60,7 +60,7 @@ export type ReportAppointmentRow = {
   paymentConfirmed: boolean;
   paymentMethod?: string | null;
   valueInCents: number;
-  status: 'scheduled' | 'cancelled';
+  status: 'scheduled' | 'completed' | 'cancelled';
 };
 
 export type ReportPdfInput = {

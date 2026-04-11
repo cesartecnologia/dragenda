@@ -6,19 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageActions, PageContainer, PageContent, PageHeader, PageHeaderContent, PageTitle } from '@/components/ui/page-container';
 import { requireSubscribedSession } from '@/lib/auth';
 import { normalizeSearchText } from '@/helpers/format';
-import { listSpecialtiesByClinicId } from '@/server/clinic-data';
+import { listSpecialtiesByClinicId, searchSpecialtiesByClinicId } from '@/server/clinic-data';
 
 import AddSpecialtyButton from './_components/add-specialty-button';
 import SpecialtiesDataTable from './_components/specialties-data-table';
+
+export const dynamic = 'force-dynamic';
 
 interface Props { searchParams: Promise<{ q?: string }> }
 
 export default async function EspecialidadesPage({ searchParams }: Props) {
   const session = await requireSubscribedSession();
   const { q = '' } = await searchParams;
-  const specialties = await listSpecialtiesByClinicId(session.user.clinic!.id);
   const normalized = normalizeSearchText(q);
-  const filtered = normalized ? specialties.filter((item) => normalizeSearchText(item.name).includes(normalized)) : specialties;
+  const filtered = normalized
+    ? await searchSpecialtiesByClinicId(session.user.clinic!.id, q)
+    : await listSpecialtiesByClinicId(session.user.clinic!.id);
 
   return (
     <PageContainer>

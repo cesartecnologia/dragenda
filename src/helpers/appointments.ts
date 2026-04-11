@@ -11,5 +11,6 @@ export const getAppointmentPaymentMethodLabel = (value?: AppointmentPaymentMetho
 
 export const getAppointmentStatusLabel = (status?: AppointmentStatus | null) => {
   if (status === 'cancelled') return 'Cancelado';
+  if (status === 'completed') return 'Consulta concluída';
   return 'Agendado';
 };
