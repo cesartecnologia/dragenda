@@ -144,6 +144,11 @@ export default function AppointmentsDataTable({
     },
   ];
 
+  const orderedAppointments = useMemo(
+    () => [...data].sort((left, right) => new Date(left.date).getTime() - new Date(right.date).getTime()),
+    [data],
+  );
+
   const columns = useMemo(
     () => getAppointmentsTableColumns({
       renderActions: (appointment) => (
@@ -164,7 +169,7 @@ export default function AppointmentsDataTable({
 
     return (
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {data.map((appointment) => {
+        {orderedAppointments.map((appointment) => {
           const statusBadge = appointment.status === 'cancelled'
             ? <span className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-medium text-red-700">Cancelado</span>
             : <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">Confirmado</span>;
@@ -220,7 +225,7 @@ export default function AppointmentsDataTable({
 
   return (
     <>
-      {variant === 'cards' ? renderCards() : <DataTable data={data} columns={columns} />}
+      {variant === 'cards' ? renderCards() : <DataTable data={orderedAppointments} columns={columns} />}
 
       <AddAppointmentForm isOpen={!!editingAppointment} appointment={editingAppointment ?? undefined} patients={patients} doctors={doctors} onSuccess={() => setEditingAppointment(null)} onClose={() => setEditingAppointment(null)} />
 
