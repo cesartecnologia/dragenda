@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import Image from 'next/image';
 
 import { useAction } from 'next-safe-action/hooks';
-import { Ban, CalendarRange, CheckCircle2, EditIcon, MessageCircle, Printer, Receipt, RotateCcw, TrashIcon, Undo2, UserRound, Wallet } from 'lucide-react';
+import { Ban, CalendarRange, CheckCircle2, EditIcon, MessageCircle, Printer, Receipt, RotateCcw, Stethoscope, TrashIcon, Undo2, UserRound, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { deleteAppointment } from '@/actions/delete-appointment';
@@ -201,7 +201,7 @@ export default function AppointmentsDataTable({
 
           return (
             <Card key={appointment.id} className="overflow-hidden border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-              <CardHeader className="border-b border-slate-100 bg-slate-50/60 px-5 py-6">
+              <CardHeader className="border-b border-slate-100 bg-slate-50/60 px-5 py-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex min-w-0 flex-1 items-start gap-4">
                     <div className="flex h-28 w-24 shrink-0 items-center justify-center overflow-hidden">
@@ -213,16 +213,10 @@ export default function AppointmentsDataTable({
                         className="h-full w-full object-contain"
                       />
                     </div>
-                    <div className="min-w-0 flex-1 space-y-4 pt-1">
-                      <div className="space-y-1.5">
-                        <h3 className="truncate text-[2rem] font-semibold leading-none tracking-[-0.02em] text-slate-800">{appointment.patient.name}</h3>
+                    <div className="min-w-0 flex-1 pt-3">
+                      <div className="space-y-1">
+                        <h3 className="truncate text-[1.85rem] font-semibold leading-tight tracking-[-0.02em] text-slate-800">{appointment.patient.name}</h3>
                         <p className="truncate text-sm font-medium text-slate-500">{formatPhoneNumber(appointment.patient.phoneNumber)}</p>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-flex min-h-9 items-center rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
-                          {appointment.doctor.specialty}
-                        </span>
-                        {statusBadge}
                       </div>
                     </div>
                   </div>
@@ -232,7 +226,14 @@ export default function AppointmentsDataTable({
                 </div>
               </CardHeader>
               <CardContent className="space-y-3 px-5 py-5 text-sm text-slate-600">
-                <div className="flex items-center gap-2"><UserRound className="size-4 text-slate-400" /><span>Médico: {appointment.doctor.name}</span></div>
+                <div className="flex items-center gap-2"><UserRound className="size-4 text-slate-400" /><span>{appointment.doctor.name}</span></div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex min-h-9 items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
+                    <Stethoscope className="size-4" />
+                    {appointment.doctor.specialty}
+                  </span>
+                  {statusBadge}
+                </div>
                 <div className="flex items-center gap-2"><CalendarRange className="size-4 text-slate-400" /><span>{formatDateTimeBr(appointment.date)}</span></div>
                 <div className="flex items-center gap-2"><Wallet className="size-4 text-slate-400" /><span>{formatCurrencyInCents(appointment.appointmentPriceInCents)}</span></div>
                 <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-500">

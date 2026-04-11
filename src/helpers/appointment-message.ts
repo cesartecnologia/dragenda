@@ -51,7 +51,7 @@ export const buildAppointmentWhatsappText = ({
     '',
     isCancelled
       ? 'Seu agendamento foi cancelado. Se precisar, fale com a clínica para reagendar.'
-      : 'Para alterações ou orientações adicionais, entre em contato com a clínica.',
+      : 'Qualquer dúvida, fale com a clínica.',
   ].filter(Boolean);
 
   return lines.join('\n');
