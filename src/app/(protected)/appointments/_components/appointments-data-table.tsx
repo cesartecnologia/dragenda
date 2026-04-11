@@ -201,21 +201,21 @@ export default function AppointmentsDataTable({
 
           return (
             <Card key={appointment.id} className="overflow-hidden border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-              <CardHeader className="border-b border-slate-100 bg-slate-50/60 px-5 py-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex min-w-0 flex-1 items-start gap-4">
-                    <div className="flex h-28 w-24 shrink-0 items-center justify-center overflow-hidden">
+              <CardHeader className="border-b border-slate-100 bg-slate-50/60 px-4 py-3">
+                <div className="flex items-start justify-between gap-2.5">
+                  <div className="flex min-w-0 flex-1 items-start gap-2.5">
+                    <div className="flex h-14 w-11 shrink-0 items-center justify-center overflow-hidden">
                       <Image
                         src={getSexAvatarIcon(appointment.patient.sex)}
                         alt={appointment.patient.sex === 'female' ? 'Ícone paciente feminina' : 'Ícone paciente masculino'}
-                        width={140}
-                        height={168}
+                        width={64}
+                        height={88}
                         className="h-full w-full object-contain"
                       />
                     </div>
-                    <div className="min-w-0 flex-1 pt-3">
+                    <div className="min-w-0 flex-1 pt-0.5">
                       <div className="space-y-1">
-                        <h3 className="truncate text-[1.85rem] font-semibold leading-tight tracking-[-0.02em] text-slate-800">{appointment.patient.name}</h3>
+                        <h3 className="truncate text-[1.52rem] font-semibold leading-tight tracking-[-0.02em] text-slate-800">{appointment.patient.name}</h3>
                         <p className="truncate text-sm font-medium text-slate-500">{formatPhoneNumber(appointment.patient.phoneNumber)}</p>
                       </div>
                     </div>
