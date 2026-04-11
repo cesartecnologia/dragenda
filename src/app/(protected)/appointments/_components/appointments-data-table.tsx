@@ -194,10 +194,10 @@ export default function AppointmentsDataTable({
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {orderedAppointments.map((appointment) => {
           const statusBadge = appointment.status === 'cancelled'
-            ? <span className="inline-flex min-h-9 items-center rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700">Cancelado</span>
+            ? <span className="inline-flex min-h-9 items-center rounded-full bg-red-50 px-4 py-2 text-sm font-medium text-red-700">Cancelado</span>
             : appointment.status === 'completed'
-              ? <span className="inline-flex min-h-9 items-center rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">Consulta concluída</span>
-              : <span className="inline-flex min-h-9 items-center rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">Agendado</span>;
+              ? <span className="inline-flex min-h-9 items-center rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">Consulta concluída</span>
+              : <span className="inline-flex min-h-9 items-center rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">Agendado</span>;
 
           return (
             <Card key={appointment.id} className="overflow-hidden border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
@@ -226,14 +226,14 @@ export default function AppointmentsDataTable({
                 </div>
               </CardHeader>
               <CardContent className="space-y-3 px-5 py-5 text-sm text-slate-600">
-                <div className="flex items-center gap-2"><UserRound className="size-4 text-slate-400" /><span>{appointment.doctor.name}</span></div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="inline-flex min-h-9 items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
-                    <Stethoscope className="size-4" />
-                    {appointment.doctor.specialty}
+                    <UserRound className="size-4" />
+                    {appointment.doctor.name}
                   </span>
                   {statusBadge}
                 </div>
+                <div className="flex items-center gap-2"><Stethoscope className="size-4 text-slate-400" /><span>{appointment.doctor.specialty}</span></div>
                 <div className="flex items-center gap-2"><CalendarRange className="size-4 text-slate-400" /><span>{formatDateTimeBr(appointment.date)}</span></div>
                 <div className="flex items-center gap-2"><Wallet className="size-4 text-slate-400" /><span>{formatCurrencyInCents(appointment.appointmentPriceInCents)}</span></div>
                 <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-500">
