@@ -10,15 +10,23 @@ import ClinicSettingsForm from './_components/clinic-settings-form';
 export default async function ConfiguracoesClinicaPage() {
   const session = await requireSession();
   if (!canAccessClinicSettings(session.user.role)) redirect('/agendamentos');
+
   const clinic = session.user.clinic?.id ? await getClinicById(session.user.clinic.id) : null;
+
   return (
     <PageContainer>
       <PageHeader>
         <PageHeaderContent>
-          <PageTitle>Configurações da clínica</PageTitle>
+          <PageTitle>Cadastro da empresa</PageTitle>
         </PageHeaderContent>
       </PageHeader>
-      <PageContent><ClinicSettingsForm clinic={clinic} /></PageContent>
+      <PageContent>
+        <ClinicSettingsForm
+          clinic={clinic}
+          defaultResponsibleName={session.user.name}
+          defaultResponsibleEmail={session.user.email}
+        />
+      </PageContent>
     </PageContainer>
   );
 }

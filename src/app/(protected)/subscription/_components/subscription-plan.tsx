@@ -3,6 +3,7 @@
 
 import { CheckCircle2, CreditCard, Loader2, ShieldCheck } from 'lucide-react';
 import { useAction } from 'next-safe-action/hooks';
+import { toast } from 'sonner';
 
 import { createAsaasCheckout } from '@/actions/create-asaas-checkout';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +30,9 @@ export function SubscriptionPlan({
     onSuccess: ({ data }) => {
       if (!data?.checkoutUrl) throw new Error('Link do checkout não encontrado.');
       window.location.href = data.checkoutUrl;
+    },
+    onError: ({ error }) => {
+      toast.error(error.serverError ?? 'Não foi possível gerar o checkout Asaas.');
     },
   });
 

@@ -28,6 +28,8 @@ export interface UserRecord {
   updatedAt: Date;
 }
 
+export type ClinicCompanyType = 'MEI' | 'LIMITED' | 'INDIVIDUAL' | 'ASSOCIATION';
+
 export interface ClinicRecord {
   id: string;
   name: string;
@@ -36,6 +38,15 @@ export interface ClinicRecord {
   phoneNumber: string | null;
   logoUrl: string | null;
   cloudinaryPublicId: string | null;
+  responsibleName: string | null;
+  responsibleEmail: string | null;
+  responsibleCpf: string | null;
+  companyType: ClinicCompanyType | null;
+  postalCode: string | null;
+  addressNumber: string | null;
+  complement: string | null;
+  province: string | null;
+  website: string | null;
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;
   asaasCustomerId: string | null;
