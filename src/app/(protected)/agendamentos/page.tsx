@@ -4,7 +4,7 @@ import Link from 'next/link';
 import DebouncedSearchForm from '@/components/common/debounced-search-form';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PageActions, PageContainer, PageContent, PageHeader, PageHeaderContent, PageTitle } from '@/components/ui/page-container';
+import { PageContainer, PageContent, PageHeader, PageHeaderContent, PageTitle } from '@/components/ui/page-container';
 import { normalizeSearchText } from '@/helpers/format';
 import { requireSubscribedSession } from '@/lib/auth';
 import { getClinicById, listAppointmentsByClinicIdWithRelations, listDoctorsByClinicId, listPatientsByClinicId } from '@/server/clinic-data';
@@ -56,9 +56,6 @@ export default async function AgendamentosPage({ searchParams }: Props) {
         <PageHeaderContent>
           <PageTitle>Agendamentos</PageTitle>
         </PageHeaderContent>
-        <PageActions>
-          <AddAppointmentButton patients={patients} doctors={doctors} />
-        </PageActions>
       </PageHeader>
 
       <PageContent className="space-y-4">
@@ -72,7 +69,8 @@ export default async function AgendamentosPage({ searchParams }: Props) {
               />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <AddAppointmentButton patients={patients} doctors={doctors} />
               <AppointmentsFiltersSheet doctors={doctors} q={q} doctor={doctor} payment={payment} status={status} from={from} to={to} />
               {hasAdvancedFilters ? (
                 <Button type="button" variant="ghost" className="rounded-xl" asChild>

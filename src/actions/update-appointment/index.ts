@@ -3,7 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
+import dayjs from 'dayjs';
+
 import { auth } from '@/lib/auth';
+import { isAdminRole } from '@/lib/access';
 import { actionClient } from '@/lib/next-safe-action';
 import { confirmAppointmentPayment, getAppointmentById, setAppointmentStatus } from '@/server/clinic-data';
 
@@ -37,6 +40,16 @@ export const changeAppointmentStatus = actionClient
 
     const appointment = await getAppointmentById(parsedInput.appointmentId);
     if (!appointment || appointment.clinicId !== session.user.clinic?.id) throw new Error('Appointment not found');
+
+    const isAdmin = isAdminRole(session.user.role);
+
+    if (parsedInput.status === 'completed' && dayjs(appointment.date).isAfter(dayjs())) {
+      throw new Error('A consulta só pode ser concluída no horário agendado ou depois dele.');
+    }
+
+    if (parsedInput.status === 'scheduled' && ['completed', 'cancelled'].includes(appointment.status) && !isAdmin) {
+      throw new Error('Somente administradores podem reabrir este agendamento.');
+    }
 
     await setAppointmentStatus({
       appointmentId: parsedInput.appointmentId,

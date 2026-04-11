@@ -149,14 +149,14 @@ export default function MedicosCatalogo({
                     className="h-28 w-24 rounded-2xl"
                   />
                   <div className="min-w-0 flex-1 self-center">
-                    <h3 className="truncate text-[1.4rem] font-semibold leading-tight text-slate-800">{doctor.name}</h3>
+                    <h3 className="truncate text-[1.6rem] font-semibold leading-tight text-slate-800">{doctor.name}</h3>
                     <div className="mt-2.5 space-y-2">
-                      <Badge variant="secondary" className="max-w-full rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700 hover:bg-blue-50">
-                        <Stethoscope className="mr-1 size-3 shrink-0" />
-                        <span className="truncate">{doctor.specialty}</span>
-                      </Badge>
+                      <div className="inline-flex max-w-full items-start gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700">
+                        <Stethoscope className="mt-0.5 size-3 shrink-0" />
+                        <span className="line-clamp-2 break-words leading-4">{doctor.specialty}</span>
+                      </div>
                       <div>
-                        <Badge variant="outline" className="rounded-full px-2.5 py-1 text-[10px] font-medium">CRM {doctor.crm}</Badge>
+                        <span className="inline-flex rounded-full border border-slate-200 px-2.5 py-1 text-[10px] font-medium text-slate-600">CRM {doctor.crm}</span>
                       </div>
                     </div>
                   </div>

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
 import { auth } from '@/lib/auth';
+import { isAdminRole } from '@/lib/access';
 import { actionClient } from '@/lib/next-safe-action';
 import { deleteAppointmentRecord, getAppointmentById } from '@/server/clinic-data';
 
@@ -24,6 +25,10 @@ export const deleteAppointment = actionClient
 
     if (!appointment || appointment.clinicId != session.user.clinic?.id) {
       throw new Error('Appointment not found');
+    }
+
+    if (!isAdminRole(session.user.role)) {
+      throw new Error('Somente administradores podem excluir agendamentos.');
     }
 
     await deleteAppointmentRecord(parsedInput.id);

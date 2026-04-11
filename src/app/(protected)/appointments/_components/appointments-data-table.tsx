@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from 'react';
 
+import dayjs from 'dayjs';
+
 import { useAction } from 'next-safe-action/hooks';
 import { Ban, CalendarRange, CheckCircle2, EditIcon, MessageCircle, Printer, Receipt, RotateCcw, Stethoscope, TrashIcon, Undo2, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
@@ -19,7 +21,7 @@ import { buildAppointmentWhatsappText } from '@/helpers/appointment-message';
 import { formatCurrencyInCents } from '@/helpers/currency';
 import { openAppointmentPrintPopup } from '@/helpers/open-appointment-print-popup';
 import { formatDateTimeBr } from '@/helpers/time';
-import { canDeleteRecords, canManageFinancialActions } from '@/lib/access';
+import { canManageFinancialActions, isAdminRole } from '@/lib/access';
 
 import AddAppointmentForm from './add-appointment-form';
 import AppointmentRowActions from './appointment-row-actions';
@@ -31,6 +33,8 @@ type AppointmentWithRelations = typeof appointmentsTable.$inferSelect & {
 };
 
 type ClinicSummary = Pick<typeof clinicsTable.$inferSelect, 'name' | 'phoneNumber' | 'address' | 'cnpj' | 'logoUrl'>;
+
+const canCompleteAppointmentAt = (value: Date | string) => !dayjs(value).isAfter(dayjs());
 
 export default function AppointmentsDataTable({
   data,
@@ -54,12 +58,14 @@ export default function AppointmentsDataTable({
   const [paymentTarget, setPaymentTarget] = useState<AppointmentWithRelations | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<AppointmentPaymentMethod>('pix');
 
+  const isAdmin = isAdminRole(role);
+
   const deleteAppointmentAction = useAction(deleteAppointment, {
     onSuccess: () => {
       toast.success('Agendamento excluído com sucesso.');
       setDeleteTarget(null);
     },
-    onError: () => toast.error('Erro ao excluir agendamento.'),
+    onError: ({ error }) => toast.error(error.serverError ?? 'Erro ao excluir agendamento.'),
   });
 
   const confirmPaymentAction = useAction(updateAppointmentPayment, {
@@ -76,7 +82,7 @@ export default function AppointmentsDataTable({
       setStatusTarget(null);
       setCompletionTarget(null);
     },
-    onError: () => toast.error('Não foi possível atualizar o status do agendamento.'),
+    onError: ({ error }) => toast.error(error.serverError ?? 'Não foi possível atualizar o status do agendamento.'),
   });
 
   const renderWhatsapp = (appointment: AppointmentWithRelations) => {
@@ -112,13 +118,17 @@ export default function AppointmentsDataTable({
       key: 'complete',
       label: appointment.status === 'completed' ? 'Reabrir como agendada' : 'Consulta concluída',
       icon: appointment.status === 'completed' ? Undo2 : CheckCircle2,
-      hidden: appointment.status === 'cancelled',
+      hidden:
+        appointment.status === 'cancelled'
+        || (appointment.status === 'completed' && !isAdmin)
+        || (appointment.status !== 'completed' && !canCompleteAppointmentAt(appointment.date)),
       onClick: () => setCompletionTarget(appointment),
     },
     {
       key: 'status',
       label: appointment.status === 'cancelled' ? 'Reativar agendamento' : 'Cancelar agendamento',
       icon: appointment.status === 'cancelled' ? RotateCcw : Ban,
+      hidden: appointment.status === 'cancelled' && !isAdmin,
       onClick: () => setStatusTarget(appointment),
     },
     {
@@ -147,7 +157,7 @@ export default function AppointmentsDataTable({
       key: 'delete',
       label: 'Excluir agendamento',
       icon: TrashIcon,
-      hidden: !canDeleteRecords(role),
+      hidden: !isAdmin,
       destructive: true,
       onClick: () => setDeleteTarget(appointment),
     },
@@ -288,7 +298,7 @@ export default function AppointmentsDataTable({
             <AlertDialogDescription>
               {completionTarget?.status === 'completed'
                 ? 'A consulta voltará a ficar como agendada para acompanhamento no sistema.'
-                : 'Deseja marcar esta consulta como concluída? Ela continuará no histórico da clínica.'}
+                : 'Deseja marcar esta consulta como concluída?'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

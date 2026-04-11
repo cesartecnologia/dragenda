@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+import dayjs from 'dayjs';
+
 import { useAction } from 'next-safe-action/hooks';
 import { Ban, CalendarRange, CheckCircle2, EditIcon, MessageCircle, Printer, Receipt, RotateCcw, TrashIcon, Undo2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -15,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { appointmentsTable, clinicsTable, doctorsTable, patientsTable, type AppointmentPaymentMethod, type UserRole } from '@/db/schema';
 import { buildAppointmentWhatsappText } from '@/helpers/appointment-message';
 import { openAppointmentPrintPopup } from '@/helpers/open-appointment-print-popup';
-import { canDeleteRecords, canManageFinancialActions } from '@/lib/access';
+import { canManageFinancialActions, isAdminRole } from '@/lib/access';
 
 import AddAppointmentForm from '../../../appointments/_components/add-appointment-form';
 import AppointmentActionsGrid from '../../../appointments/_components/appointment-actions-grid';
@@ -26,6 +28,8 @@ type AppointmentWithRelations = typeof appointmentsTable.$inferSelect & {
 };
 
 type ClinicSummary = Pick<typeof clinicsTable.$inferSelect, 'name' | 'phoneNumber' | 'address' | 'cnpj' | 'logoUrl'>;
+
+const canCompleteAppointmentAt = (value: Date | string) => !dayjs(value).isAfter(dayjs());
 
 interface Props {
   appointment: AppointmentWithRelations;
@@ -43,13 +47,15 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<AppointmentPaymentMethod>(appointment.paymentMethod ?? 'pix');
 
+  const isAdmin = isAdminRole(role);
+
   const deleteAppointmentAction = useAction(deleteAppointment, {
     onSuccess: () => {
       toast.success('Agendamento excluído com sucesso.');
       setDeleteOpen(false);
       window.location.href = '/agendamentos';
     },
-    onError: () => toast.error('Erro ao excluir agendamento.'),
+    onError: ({ error }) => toast.error(error.serverError ?? 'Erro ao excluir agendamento.'),
   });
 
   const confirmPaymentAction = useAction(updateAppointmentPayment, {
@@ -66,7 +72,7 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
       setStatusOpen(false);
       setCompletionOpen(false);
     },
-    onError: () => toast.error('Não foi possível atualizar o status do agendamento.'),
+    onError: ({ error }) => toast.error(error.serverError ?? 'Não foi possível atualizar o status do agendamento.'),
   });
 
   const handleWhatsapp = () => {
@@ -105,7 +111,10 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
       label: appointment.status === 'completed' ? 'Reabrir como agendada' : 'Consulta concluída',
       icon: appointment.status === 'completed' ? Undo2 : CheckCircle2,
       className: 'border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800',
-      hidden: appointment.status === 'cancelled',
+      hidden:
+        appointment.status === 'cancelled'
+        || (appointment.status === 'completed' && !isAdmin)
+        || (appointment.status !== 'completed' && !canCompleteAppointmentAt(appointment.date)),
       onClick: () => setCompletionOpen(true),
     },
     {
@@ -115,6 +124,7 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
       className: appointment.status === 'cancelled'
         ? 'border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800'
         : 'border-amber-200 text-amber-700 hover:bg-amber-50 hover:text-amber-800',
+      hidden: appointment.status === 'cancelled' && !isAdmin,
       onClick: () => setStatusOpen(true),
     },
   ];
@@ -149,7 +159,7 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
       label: 'Excluir agendamento',
       icon: TrashIcon,
       className: 'border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700',
-      hidden: !canDeleteRecords(role),
+      hidden: !isAdmin,
       onClick: () => setDeleteOpen(true),
     },
   ];
@@ -208,7 +218,7 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
             <AlertDialogDescription>
               {appointment.status === 'completed'
                 ? 'A consulta voltará a ficar como agendada para acompanhamento no sistema.'
-                : 'Deseja marcar esta consulta como concluída? Ela continuará no histórico da clínica.'}
+                : 'Deseja marcar esta consulta como concluída?'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

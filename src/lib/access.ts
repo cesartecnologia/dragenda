@@ -58,3 +58,5 @@ export const canManagePatients = (role?: UserRole | null) => ['master', 'support
 export const canManageDoctors = (role?: UserRole | null) => ['master', 'support', 'owner', 'admin', 'attendant'].includes(role ?? 'owner');
 export const canManageAppointments = (role?: UserRole | null) => ['master', 'support', 'owner', 'admin', 'attendant'].includes(role ?? 'owner');
 export const canDeleteRecords = (role?: UserRole | null) => ['master', 'support', 'owner', 'admin'].includes(role ?? 'owner');
+
+export const isAdminRole = (role?: UserRole | null) => role === 'admin';
