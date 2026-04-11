@@ -3,9 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import dayjs from 'dayjs';
+import Image from 'next/image';
 
 import { useAction } from 'next-safe-action/hooks';
-import { Ban, CalendarRange, CheckCircle2, EditIcon, MessageCircle, Printer, Receipt, RotateCcw, Stethoscope, TrashIcon, Undo2, Wallet } from 'lucide-react';
+import { Ban, CalendarRange, CheckCircle2, EditIcon, MessageCircle, Printer, Receipt, RotateCcw, TrashIcon, Undo2, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { deleteAppointment } from '@/actions/delete-appointment';
@@ -16,7 +17,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { DataTable } from '@/components/ui/data-table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { appointmentsTable, clinicsTable, doctorsTable, patientsTable, type AppointmentPaymentMethod, type UserRole } from '@/db/schema';
+import { appointmentsTable, clinicsTable, doctorsTable, patientsTable, type AppointmentPaymentMethod, type PatientSex, type UserRole } from '@/db/schema';
 import { buildAppointmentWhatsappText } from '@/helpers/appointment-message';
 import { formatCurrencyInCents } from '@/helpers/currency';
 import { openAppointmentPrintPopup } from '@/helpers/open-appointment-print-popup';
@@ -35,6 +36,8 @@ type AppointmentWithRelations = typeof appointmentsTable.$inferSelect & {
 type ClinicSummary = Pick<typeof clinicsTable.$inferSelect, 'name' | 'phoneNumber' | 'address' | 'cnpj' | 'logoUrl'>;
 
 const canCompleteAppointmentAt = (value: Date | string) => !dayjs(value).isAfter(dayjs());
+
+const getSexAvatarIcon = (sex?: PatientSex | null) => (sex === 'female' ? '/icons/doctor-female.svg' : '/icons/doctor-male.svg');
 
 export default function AppointmentsDataTable({
   data,
@@ -199,23 +202,35 @@ export default function AppointmentsDataTable({
             <Card key={appointment.id} className="overflow-hidden border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
               <CardHeader className="border-b border-slate-100 bg-slate-50/60 p-4">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 space-y-2.5">
-                    <div className="space-y-1.5">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500">Paciente:</span>
-                        <h3 className="truncate text-lg font-semibold text-slate-800">{appointment.patient.name}</h3>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-16 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-100">
+                        <Image
+                          src={getSexAvatarIcon(appointment.patient.sex)}
+                          alt={appointment.patient.sex === 'female' ? 'Ícone paciente feminina' : 'Ícone paciente masculino'}
+                          width={96}
+                          height={120}
+                          className="h-full w-full object-contain"
+                        />
                       </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500">Médico:</span>
-                        <p className="truncate text-sm font-medium text-slate-700">{appointment.doctor.name}</p>
+                      <div className="min-w-0 flex-1 space-y-2.5">
+                        <div className="space-y-1.5">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500">Paciente:</span>
+                            <h3 className="truncate text-xl font-semibold text-slate-800">{appointment.patient.name}</h3>
+                          </div>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500">Médico:</span>
+                            <p className="truncate text-sm font-medium text-slate-700">{appointment.doctor.name}</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700">
+                            {appointment.doctor.specialty}
+                          </span>
+                          {statusBadge}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700">
-                        <Stethoscope className="mr-1 size-3" />
-                        {appointment.doctor.specialty}
-                      </span>
-                      {statusBadge}
                     </div>
                   </div>
                   <div onClick={(event) => event.stopPropagation()}>
