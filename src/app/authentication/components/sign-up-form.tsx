@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
+import { PatternFormat } from 'react-number-format';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -27,6 +28,18 @@ const registerSchema = z.object({
   name: z.string().trim().min(1, { message: 'Nome é obrigatório' }),
   email: z.string().trim().min(1, { message: 'E-mail é obrigatório' }).email({ message: 'E-mail inválido' }),
   password: z.string().trim().min(8, { message: 'A senha deve ter pelo menos 8 caracteres' }),
+  clinicName: z.string().trim().min(1, { message: 'Nome da clínica é obrigatório' }),
+  clinicCnpj: z
+    .string()
+    .trim()
+    .min(14, { message: 'CNPJ é obrigatório' })
+    .refine((value) => value.replace(/\D/g, '').length === 14, { message: 'CNPJ inválido' }),
+  clinicPhoneNumber: z
+    .string()
+    .trim()
+    .min(10, { message: 'Telefone é obrigatório' })
+    .refine((value) => value.replace(/\D/g, '').length >= 10, { message: 'Telefone inválido' }),
+  clinicAddress: z.string().trim().min(1, { message: 'Endereço é obrigatório' }),
 });
 
 const SignUpForm = () => {
@@ -37,6 +50,10 @@ const SignUpForm = () => {
       name: '',
       email: '',
       password: '',
+      clinicName: '',
+      clinicCnpj: '',
+      clinicPhoneNumber: '',
+      clinicAddress: '',
     },
   });
 
@@ -46,10 +63,14 @@ const SignUpForm = () => {
         email: values.email,
         password: values.password,
         name: values.name,
+        clinicName: values.clinicName,
+        clinicCnpj: values.clinicCnpj,
+        clinicPhoneNumber: values.clinicPhoneNumber,
+        clinicAddress: values.clinicAddress,
       },
       {
         onSuccess: () => {
-          router.push('/painel');
+          router.push('/configuracoes/clinica?onboarding=1');
           router.refresh();
         },
         onError: (ctx) => {
@@ -57,7 +78,7 @@ const SignUpForm = () => {
             case 'USER_ALREADY_EXISTS':
               toast.error('E-mail já cadastrado.');
               return;
-                        case 'WEAK_PASSWORD':
+            case 'WEAK_PASSWORD':
               toast.error('A senha não atende à política do Firebase.');
               return;
             case 'INVALID_API_KEY':
@@ -67,13 +88,14 @@ const SignUpForm = () => {
               toast.error('Falha de rede ao falar com o Firebase.');
               return;
             case 'REGISTER_FAILED':
-              toast.error('Não foi possível criar o usuário no servidor. Verifique o Firebase Admin.', { duration: 10000 });
+              toast.error('Não foi possível criar o usuário no servidor. Verifique o Firebase Admin.', {
+                duration: 10000,
+              });
               return;
             case 'ACCOUNT_CREATED_BUT_SESSION_FAILED':
-              toast.error(
-                'Usuário criado, mas a sessão do servidor falhou. Tente fazer login novamente.',
-                { duration: 10000 },
-              );
+              toast.error('Usuário criado, mas a sessão do servidor falhou. Tente fazer login novamente.', {
+                duration: 10000,
+              });
               return;
             default:
               toast.error(ctx.error.message || 'Erro ao criar conta.', {
@@ -90,44 +112,113 @@ const SignUpForm = () => {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <CardHeader>
-            <CardTitle>Criar usuário</CardTitle>
-            <CardDescription>Criação de usuário pelo servidor e login com e-mail e senha.</CardDescription>
+            <CardTitle>Criar conta da clínica</CardTitle>
+            <CardDescription>
+              Cadastre o responsável e os dados principais da clínica para liberar a assinatura no Asaas.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome do responsável</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digite o nome" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>E-mail</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digite o e-mail" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Senha</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digite a senha" type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="clinicName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome da clínica</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digite o nome da clínica" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="clinicCnpj"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CNPJ</FormLabel>
+                    <FormControl>
+                      <PatternFormat
+                        customInput={Input}
+                        format="##.###.###/####-##"
+                        value={field.value ?? ''}
+                        onValueChange={(value) => field.onChange(value.value)}
+                        placeholder="00.000.000/0000-00"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="clinicPhoneNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone da clínica</FormLabel>
+                    <FormControl>
+                      <PatternFormat
+                        customInput={Input}
+                        format="(##) #####-####"
+                        value={field.value ?? ''}
+                        onValueChange={(value) => field.onChange(value.value)}
+                        placeholder="(11) 99999-9999"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
-              name="name"
+              name="clinicAddress"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nome</FormLabel>
+                  <FormLabel>Endereço da clínica</FormLabel>
                   <FormControl>
-                    <Input placeholder="Digite o nome" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>E-mail</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Digite o e-mail" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Senha</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Digite a senha" type="password" {...field} />
+                    <Input placeholder="Rua, número, bairro, cidade e CEP" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -136,11 +227,7 @@ const SignUpForm = () => {
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
             <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                'Criar conta'
-              )}
+              {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Criar conta'}
             </Button>
             <p className="text-muted-foreground text-center text-sm">
               Já tem acesso?{' '}

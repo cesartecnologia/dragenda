@@ -9,8 +9,6 @@ const PLAN_NAME = 'essential';
 const PLAN_LABEL = 'Plano Profissional';
 const PLAN_VALUE = Number(process.env.ASAAS_PLAN_VALUE ?? '99');
 
-const onlyDigits = (value?: string | null) => (value ?? '').replace(/\D/g, '');
-
 export const createAsaasCheckout = actionClient.action(async () => {
   const session = await requireSession();
 
@@ -38,38 +36,16 @@ export const createAsaasCheckout = actionClient.action(async () => {
 
   if (!clinicId || !clinic) throw new Error('Clínica não encontrada.');
 
-  const customerDocument = onlyDigits(clinic.cnpj) || onlyDigits(clinic.responsibleCpf);
-  const customerEmail = (clinic.responsibleEmail ?? session.user.email).trim();
-  const customerPhone = onlyDigits(clinic.phoneNumber);
-  const customerName = clinic.name || clinic.responsibleName || session.user.name;
-
-  const missingFields = [
-    !clinic.name?.trim() ? 'nome da clínica' : null,
-    !customerDocument ? 'CPF/CNPJ do cadastro' : null,
-    !customerPhone ? 'telefone da clínica' : null,
-    !customerEmail ? 'e-mail do responsável' : null,
-  ].filter(Boolean);
-
-  if (missingFields.length) {
-    throw new Error(
-      `Complete o cadastro da empresa antes de gerar o checkout Asaas: ${missingFields.join(', ')}. Acesse Configurações > Clínica.`,
-    );
+  if (!clinic.cnpj || !clinic.phoneNumber) {
+    throw new Error('Complete o CNPJ e o telefone da clínica antes de assinar.');
   }
 
   const customer = await upsertAsaasCustomer({
     asaasCustomerId: clinic.asaasCustomerId ?? userProfile.asaasCustomerId,
-    name: customerName,
-    email: customerEmail,
-    cpfCnpj: customerDocument,
-    mobilePhone: customerPhone,
-    company: clinic.name,
-    postalCode: clinic.postalCode,
-    address: clinic.address,
-    addressNumber: clinic.addressNumber,
-    complement: clinic.complement,
-    province: clinic.province,
-    externalReference: clinic.id,
-    companyType: clinic.companyType,
+    name: clinic.name || session.user.name,
+    email: session.user.email,
+    cpfCnpj: clinic.cnpj,
+    mobilePhone: clinic.phoneNumber,
   });
 
   await updateUserAsaasSubscription(session.user.id, {

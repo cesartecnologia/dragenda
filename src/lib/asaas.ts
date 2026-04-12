@@ -1,5 +1,3 @@
-import { type ClinicCompanyType } from '@/db/schema';
-
 export type AsaasCustomer = {
   id: string;
   name?: string;
@@ -41,10 +39,6 @@ export type AsaasSubscriptionPayment = {
 
 const trimSlash = (value: string) => value.replace(/\/+$/, '');
 const onlyDigits = (value?: string | null) => (value ?? '').replace(/\D/g, '');
-const normalizeText = (value?: string | null) => {
-  const normalized = value?.trim() ?? '';
-  return normalized || undefined;
-};
 
 export const getAsaasApiBaseUrl = () => {
   const configured = process.env.ASAAS_API_BASE_URL?.trim();
@@ -107,29 +101,12 @@ export const upsertAsaasCustomer = async (params: {
   email: string;
   cpfCnpj?: string | null;
   mobilePhone?: string | null;
-  company?: string | null;
-  postalCode?: string | null;
-  address?: string | null;
-  addressNumber?: string | null;
-  complement?: string | null;
-  province?: string | null;
-  externalReference?: string | null;
-  companyType?: ClinicCompanyType | null;
 }) => {
   const payload = {
     name: params.name,
     email: params.email,
     cpfCnpj: onlyDigits(params.cpfCnpj) || undefined,
     mobilePhone: onlyDigits(params.mobilePhone) || undefined,
-    company: normalizeText(params.company),
-    postalCode: onlyDigits(params.postalCode) || undefined,
-    address: normalizeText(params.address),
-    addressNumber: normalizeText(params.addressNumber),
-    complement: normalizeText(params.complement),
-    province: normalizeText(params.province),
-    externalReference: normalizeText(params.externalReference),
-    notificationDisabled: true,
-    ...(params.companyType ? { personType: 'JURIDICA' as const, companyType: params.companyType } : {}),
   };
 
   if (params.asaasCustomerId) {
@@ -183,7 +160,7 @@ export const createAsaasRecurringCheckout = async (params: {
       subscription: {
         cycle: 'MONTHLY',
         nextDueDate,
-      },
+      }
     }),
     headers: getHeaders(true),
   });

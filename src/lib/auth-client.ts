@@ -19,6 +19,16 @@ type CallbackContext = {
   };
 };
 
+type SignUpValues = {
+  email: string;
+  password: string;
+  name: string;
+  clinicName: string;
+  clinicCnpj: string;
+  clinicPhoneNumber: string;
+  clinicAddress: string;
+};
+
 const normalizeErrorCode = (code?: string) => {
   switch (code) {
     case 'auth/email-already-in-use':
@@ -89,7 +99,6 @@ const exchangeIdTokenForSession = async (user: User) => {
   await firebaseSignOut(firebaseAuth);
 };
 
-
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const signInWithRetry = async (email: string, password: string) => {
@@ -158,7 +167,7 @@ export const authClient = {
   },
   signUp: {
     email: async (
-      values: { email: string; password: string; name: string },
+      values: SignUpValues,
       callbacks?: {
         onSuccess?: () => void;
         onError?: (ctx: CallbackContext) => void;
@@ -180,7 +189,15 @@ export const authClient = {
 
         await setPersistence(firebaseAuth, inMemoryPersistence);
         const credentials = await signInWithRetry(values.email, values.password);
-        await exchangeIdTokenForSession(credentials.user);
+        try {
+          await exchangeIdTokenForSession(credentials.user);
+        } catch (sessionError) {
+          throw new Error(
+            sessionError instanceof Error
+              ? `ACCOUNT_CREATED_BUT_SESSION_FAILED:${sessionError.message}`
+              : 'ACCOUNT_CREATED_BUT_SESSION_FAILED',
+          );
+        }
         callbacks?.onSuccess?.();
       } catch (error) {
         callbacks?.onError?.({
@@ -189,21 +206,10 @@ export const authClient = {
       }
     },
   },
-  signOut: async (options?: {
-    fetchOptions?: {
-      onSuccess?: () => void;
-      onError?: () => void;
-    };
-  }) => {
-    try {
-      await fetch('/api/session/logout', {
-        method: 'POST',
-      });
-      await firebaseSignOut(firebaseAuth);
-      options?.fetchOptions?.onSuccess?.();
-    } catch {
-      options?.fetchOptions?.onError?.();
-    }
+  signOut: async () => {
+    await fetch('/api/session/logout', {
+      method: 'POST',
+    });
   },
   useSession: () => {
     const [data, setData] = useState<AppSession | null>(null);
