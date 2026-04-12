@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { getAdminAuth } from '@/lib/firebase-admin';
-import { createClinicForUser, upsertUserProfile } from '@/server/clinic-data';
+import { createClinicForUser, updateClinicSettings, upsertUserProfile } from '@/server/clinic-data';
 
 const validateEmail = (email: string) => /.+@.+\..+/.test(email);
 const onlyDigits = (value?: string) => (value ?? '').replace(/\D/g, '');
@@ -18,6 +18,8 @@ export const POST = async (request: Request) => {
       clinicAddress?: string;
       clinicAddressNumber?: string;
       clinicAddressComplement?: string;
+      clinicPostalCode?: string;
+      clinicProvince?: string;
     };
 
     const name = body.name?.trim();
@@ -29,6 +31,8 @@ export const POST = async (request: Request) => {
     const clinicAddress = body.clinicAddress?.trim();
     const clinicAddressNumber = body.clinicAddressNumber?.trim();
     const clinicAddressComplement = body.clinicAddressComplement?.trim() || null;
+    const clinicPostalCode = onlyDigits(body.clinicPostalCode);
+    const clinicProvince = body.clinicProvince?.trim();
 
     if (!name) {
       return NextResponse.json({ error: 'MISSING_NAME' }, { status: 400 });
@@ -42,25 +46,13 @@ export const POST = async (request: Request) => {
       return NextResponse.json({ error: 'WEAK_PASSWORD' }, { status: 400 });
     }
 
-    if (!clinicName) {
-      return NextResponse.json({ error: 'MISSING_CLINIC_NAME' }, { status: 400 });
-    }
-
-    if (!clinicCnpj || clinicCnpj.length !== 14) {
-      return NextResponse.json({ error: 'MISSING_CLINIC_CNPJ' }, { status: 400 });
-    }
-
-    if (!clinicPhoneNumber || clinicPhoneNumber.length < 10) {
-      return NextResponse.json({ error: 'MISSING_CLINIC_PHONE' }, { status: 400 });
-    }
-
-    if (!clinicAddress) {
-      return NextResponse.json({ error: 'MISSING_CLINIC_ADDRESS' }, { status: 400 });
-    }
-
-    if (!clinicAddressNumber) {
-      return NextResponse.json({ error: 'MISSING_CLINIC_ADDRESS_NUMBER' }, { status: 400 });
-    }
+    if (!clinicName) return NextResponse.json({ error: 'MISSING_CLINIC_NAME' }, { status: 400 });
+    if (!clinicCnpj) return NextResponse.json({ error: 'MISSING_CLINIC_CNPJ' }, { status: 400 });
+    if (!clinicPhoneNumber) return NextResponse.json({ error: 'MISSING_CLINIC_PHONE' }, { status: 400 });
+    if (!clinicAddress) return NextResponse.json({ error: 'MISSING_CLINIC_ADDRESS' }, { status: 400 });
+    if (!clinicAddressNumber) return NextResponse.json({ error: 'MISSING_CLINIC_ADDRESS_NUMBER' }, { status: 400 });
+    if (!clinicPostalCode) return NextResponse.json({ error: 'MISSING_CLINIC_POSTAL_CODE' }, { status: 400 });
+    if (!clinicProvince) return NextResponse.json({ error: 'MISSING_CLINIC_PROVINCE' }, { status: 400 });
 
     const adminAuth = getAdminAuth();
     let user;
@@ -87,17 +79,22 @@ export const POST = async (request: Request) => {
       emailVerified: false,
     });
 
-    await createClinicForUser({
+    const clinic = await createClinicForUser({
       userId: user.uid,
       name: clinicName,
+    });
+
+    await updateClinicSettings(clinic.id, {
       cnpj: clinicCnpj,
       phoneNumber: clinicPhoneNumber,
       address: clinicAddress,
       addressNumber: clinicAddressNumber,
       addressComplement: clinicAddressComplement,
+      postalCode: clinicPostalCode,
+      province: clinicProvince,
     });
 
-    return NextResponse.json({ ok: true, uid: user.uid });
+    return NextResponse.json({ ok: true, uid: user.uid, clinicId: clinic.id });
   } catch (error: any) {
     return NextResponse.json(
       {

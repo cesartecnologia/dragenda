@@ -33,7 +33,9 @@ const registerSchema = z.object({
   clinicPhoneNumber: z.string().trim().min(10, { message: 'Telefone é obrigatório' }),
   clinicAddress: z.string().trim().min(1, { message: 'Logradouro é obrigatório' }),
   clinicAddressNumber: z.string().trim().min(1, { message: 'Número é obrigatório' }),
-  clinicAddressComplement: z.string().trim().optional(),
+  clinicAddressComplement: z.string().optional(),
+  clinicPostalCode: z.string().trim().min(8, { message: 'CEP é obrigatório' }),
+  clinicProvince: z.string().trim().min(1, { message: 'Bairro é obrigatório' }),
 });
 
 const SignUpForm = () => {
@@ -50,6 +52,8 @@ const SignUpForm = () => {
       clinicAddress: '',
       clinicAddressNumber: '',
       clinicAddressComplement: '',
+      clinicPostalCode: '',
+      clinicProvince: '',
     },
   });
 
@@ -65,10 +69,12 @@ const SignUpForm = () => {
         clinicAddress: values.clinicAddress,
         clinicAddressNumber: values.clinicAddressNumber,
         clinicAddressComplement: values.clinicAddressComplement,
+        clinicPostalCode: values.clinicPostalCode,
+        clinicProvince: values.clinicProvince,
       },
       {
         onSuccess: () => {
-          router.push('/pos-login');
+          router.push('/assinatura');
           router.refresh();
         },
         onError: (ctx) => {
@@ -86,19 +92,13 @@ const SignUpForm = () => {
               toast.error('Falha de rede ao falar com o Firebase.');
               return;
             case 'REGISTER_FAILED':
-              toast.error('Não foi possível criar o usuário no servidor. Verifique o Firebase Admin.', {
-                duration: 10000,
-              });
+              toast.error('Não foi possível criar o usuário no servidor. Verifique o Firebase Admin.', { duration: 10000 });
               return;
             case 'ACCOUNT_CREATED_BUT_SESSION_FAILED':
-              toast.error('Usuário criado, mas a sessão do servidor falhou. Tente fazer login novamente.', {
-                duration: 10000,
-              });
+              toast.error('Usuário criado, mas a sessão do servidor falhou. Tente fazer login novamente.', { duration: 10000 });
               return;
             default:
-              toast.error(ctx.error.message || 'Erro ao criar conta.', {
-                duration: 8000,
-              });
+              toast.error(ctx.error.message || 'Erro ao criar conta.', { duration: 8000 });
           }
         },
       },
@@ -110,48 +110,42 @@ const SignUpForm = () => {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <CardHeader>
-            <CardTitle>Criar usuário</CardTitle>
-            <CardDescription>Cadastre o responsável e a clínica para seguir direto para a assinatura.</CardDescription>
+            <CardTitle>Criar conta</CardTitle>
+            <CardDescription>Cadastre o responsável e os dados completos da clínica para seguir direto para a assinatura.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-semibold">Responsável</h3>
-                <p className="text-xs text-muted-foreground">Esses dados serão usados para criar seu acesso.</p>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Digite o nome" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>E-mail</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Digite o e-mail" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome do responsável</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digite o nome" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>E-mail</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digite o e-mail" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="password"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="md:col-span-2">
                     <FormLabel>Senha</FormLabel>
                     <FormControl>
                       <Input placeholder="Digite a senha" type="password" {...field} />
@@ -162,101 +156,126 @@ const SignUpForm = () => {
               />
             </div>
 
-            <div className="space-y-4 border-t pt-4">
-              <div>
-                <h3 className="text-sm font-semibold">Empresa</h3>
-                <p className="text-xs text-muted-foreground">Esses dados já entram no fluxo da assinatura com Asaas.</p>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="clinicName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome da clínica</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Digite o nome da clínica" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="clinicCnpj"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>CNPJ</FormLabel>
-                      <FormControl>
-                        <PatternFormat
-                          customInput={Input}
-                          format="##.###.###/####-##"
-                          value={field.value ?? ''}
-                          onValueChange={(value) => field.onChange(value.value)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="clinicPhoneNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Telefone</FormLabel>
-                      <FormControl>
-                        <PatternFormat
-                          customInput={Input}
-                          format="(##) #####-####"
-                          value={field.value ?? ''}
-                          onValueChange={(value) => field.onChange(value.value)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="clinicAddress"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Logradouro</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Rua, avenida, etc." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="clinicAddressNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Número</FormLabel>
-                      <FormControl>
-                        <Input placeholder="123" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="clinicAddressComplement"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Complemento</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Sala, bloco, andar" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="clinicName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome da clínica</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome da clínica" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="clinicCnpj"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CNPJ</FormLabel>
+                    <FormControl>
+                      <PatternFormat
+                        customInput={Input}
+                        format="##.###.###/####-##"
+                        value={field.value ?? ''}
+                        onValueChange={(value) => field.onChange(value.value)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="clinicPhoneNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone</FormLabel>
+                    <FormControl>
+                      <PatternFormat
+                        customInput={Input}
+                        format="(##) #####-####"
+                        value={field.value ?? ''}
+                        onValueChange={(value) => field.onChange(value.value)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="clinicPostalCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CEP</FormLabel>
+                    <FormControl>
+                      <PatternFormat
+                        customInput={Input}
+                        format="#####-###"
+                        value={field.value ?? ''}
+                        onValueChange={(value) => field.onChange(value.value)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="clinicAddress"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>Logradouro</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Rua, avenida, etc." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="clinicAddressNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Número</FormLabel>
+                    <FormControl>
+                      <Input placeholder="123" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="clinicProvince"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bairro</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Centro" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="clinicAddressComplement"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>Complemento</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Sala, bloco, conjunto..." {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-3">

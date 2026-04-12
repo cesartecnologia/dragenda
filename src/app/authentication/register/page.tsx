@@ -13,7 +13,7 @@ const RegisterPage = async () => {
 
   return (
     <div className="flex min-h-screen w-screen items-center justify-center p-4">
-      <div className="w-full max-w-4xl">
+      <div className="w-full max-w-3xl">
         <SignUpForm />
       </div>
     </div>

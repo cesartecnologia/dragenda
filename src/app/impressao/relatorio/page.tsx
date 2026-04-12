@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import AutoPrint from '@/components/common/auto-print';
 import PrintButton from '@/components/common/print-button';
 import { Button } from '@/components/ui/button';
+import { formatClinicAddress } from '@/helpers/clinic-address';
 import { formatCurrencyInCents } from '@/helpers/currency';
 import { formatCnpj, formatPhoneNumber } from '@/helpers/format';
 import { formatDateBr, formatDateTimeBr } from '@/helpers/time';
@@ -62,7 +63,7 @@ export default async function RelatorioImpressaoPage({ searchParams }: Props) {
               ) : null}
               <div className="flex-1">
                 <h1 className="text-lg font-bold uppercase tracking-wide">{clinic?.name ?? 'Clínica'}</h1>
-                {clinic?.address ? <div className="mt-1 text-[13px] leading-5 text-slate-700">{clinic.address}</div> : null}
+                {clinic ? (() => { const formattedClinicAddress = formatClinicAddress(clinic); return formattedClinicAddress ? <div className="mt-1 text-[13px] leading-5 text-slate-700">{formattedClinicAddress}</div> : null; })() : null}
                 <div className="text-[13px] leading-5 text-slate-700">
                   {clinic?.phoneNumber ? `Tel: ${formatPhoneNumber(clinic.phoneNumber)}` : null}
                   {clinic?.phoneNumber && clinic?.cnpj ? ' | ' : null}

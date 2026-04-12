@@ -13,27 +13,6 @@ export const formatCnpj = (value?: string | null) => {
   return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
 };
 
-export const formatClinicAddress = (clinic?: {
-  address?: string | null;
-  addressNumber?: string | null;
-  addressComplement?: string | null;
-} | null) => {
-  if (!clinic) return '';
-
-  const address = clinic.address?.trim() ?? '';
-  const number = clinic.addressNumber?.trim() ?? '';
-  const complement = clinic.addressComplement?.trim() ?? '';
-
-  if (!address && !number && !complement) return '';
-
-  return [
-    [address, number].filter(Boolean).join(', '),
-    complement,
-  ]
-    .filter(Boolean)
-    .join(' - ');
-};
-
 export const normalizeSearchText = (value?: string | null) =>
   (value ?? '')
     .normalize('NFD')

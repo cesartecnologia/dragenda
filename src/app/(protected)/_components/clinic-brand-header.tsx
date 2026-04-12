@@ -3,7 +3,8 @@
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
-import { formatClinicAddress, formatCnpj, formatPhoneNumber } from '@/helpers/format';
+import { formatCnpj, formatPhoneNumber } from '@/helpers/format';
+import { formatClinicAddress } from '@/helpers/clinic-address';
 
 interface Props {
   clinic: {
@@ -13,6 +14,8 @@ interface Props {
     address?: string | null;
     addressNumber?: string | null;
     addressComplement?: string | null;
+    province?: string | null;
+    postalCode?: string | null;
     logoUrl?: string | null;
   } | null;
 }
@@ -24,8 +27,6 @@ export default function ClinicBrandHeader({ clinic }: Props) {
 
   if (!clinic) return null;
   if (hiddenRoutes.some((route) => pathname.startsWith(route))) return null;
-
-  const fullAddress = formatClinicAddress(clinic);
 
   return (
     <div className="mx-auto mb-2 max-w-5xl px-6 pt-1">
@@ -43,7 +44,7 @@ export default function ClinicBrandHeader({ clinic }: Props) {
                 {clinic.cnpj ? <span>CNPJ: {formatCnpj(clinic.cnpj)}</span> : null}
                 {clinic.phoneNumber ? <span>Telefone: {formatPhoneNumber(clinic.phoneNumber)}</span> : null}
               </div>
-              {fullAddress ? <div>{fullAddress}</div> : null}
+              {formatClinicAddress(clinic) ? <div>{formatClinicAddress(clinic)}</div> : null}
             </div>
           </div>
         </div>

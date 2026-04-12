@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Building2, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useAction } from 'next-safe-action/hooks';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { PatternFormat } from 'react-number-format';
 import { toast } from 'sonner';
@@ -17,7 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { clinicsTable } from '@/db/schema';
-import { formatClinicAddress } from '@/helpers/format';
+import { formatClinicAddress, parseLegacyClinicAddress } from '@/helpers/clinic-address';
 
 const optionalTextField = z.string().optional();
 const optionalUrlField = z
@@ -34,6 +34,8 @@ const formSchema = z.object({
   address: optionalTextField,
   addressNumber: optionalTextField,
   addressComplement: optionalTextField,
+  postalCode: optionalTextField,
+  province: optionalTextField,
   phoneNumber: optionalTextField,
   logoUrl: optionalUrlField,
   cloudinaryPublicId: optionalTextField,
@@ -55,15 +57,18 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
   const [uploading, setUploading] = useState(false);
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+  const legacyAddress = useMemo(() => parseLegacyClinicAddress(clinic?.address), [clinic?.address]);
 
   const form = useForm<ClinicSettingsFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: clinic?.name ?? '',
       cnpj: clinic?.cnpj ?? '',
-      address: clinic?.address ?? '',
-      addressNumber: clinic?.addressNumber ?? '',
-      addressComplement: clinic?.addressComplement ?? '',
+      address: clinic?.address ?? legacyAddress.address ?? '',
+      addressNumber: clinic?.addressNumber ?? legacyAddress.addressNumber ?? '',
+      addressComplement: clinic?.addressComplement ?? legacyAddress.addressComplement ?? '',
+      postalCode: clinic?.postalCode ?? legacyAddress.postalCode ?? '',
+      province: clinic?.province ?? legacyAddress.province ?? '',
       phoneNumber: clinic?.phoneNumber ?? '',
       logoUrl: clinic?.logoUrl ?? '',
       cloudinaryPublicId: clinic?.cloudinaryPublicId ?? '',
@@ -103,23 +108,23 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
   };
 
   const handleSubmit = (values: ClinicSettingsFormValues) => {
-    const payload = {
-      name: values.name.trim(),
-      cnpj: normalizeOptionalText(values.cnpj),
-      address: normalizeOptionalText(values.address),
-      addressNumber: normalizeOptionalText(values.addressNumber),
-      addressComplement: normalizeOptionalText(values.addressComplement),
-      phoneNumber: normalizeOptionalText(values.phoneNumber),
-      logoUrl: normalizeOptionalUrl(values.logoUrl),
-      cloudinaryPublicId: normalizeOptionalText(values.cloudinaryPublicId),
-    };
-
     if (clinic) {
-      action.execute(payload);
+      action.execute({
+        name: values.name.trim(),
+        cnpj: normalizeOptionalText(values.cnpj),
+        address: normalizeOptionalText(values.address),
+        addressNumber: normalizeOptionalText(values.addressNumber),
+        addressComplement: normalizeOptionalText(values.addressComplement),
+        postalCode: normalizeOptionalText(values.postalCode),
+        province: normalizeOptionalText(values.province),
+        phoneNumber: normalizeOptionalText(values.phoneNumber),
+        logoUrl: normalizeOptionalUrl(values.logoUrl),
+        cloudinaryPublicId: normalizeOptionalText(values.cloudinaryPublicId),
+      });
       return;
     }
 
-    createClinic(payload.name);
+    createClinic(values.name.trim());
   };
 
   const logoUrl = form.watch('logoUrl');
@@ -130,6 +135,8 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
     address: form.watch('address'),
     addressNumber: form.watch('addressNumber'),
     addressComplement: form.watch('addressComplement'),
+    province: form.watch('province'),
+    postalCode: form.watch('postalCode'),
   });
 
   return (
@@ -139,7 +146,7 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
           <CardTitle>{clinic ? 'Dados da clínica' : 'Criar clínica'}</CardTitle>
           <CardDescription>
             {clinic
-              ? 'Atualize os dados principais e a identidade visual.'
+              ? 'Atualize os dados principais, o endereço completo exigido pelo Asaas e a identidade visual.'
               : 'Comece criando a clínica principal do sistema.'}
           </CardDescription>
         </CardHeader>
@@ -199,27 +206,33 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
                   )}
                 />
 
-                <div className="space-y-2">
-                  <FormLabel>Logo da clínica</FormLabel>
-                  <Input type="file" accept="image/*" onChange={(event) => handleUpload(event.target.files?.[0])} />
-                  {uploading ? <p className="text-sm text-muted-foreground">Enviando logo...</p> : null}
-                  {!logoUrl ? (
-                    <p className="text-sm text-muted-foreground">
-                      Use uma imagem nítida para a identidade visual da clínica.
-                    </p>
-                  ) : null}
-                </div>
-              </div>
+                <FormField
+                  control={form.control}
+                  name="postalCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CEP</FormLabel>
+                      <FormControl>
+                        <PatternFormat
+                          customInput={Input}
+                          format="#####-###"
+                          value={field.value ?? ''}
+                          onValueChange={(value) => field.onChange(value.value)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <div className="grid gap-4 md:grid-cols-[1fr_180px]">
                 <FormField
                   control={form.control}
                   name="address"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="md:col-span-2">
                       <FormLabel>Logradouro</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value ?? ''} placeholder="Rua, avenida, etc." />
+                        <Input {...field} value={field.value ?? ''} placeholder="Rua, avenida, travessa..." />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -239,21 +252,42 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
                     </FormItem>
                   )}
                 />
-              </div>
 
-              <FormField
-                control={form.control}
-                name="addressComplement"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Complemento</FormLabel>
-                    <FormControl>
-                      <Input {...field} value={field.value ?? ''} placeholder="Sala, bloco, andar" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="province"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bairro</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value ?? ''} placeholder="Centro" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="addressComplement"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Complemento</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value ?? ''} placeholder="Sala, bloco, conjunto..." />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="space-y-2 md:col-span-2">
+                  <FormLabel>Logo da clínica</FormLabel>
+                  <Input type="file" accept="image/*" onChange={(event) => handleUpload(event.target.files?.[0])} />
+                  {uploading ? <p className="text-sm text-muted-foreground">Enviando logo...</p> : null}
+                  {!logoUrl ? <p className="text-sm text-muted-foreground">Use uma imagem nítida para a identidade visual da clínica.</p> : null}
+                </div>
+              </div>
 
               <input type="hidden" {...form.register('logoUrl')} />
               <input type="hidden" {...form.register('cloudinaryPublicId')} />
@@ -279,13 +313,7 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
         <CardContent className="grid gap-4 md:grid-cols-[120px_1fr]">
           <div className="flex h-28 items-center justify-center overflow-hidden rounded-lg border bg-muted/30">
             {logoUrl ? (
-              <Image
-                src={logoUrl}
-                alt="Logo da clínica"
-                width={110}
-                height={70}
-                className="max-h-24 w-auto object-contain"
-              />
+              <Image src={logoUrl} alt="Logo da clínica" width={110} height={70} className="max-h-24 w-auto object-contain" />
             ) : (
               <span className="text-xs text-muted-foreground">Sem logo</span>
             )}
@@ -294,11 +322,7 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
             <p className="text-lg font-semibold">{previewName || 'Nome da clínica'}</p>
             {previewCnpj ? <p className="text-sm text-muted-foreground">CNPJ: {previewCnpj}</p> : null}
             {previewPhone ? <p className="text-sm text-muted-foreground">Telefone: {previewPhone}</p> : null}
-            {previewAddress ? (
-              <p className="text-sm text-muted-foreground">Endereço: {previewAddress}</p>
-            ) : (
-              <p className="text-sm text-muted-foreground">Informe logradouro e número para aparecer aqui.</p>
-            )}
+            {previewAddress ? <p className="text-sm text-muted-foreground">Endereço: {previewAddress}</p> : null}
           </div>
         </CardContent>
       </Card>

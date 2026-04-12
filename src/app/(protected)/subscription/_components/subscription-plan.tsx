@@ -1,3 +1,4 @@
+
 'use client';
 
 import { CheckCircle2, CreditCard, Loader2, ShieldCheck } from 'lucide-react';
@@ -31,7 +32,7 @@ export function SubscriptionPlan({
       window.location.href = data.checkoutUrl;
     },
     onError: ({ error }) => {
-      toast.error(error.serverError ?? 'Não foi possível gerar o checkout da assinatura.');
+      toast.error(error.serverError ?? 'Não foi possível gerar o checkout do Asaas.');
     },
   });
 
@@ -91,9 +92,7 @@ export function SubscriptionPlan({
         </div>
 
         <div className="mt-8 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground">
-          <p className="font-medium text-foreground">
-            O acesso da clínica é liberado automaticamente quando o Asaas confirmar o pagamento da assinatura.
-          </p>
+          <p className="font-medium text-foreground">O acesso da clínica é liberado automaticamente quando o Asaas confirmar o pagamento da assinatura.</p>
         </div>
 
         <div className="mt-6 space-y-3">
@@ -126,9 +125,7 @@ export function SubscriptionPlan({
               Seu perfil Master/Suporte ignora o bloqueio comercial e pode acessar o sistema sem assinatura ativa.
             </p>
           ) : (
-            <p className="text-center text-xs text-muted-foreground">
-              Cobrança recorrente mensal com confirmação e bloqueio automáticos via webhook do Asaas.
-            </p>
+            <p className="text-center text-xs text-muted-foreground">Cobrança recorrente mensal com confirmação e bloqueio automáticos via webhook do Asaas.</p>
           )}
         </div>
       </CardContent>

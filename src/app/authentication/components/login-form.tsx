@@ -108,7 +108,11 @@ const LoginForm = () => {
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
             <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Entrar'}
+              {form.formState.isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                'Entrar'
+              )}
             </Button>
             <p className="text-muted-foreground text-center text-sm">
               Não tem acesso ainda?{' '}
