@@ -89,6 +89,7 @@ const exchangeIdTokenForSession = async (user: User) => {
   await firebaseSignOut(firebaseAuth);
 };
 
+
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const signInWithRetry = async (email: string, password: string) => {
@@ -165,6 +166,7 @@ export const authClient = {
         clinicCnpj: string;
         clinicPhoneNumber: string;
         clinicAddress: string;
+        clinicAddressNumber: string;
       },
       callbacks?: {
         onSuccess?: () => void;

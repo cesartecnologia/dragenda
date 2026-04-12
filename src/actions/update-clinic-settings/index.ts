@@ -23,6 +23,7 @@ export const updateClinicSettingsAction = actionClient.schema(z.object({
   name: z.string().trim().min(1),
   cnpj: optionalText,
   address: optionalText,
+  addressNumber: optionalText,
   phoneNumber: optionalText,
   logoUrl: optionalUrl,
   cloudinaryPublicId: optionalText,

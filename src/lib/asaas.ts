@@ -5,6 +5,7 @@ export type AsaasCustomer = {
   cpfCnpj?: string;
   mobilePhone?: string;
   address?: string;
+  addressNumber?: string;
 };
 
 export type AsaasCheckout = {
@@ -96,6 +97,51 @@ export const buildAsaasCheckoutUrl = (checkoutId: string) => {
   return `${baseUrl}?id=${encodeURIComponent(checkoutId)}`;
 };
 
+export const normalizeAsaasAddressFields = (params: {
+  address?: string | null;
+  addressNumber?: string | null;
+}) => {
+  const rawAddress = (params.address ?? '').trim();
+  const rawNumber = (params.addressNumber ?? '').trim();
+
+  if (rawAddress && rawNumber) {
+    return {
+      address: rawAddress,
+      addressNumber: rawNumber,
+    };
+  }
+
+  if (!rawAddress) {
+    return {
+      address: '',
+      addressNumber: rawNumber,
+    };
+  }
+
+  const parts = rawAddress.split(',').map((part) => part.trim()).filter(Boolean);
+  const lastPart = parts[parts.length - 1] ?? '';
+
+  if (!rawNumber && /^\d+[A-Za-z/-]*$/.test(lastPart)) {
+    return {
+      address: parts.slice(0, -1).join(', ').trim(),
+      addressNumber: lastPart,
+    };
+  }
+
+  const match = rawAddress.match(/^(.*?)(?:\s|,|-)+(\d+[A-Za-z/-]*)$/);
+  if (!rawNumber && match?.[1] && match?.[2]) {
+    return {
+      address: match[1].trim().replace(/[,-]\s*$/, ''),
+      addressNumber: match[2].trim(),
+    };
+  }
+
+  return {
+    address: rawAddress,
+    addressNumber: rawNumber,
+  };
+};
+
 export const upsertAsaasCustomer = async (params: {
   asaasCustomerId?: string | null;
   name: string;
@@ -103,13 +149,20 @@ export const upsertAsaasCustomer = async (params: {
   cpfCnpj?: string | null;
   mobilePhone?: string | null;
   address?: string | null;
+  addressNumber?: string | null;
 }) => {
+  const normalizedAddress = normalizeAsaasAddressFields({
+    address: params.address,
+    addressNumber: params.addressNumber,
+  });
+
   const payload = {
     name: params.name,
     email: params.email,
     cpfCnpj: onlyDigits(params.cpfCnpj) || undefined,
     mobilePhone: onlyDigits(params.mobilePhone) || undefined,
-    address: params.address?.trim() || undefined,
+    address: normalizedAddress.address || undefined,
+    addressNumber: normalizedAddress.addressNumber || undefined,
   };
 
   if (params.asaasCustomerId) {
@@ -163,7 +216,7 @@ export const createAsaasRecurringCheckout = async (params: {
       subscription: {
         cycle: 'MONTHLY',
         nextDueDate,
-      },
+      }
     }),
     headers: getHeaders(true),
   });

@@ -31,6 +31,7 @@ const formSchema = z.object({
   name: z.string().trim().min(1, { message: 'Nome é obrigatório.' }),
   cnpj: optionalTextField,
   address: optionalTextField,
+  addressNumber: optionalTextField,
   phoneNumber: optionalTextField,
   logoUrl: optionalUrlField,
   cloudinaryPublicId: optionalTextField,
@@ -59,6 +60,7 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
       name: clinic?.name ?? '',
       cnpj: clinic?.cnpj ?? '',
       address: clinic?.address ?? '',
+      addressNumber: clinic?.addressNumber ?? '',
       phoneNumber: clinic?.phoneNumber ?? '',
       logoUrl: clinic?.logoUrl ?? '',
       cloudinaryPublicId: clinic?.cloudinaryPublicId ?? '',
@@ -103,6 +105,7 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
         name: values.name.trim(),
         cnpj: normalizeOptionalText(values.cnpj),
         address: normalizeOptionalText(values.address),
+        addressNumber: normalizeOptionalText(values.addressNumber),
         phoneNumber: normalizeOptionalText(values.phoneNumber),
         logoUrl: normalizeOptionalUrl(values.logoUrl),
         cloudinaryPublicId: normalizeOptionalText(values.cloudinaryPublicId),
@@ -118,6 +121,7 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
   const previewCnpj = form.watch('cnpj');
   const previewPhone = form.watch('phoneNumber');
   const previewAddress = form.watch('address');
+  const previewAddressNumber = form.watch('addressNumber');
 
   return (
     <>
@@ -198,23 +202,43 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
                 </div>
               </div>
 
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Endereço</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        value={field.value ?? ''}
-                        placeholder="Rua, número, bairro, cidade e CEP"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_180px]">
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Logradouro</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value ?? ''}
+                          placeholder="Rua, avenida ou praça"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="addressNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Número</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value ?? ''}
+                          placeholder="123"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <input type="hidden" {...form.register('logoUrl')} />
               <input type="hidden" {...form.register('cloudinaryPublicId')} />
@@ -256,7 +280,9 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
             {previewCnpj ? <p className="text-sm text-muted-foreground">CNPJ: {previewCnpj}</p> : null}
             {previewPhone ? <p className="text-sm text-muted-foreground">Telefone: {previewPhone}</p> : null}
             {previewAddress ? (
-              <p className="text-sm text-muted-foreground">Endereço: {previewAddress}</p>
+              <p className="text-sm text-muted-foreground">
+                Endereço: {previewAddress}{previewAddressNumber ? `, ${previewAddressNumber}` : ''}
+              </p>
             ) : (
               <p className="text-sm text-muted-foreground">
                 O endereço aparecerá no cabeçalho dos comprovantes e relatórios.

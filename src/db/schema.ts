@@ -33,6 +33,7 @@ export interface ClinicRecord {
   name: string;
   cnpj: string | null;
   address: string | null;
+  addressNumber: string | null;
   phoneNumber: string | null;
   logoUrl: string | null;
   cloudinaryPublicId: string | null;

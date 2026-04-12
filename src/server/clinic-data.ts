@@ -266,6 +266,7 @@ export const createClinicForUser = async (params: { userId: string; name: string
     name: params.name,
     cnpj: null,
     address: null,
+    addressNumber: null,
     phoneNumber: null,
     logoUrl: null,
     cloudinaryPublicId: null,

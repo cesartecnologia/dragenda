@@ -87,12 +87,6 @@ export const hasSubscriptionAccess = (session: AppSession | null) =>
       }),
   );
 
-export const getAuthenticatedRedirectPath = (session: AppSession) => {
-  if (!session.user.clinic && !hasPrivilegedAccess(session)) return '/configuracoes/clinica';
-  if (!session.user.hasSubscriptionAccess) return '/assinatura';
-  return '/painel';
-};
-
 export const getServerSession = cache(async (): Promise<AppSession | null> => {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME)?.value;
@@ -175,8 +169,8 @@ export const requireClinicSession = cache(async () => {
 
 export const requireSubscribedSession = cache(async () => {
   const session = await requireSession();
-  if (!session.user.clinic && !hasPrivilegedAccess(session)) redirect('/configuracoes/clinica');
   if (!session.user.hasSubscriptionAccess) redirect('/assinatura');
+  if (!session.user.clinic && !hasPrivilegedAccess(session)) redirect('/configuracoes/clinica');
   return session;
 });
 

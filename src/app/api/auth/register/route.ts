@@ -16,6 +16,7 @@ export const POST = async (request: Request) => {
       clinicCnpj?: string;
       clinicPhoneNumber?: string;
       clinicAddress?: string;
+      clinicAddressNumber?: string;
     };
 
     const name = body.name?.trim();
@@ -25,6 +26,7 @@ export const POST = async (request: Request) => {
     const clinicCnpj = onlyDigits(body.clinicCnpj);
     const clinicPhoneNumber = onlyDigits(body.clinicPhoneNumber);
     const clinicAddress = body.clinicAddress?.trim();
+    const clinicAddressNumber = body.clinicAddressNumber?.trim();
 
     if (!name) {
       return NextResponse.json({ error: 'MISSING_NAME' }, { status: 400 });
@@ -52,6 +54,10 @@ export const POST = async (request: Request) => {
 
     if (!clinicAddress) {
       return NextResponse.json({ error: 'MISSING_CLINIC_ADDRESS' }, { status: 400 });
+    }
+
+    if (!clinicAddressNumber) {
+      return NextResponse.json({ error: 'MISSING_CLINIC_ADDRESS_NUMBER' }, { status: 400 });
     }
 
     const adminAuth = getAdminAuth();
@@ -88,6 +94,7 @@ export const POST = async (request: Request) => {
       cnpj: clinicCnpj,
       phoneNumber: clinicPhoneNumber,
       address: clinicAddress,
+      addressNumber: clinicAddressNumber,
     });
 
     return NextResponse.json({ ok: true, uid: user.uid, clinicId: clinic.id });

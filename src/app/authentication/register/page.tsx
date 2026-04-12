@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import { getAuthenticatedRedirectPath, getServerSession } from '@/lib/auth';
+import { getServerSession } from '@/lib/auth';
 
 import SignUpForm from '../components/sign-up-form';
 
@@ -8,7 +8,7 @@ const RegisterPage = async () => {
   const session = await getServerSession();
 
   if (session?.user) {
-    redirect(getAuthenticatedRedirectPath(session));
+    redirect(session.user.hasSubscriptionAccess ? '/painel' : '/assinatura');
   }
 
   return (
