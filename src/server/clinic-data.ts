@@ -263,8 +263,6 @@ export const createClinicForUser = async (params: {
   addressNumber?: string | null;
   addressComplement?: string | null;
   phoneNumber?: string | null;
-  logoUrl?: string | null;
-  cloudinaryPublicId?: string | null;
 }) => {
   const user = await getUserProfileById(params.userId);
   if (!user) throw new Error('User not found');
@@ -279,8 +277,8 @@ export const createClinicForUser = async (params: {
     addressNumber: params.addressNumber ?? null,
     addressComplement: params.addressComplement ?? null,
     phoneNumber: params.phoneNumber ?? null,
-    logoUrl: params.logoUrl ?? null,
-    cloudinaryPublicId: params.cloudinaryPublicId ?? null,
+    logoUrl: null,
+    cloudinaryPublicId: null,
     stripeCustomerId: null,
     stripeSubscriptionId: null,
     asaasCustomerId: null,

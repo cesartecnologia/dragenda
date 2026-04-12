@@ -19,6 +19,18 @@ type CallbackContext = {
   };
 };
 
+type SignUpValues = {
+  email: string;
+  password: string;
+  name: string;
+  clinicName: string;
+  clinicCnpj: string;
+  clinicPhoneNumber: string;
+  clinicAddress: string;
+  clinicAddressNumber: string;
+  clinicAddressComplement?: string;
+};
+
 const normalizeErrorCode = (code?: string) => {
   switch (code) {
     case 'auth/email-already-in-use':
@@ -89,7 +101,6 @@ const exchangeIdTokenForSession = async (user: User) => {
   await firebaseSignOut(firebaseAuth);
 };
 
-
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const signInWithRetry = async (email: string, password: string) => {
@@ -158,7 +169,7 @@ export const authClient = {
   },
   signUp: {
     email: async (
-      values: { email: string; password: string; name: string },
+      values: SignUpValues,
       callbacks?: {
         onSuccess?: () => void;
         onError?: (ctx: CallbackContext) => void;
@@ -225,16 +236,12 @@ export const authClient = {
         }
       };
 
-      void loadSession();
-
+      loadSession();
       return () => {
         active = false;
       };
     }, []);
 
-    return {
-      data,
-      isPending,
-    };
+    return { data, isPending };
   },
 };

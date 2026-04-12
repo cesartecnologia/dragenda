@@ -25,7 +25,7 @@ export default function ClinicBrandHeader({ clinic }: Props) {
   if (!clinic) return null;
   if (hiddenRoutes.some((route) => pathname.startsWith(route))) return null;
 
-  const clinicAddress = formatClinicAddress(clinic);
+  const fullAddress = formatClinicAddress(clinic);
 
   return (
     <div className="mx-auto mb-2 max-w-5xl px-6 pt-1">
@@ -43,7 +43,7 @@ export default function ClinicBrandHeader({ clinic }: Props) {
                 {clinic.cnpj ? <span>CNPJ: {formatCnpj(clinic.cnpj)}</span> : null}
                 {clinic.phoneNumber ? <span>Telefone: {formatPhoneNumber(clinic.phoneNumber)}</span> : null}
               </div>
-              {clinicAddress ? <div>{clinicAddress}</div> : null}
+              {fullAddress ? <div>{fullAddress}</div> : null}
             </div>
           </div>
         </div>

@@ -1,4 +1,3 @@
-
 'use server';
 
 import { requireSession } from '@/lib/auth';
@@ -38,7 +37,7 @@ export const createAsaasCheckout = actionClient.action(async () => {
   if (!clinicId || !clinic) throw new Error('Clínica não encontrada.');
 
   if (!clinic.cnpj || !clinic.phoneNumber || !clinic.address || !clinic.addressNumber) {
-    throw new Error('Informe o logradouro e o número da clínica antes de assinar.');
+    throw new Error('Informe o CNPJ, telefone, logradouro e número da clínica antes de assinar.');
   }
 
   const customer = await upsertAsaasCustomer({

@@ -169,7 +169,7 @@ export const createAsaasRecurringCheckout = async (params: {
       subscription: {
         cycle: 'MONTHLY',
         nextDueDate,
-      }
+      },
     }),
     headers: getHeaders(true),
   });
