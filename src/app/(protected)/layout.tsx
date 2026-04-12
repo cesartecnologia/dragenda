@@ -1,13 +1,13 @@
 import SupportFloatButton from '@/components/common/support-float-button';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { requireSubscribedSession } from '@/lib/auth';
+import { requireSession } from '@/lib/auth';
 import { getClinicById } from '@/server/clinic-data';
 
 import { AppSidebar } from './_components/app-sidebar';
 import ClinicBrandHeader from './_components/clinic-brand-header';
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
-  const session = await requireSubscribedSession();
+  const session = await requireSession();
   const clinic = session.user.clinic ? await getClinicById(session.user.clinic.id) : null;
 
   return (
@@ -22,6 +22,8 @@ export default async function Layout({ children }: { children: React.ReactNode }
           cnpj: clinic.cnpj,
           phoneNumber: clinic.phoneNumber,
           address: clinic.address,
+          addressNumber: clinic.addressNumber,
+          addressComplement: clinic.addressComplement,
           logoUrl: clinic.logoUrl,
         } : null} />
         {children}

@@ -19,3 +19,20 @@ export const normalizeSearchText = (value?: string | null) =>
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
     .trim();
+
+
+type ClinicAddressParts = {
+  address?: string | null;
+  addressNumber?: string | null;
+  addressComplement?: string | null;
+};
+
+export const formatClinicAddress = (clinic?: ClinicAddressParts | null) => {
+  const address = clinic?.address?.trim() ?? '';
+  const addressNumber = clinic?.addressNumber?.trim() ?? '';
+  const addressComplement = clinic?.addressComplement?.trim() ?? '';
+
+  const base = [address, addressNumber].filter(Boolean).join(', ');
+  if (base && addressComplement) return `${base} - ${addressComplement}`;
+  return base || addressComplement;
+};

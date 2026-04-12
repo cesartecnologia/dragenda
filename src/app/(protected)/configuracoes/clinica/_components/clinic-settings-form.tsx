@@ -17,6 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { clinicsTable } from '@/db/schema';
+import { formatClinicAddress } from '@/helpers/format';
 
 const optionalTextField = z.string().optional();
 const optionalUrlField = z
@@ -32,6 +33,7 @@ const formSchema = z.object({
   cnpj: optionalTextField,
   address: optionalTextField,
   addressNumber: optionalTextField,
+  addressComplement: optionalTextField,
   phoneNumber: optionalTextField,
   logoUrl: optionalUrlField,
   cloudinaryPublicId: optionalTextField,
@@ -49,18 +51,49 @@ function normalizeOptionalUrl(value?: string) {
   return normalized === '' ? null : normalized;
 }
 
+function deriveAddressDefaults(clinic: typeof clinicsTable.$inferSelect | null) {
+  const rawAddress = clinic?.address?.trim() ?? '';
+  const storedNumber = clinic?.addressNumber?.trim() ?? '';
+  const storedComplement = clinic?.addressComplement?.trim() ?? '';
+
+  if (storedNumber || storedComplement || !rawAddress) {
+    return {
+      address: rawAddress,
+      addressNumber: storedNumber,
+      addressComplement: storedComplement,
+    };
+  }
+
+  const match = rawAddress.match(/^(.*?)(?:,\s*|\s+-\s+)(\d+[A-Za-z0-9\/-]*)$/);
+  if (!match) {
+    return {
+      address: rawAddress,
+      addressNumber: '',
+      addressComplement: '',
+    };
+  }
+
+  return {
+    address: match[1]?.trim() ?? rawAddress,
+    addressNumber: match[2]?.trim() ?? '',
+    addressComplement: '',
+  };
+}
+
 export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsTable.$inferSelect | null }) {
   const [uploading, setUploading] = useState(false);
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+  const addressDefaults = deriveAddressDefaults(clinic);
 
   const form = useForm<ClinicSettingsFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: clinic?.name ?? '',
       cnpj: clinic?.cnpj ?? '',
-      address: clinic?.address ?? '',
-      addressNumber: clinic?.addressNumber ?? '',
+      address: addressDefaults.address,
+      addressNumber: addressDefaults.addressNumber,
+      addressComplement: addressDefaults.addressComplement,
       phoneNumber: clinic?.phoneNumber ?? '',
       logoUrl: clinic?.logoUrl ?? '',
       cloudinaryPublicId: clinic?.cloudinaryPublicId ?? '',
@@ -78,6 +111,7 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
       toast.error('Configure o Cloudinary antes de enviar a logo.');
       return;
     }
+
     setUploading(true);
     try {
       const body = new FormData();
@@ -99,29 +133,35 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
     }
   };
 
-  const handleSubmit = (values: ClinicSettingsFormValues) => {
+  const handleSubmit = async (values: ClinicSettingsFormValues) => {
+    const payload = {
+      name: values.name.trim(),
+      cnpj: normalizeOptionalText(values.cnpj),
+      address: normalizeOptionalText(values.address),
+      addressNumber: normalizeOptionalText(values.addressNumber),
+      addressComplement: normalizeOptionalText(values.addressComplement),
+      phoneNumber: normalizeOptionalText(values.phoneNumber),
+      logoUrl: normalizeOptionalUrl(values.logoUrl),
+      cloudinaryPublicId: normalizeOptionalText(values.cloudinaryPublicId),
+    };
+
     if (clinic) {
-      action.execute({
-        name: values.name.trim(),
-        cnpj: normalizeOptionalText(values.cnpj),
-        address: normalizeOptionalText(values.address),
-        addressNumber: normalizeOptionalText(values.addressNumber),
-        phoneNumber: normalizeOptionalText(values.phoneNumber),
-        logoUrl: normalizeOptionalUrl(values.logoUrl),
-        cloudinaryPublicId: normalizeOptionalText(values.cloudinaryPublicId),
-      });
+      action.execute(payload);
       return;
     }
 
-    createClinic(values.name.trim());
+    await createClinic(payload);
   };
 
   const logoUrl = form.watch('logoUrl');
   const previewName = form.watch('name');
   const previewCnpj = form.watch('cnpj');
   const previewPhone = form.watch('phoneNumber');
-  const previewAddress = form.watch('address');
-  const previewAddressNumber = form.watch('addressNumber');
+  const clinicAddress = formatClinicAddress({
+    address: form.watch('address'),
+    addressNumber: form.watch('addressNumber'),
+    addressComplement: form.watch('addressComplement'),
+  });
 
   return (
     <>
@@ -202,7 +242,7 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_180px]">
+              <div className="grid gap-4 md:grid-cols-[1fr_160px]">
                 <FormField
                   control={form.control}
                   name="address"
@@ -210,11 +250,7 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
                     <FormItem>
                       <FormLabel>Logradouro</FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          value={field.value ?? ''}
-                          placeholder="Rua, avenida ou praça"
-                        />
+                        <Input {...field} value={field.value ?? ''} placeholder="Rua, avenida, alameda..." />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -228,17 +264,31 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
                     <FormItem>
                       <FormLabel>Número</FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          value={field.value ?? ''}
-                          placeholder="123"
-                        />
+                        <Input {...field} value={field.value ?? ''} placeholder="123" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="addressComplement"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Complemento</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value ?? ''}
+                        placeholder="Sala, bloco, bairro ou referência"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <input type="hidden" {...form.register('logoUrl')} />
               <input type="hidden" {...form.register('cloudinaryPublicId')} />
@@ -279,10 +329,8 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
             <p className="text-lg font-semibold">{previewName || 'Nome da clínica'}</p>
             {previewCnpj ? <p className="text-sm text-muted-foreground">CNPJ: {previewCnpj}</p> : null}
             {previewPhone ? <p className="text-sm text-muted-foreground">Telefone: {previewPhone}</p> : null}
-            {previewAddress ? (
-              <p className="text-sm text-muted-foreground">
-                Endereço: {previewAddress}{previewAddressNumber ? `, ${previewAddressNumber}` : ''}
-              </p>
+            {clinicAddress ? (
+              <p className="text-sm text-muted-foreground">Endereço: {clinicAddress}</p>
             ) : (
               <p className="text-sm text-muted-foreground">
                 O endereço aparecerá no cabeçalho dos comprovantes e relatórios.

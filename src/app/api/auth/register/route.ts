@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 
 import { getAdminAuth } from '@/lib/firebase-admin';
-import { createClinicForUser, updateClinicSettings, upsertUserProfile } from '@/server/clinic-data';
+import { upsertUserProfile } from '@/server/clinic-data';
 
 const validateEmail = (email: string) => /.+@.+\..+/.test(email);
-const onlyDigits = (value?: string) => (value ?? '').replace(/\D/g, '');
 
 export const POST = async (request: Request) => {
   try {
@@ -12,21 +11,11 @@ export const POST = async (request: Request) => {
       name?: string;
       email?: string;
       password?: string;
-      clinicName?: string;
-      clinicCnpj?: string;
-      clinicPhoneNumber?: string;
-      clinicAddress?: string;
-      clinicAddressNumber?: string;
     };
 
     const name = body.name?.trim();
     const email = body.email?.trim().toLowerCase();
     const password = body.password?.trim();
-    const clinicName = body.clinicName?.trim();
-    const clinicCnpj = onlyDigits(body.clinicCnpj);
-    const clinicPhoneNumber = onlyDigits(body.clinicPhoneNumber);
-    const clinicAddress = body.clinicAddress?.trim();
-    const clinicAddressNumber = body.clinicAddressNumber?.trim();
 
     if (!name) {
       return NextResponse.json({ error: 'MISSING_NAME' }, { status: 400 });
@@ -38,26 +27,6 @@ export const POST = async (request: Request) => {
 
     if (!password || password.length < 8) {
       return NextResponse.json({ error: 'WEAK_PASSWORD' }, { status: 400 });
-    }
-
-    if (!clinicName) {
-      return NextResponse.json({ error: 'MISSING_CLINIC_NAME' }, { status: 400 });
-    }
-
-    if (!clinicCnpj) {
-      return NextResponse.json({ error: 'MISSING_CLINIC_CNPJ' }, { status: 400 });
-    }
-
-    if (!clinicPhoneNumber) {
-      return NextResponse.json({ error: 'MISSING_CLINIC_PHONE' }, { status: 400 });
-    }
-
-    if (!clinicAddress) {
-      return NextResponse.json({ error: 'MISSING_CLINIC_ADDRESS' }, { status: 400 });
-    }
-
-    if (!clinicAddressNumber) {
-      return NextResponse.json({ error: 'MISSING_CLINIC_ADDRESS_NUMBER' }, { status: 400 });
     }
 
     const adminAuth = getAdminAuth();
@@ -85,19 +54,7 @@ export const POST = async (request: Request) => {
       emailVerified: false,
     });
 
-    const clinic = await createClinicForUser({
-      userId: user.uid,
-      name: clinicName,
-    });
-
-    await updateClinicSettings(clinic.id, {
-      cnpj: clinicCnpj,
-      phoneNumber: clinicPhoneNumber,
-      address: clinicAddress,
-      addressNumber: clinicAddressNumber,
-    });
-
-    return NextResponse.json({ ok: true, uid: user.uid, clinicId: clinic.id });
+    return NextResponse.json({ ok: true, uid: user.uid });
   } catch (error: any) {
     return NextResponse.json(
       {

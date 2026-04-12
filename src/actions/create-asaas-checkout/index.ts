@@ -2,7 +2,7 @@
 'use server';
 
 import { requireSession } from '@/lib/auth';
-import { createAsaasRecurringCheckout, normalizeAsaasAddressFields, upsertAsaasCustomer } from '@/lib/asaas';
+import { createAsaasRecurringCheckout, upsertAsaasCustomer } from '@/lib/asaas';
 import { actionClient } from '@/lib/next-safe-action';
 import { createClinicForUser, getClinicById, getUserProfileById, updateUserAsaasSubscription } from '@/server/clinic-data';
 
@@ -36,16 +36,8 @@ export const createAsaasCheckout = actionClient.action(async () => {
   }
 
   if (!clinicId || !clinic) throw new Error('Clínica não encontrada.');
-  if (!clinic.cnpj || !clinic.phoneNumber || !clinic.address) {
-    throw new Error('Complete CNPJ, telefone e endereço da clínica antes de assinar.');
-  }
 
-  const normalizedAddress = normalizeAsaasAddressFields({
-    address: clinic.address,
-    addressNumber: clinic.addressNumber,
-  });
-
-  if (!normalizedAddress.address || !normalizedAddress.addressNumber) {
+  if (!clinic.cnpj || !clinic.phoneNumber || !clinic.address || !clinic.addressNumber) {
     throw new Error('Informe o logradouro e o número da clínica antes de assinar.');
   }
 
@@ -55,8 +47,9 @@ export const createAsaasCheckout = actionClient.action(async () => {
     email: session.user.email,
     cpfCnpj: clinic.cnpj,
     mobilePhone: clinic.phoneNumber,
-    address: normalizedAddress.address,
-    addressNumber: normalizedAddress.addressNumber,
+    address: clinic.address,
+    addressNumber: clinic.addressNumber,
+    complement: clinic.addressComplement,
   });
 
   await updateUserAsaasSubscription(session.user.id, {

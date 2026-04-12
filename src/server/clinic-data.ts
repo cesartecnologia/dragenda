@@ -255,7 +255,17 @@ export const getClinicById = async (clinicId: string): Promise<Clinic | null> =>
   });
 };
 
-export const createClinicForUser = async (params: { userId: string; name: string }) => {
+export const createClinicForUser = async (params: {
+  userId: string;
+  name: string;
+  cnpj?: string | null;
+  address?: string | null;
+  addressNumber?: string | null;
+  addressComplement?: string | null;
+  phoneNumber?: string | null;
+  logoUrl?: string | null;
+  cloudinaryPublicId?: string | null;
+}) => {
   const user = await getUserProfileById(params.userId);
   if (!user) throw new Error('User not found');
 
@@ -264,12 +274,13 @@ export const createClinicForUser = async (params: { userId: string; name: string
   const clinic: Clinic = {
     id: clinicId,
     name: params.name,
-    cnpj: null,
-    address: null,
-    addressNumber: null,
-    phoneNumber: null,
-    logoUrl: null,
-    cloudinaryPublicId: null,
+    cnpj: params.cnpj ?? null,
+    address: params.address ?? null,
+    addressNumber: params.addressNumber ?? null,
+    addressComplement: params.addressComplement ?? null,
+    phoneNumber: params.phoneNumber ?? null,
+    logoUrl: params.logoUrl ?? null,
+    cloudinaryPublicId: params.cloudinaryPublicId ?? null,
     stripeCustomerId: null,
     stripeSubscriptionId: null,
     asaasCustomerId: null,
