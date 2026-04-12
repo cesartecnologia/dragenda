@@ -4,6 +4,7 @@ export type AsaasCustomer = {
   email?: string;
   cpfCnpj?: string;
   mobilePhone?: string;
+  address?: string;
 };
 
 export type AsaasCheckout = {
@@ -101,12 +102,14 @@ export const upsertAsaasCustomer = async (params: {
   email: string;
   cpfCnpj?: string | null;
   mobilePhone?: string | null;
+  address?: string | null;
 }) => {
   const payload = {
     name: params.name,
     email: params.email,
     cpfCnpj: onlyDigits(params.cpfCnpj) || undefined,
     mobilePhone: onlyDigits(params.mobilePhone) || undefined,
+    address: params.address?.trim() || undefined,
   };
 
   if (params.asaasCustomerId) {
@@ -160,7 +163,7 @@ export const createAsaasRecurringCheckout = async (params: {
       subscription: {
         cycle: 'MONTHLY',
         nextDueDate,
-      }
+      },
     }),
     headers: getHeaders(true),
   });

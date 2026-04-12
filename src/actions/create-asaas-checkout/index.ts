@@ -35,9 +35,8 @@ export const createAsaasCheckout = actionClient.action(async () => {
   }
 
   if (!clinicId || !clinic) throw new Error('Clínica não encontrada.');
-
-  if (!clinic.cnpj || !clinic.phoneNumber) {
-    throw new Error('Complete o CNPJ e o telefone da clínica antes de assinar.');
+  if (!clinic.cnpj || !clinic.phoneNumber || !clinic.address) {
+    throw new Error('Complete CNPJ, telefone e endereço da clínica antes de assinar.');
   }
 
   const customer = await upsertAsaasCustomer({
@@ -46,6 +45,7 @@ export const createAsaasCheckout = actionClient.action(async () => {
     email: session.user.email,
     cpfCnpj: clinic.cnpj,
     mobilePhone: clinic.phoneNumber,
+    address: clinic.address,
   });
 
   await updateUserAsaasSubscription(session.user.id, {

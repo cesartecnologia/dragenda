@@ -19,16 +19,6 @@ type CallbackContext = {
   };
 };
 
-type SignUpValues = {
-  email: string;
-  password: string;
-  name: string;
-  clinicName: string;
-  clinicCnpj: string;
-  clinicPhoneNumber: string;
-  clinicAddress: string;
-};
-
 const normalizeErrorCode = (code?: string) => {
   switch (code) {
     case 'auth/email-already-in-use':
@@ -167,7 +157,15 @@ export const authClient = {
   },
   signUp: {
     email: async (
-      values: SignUpValues,
+      values: {
+        email: string;
+        password: string;
+        name: string;
+        clinicName: string;
+        clinicCnpj: string;
+        clinicPhoneNumber: string;
+        clinicAddress: string;
+      },
       callbacks?: {
         onSuccess?: () => void;
         onError?: (ctx: CallbackContext) => void;
@@ -189,15 +187,7 @@ export const authClient = {
 
         await setPersistence(firebaseAuth, inMemoryPersistence);
         const credentials = await signInWithRetry(values.email, values.password);
-        try {
-          await exchangeIdTokenForSession(credentials.user);
-        } catch (sessionError) {
-          throw new Error(
-            sessionError instanceof Error
-              ? `ACCOUNT_CREATED_BUT_SESSION_FAILED:${sessionError.message}`
-              : 'ACCOUNT_CREATED_BUT_SESSION_FAILED',
-          );
-        }
+        await exchangeIdTokenForSession(credentials.user);
         callbacks?.onSuccess?.();
       } catch (error) {
         callbacks?.onError?.({
@@ -206,10 +196,21 @@ export const authClient = {
       }
     },
   },
-  signOut: async () => {
-    await fetch('/api/session/logout', {
-      method: 'POST',
-    });
+  signOut: async (options?: {
+    fetchOptions?: {
+      onSuccess?: () => void;
+      onError?: () => void;
+    };
+  }) => {
+    try {
+      await fetch('/api/session/logout', {
+        method: 'POST',
+      });
+      await firebaseSignOut(firebaseAuth);
+      options?.fetchOptions?.onSuccess?.();
+    } catch {
+      options?.fetchOptions?.onError?.();
+    }
   },
   useSession: () => {
     const [data, setData] = useState<AppSession | null>(null);

@@ -18,9 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { FormControl, FormMessage } from '@/components/ui/form';
-import { FormItem, FormLabel } from '@/components/ui/form';
-import { Form, FormField } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { authClient } from '@/lib/auth-client';
 
@@ -29,16 +27,8 @@ const registerSchema = z.object({
   email: z.string().trim().min(1, { message: 'E-mail é obrigatório' }).email({ message: 'E-mail inválido' }),
   password: z.string().trim().min(8, { message: 'A senha deve ter pelo menos 8 caracteres' }),
   clinicName: z.string().trim().min(1, { message: 'Nome da clínica é obrigatório' }),
-  clinicCnpj: z
-    .string()
-    .trim()
-    .min(14, { message: 'CNPJ é obrigatório' })
-    .refine((value) => value.replace(/\D/g, '').length === 14, { message: 'CNPJ inválido' }),
-  clinicPhoneNumber: z
-    .string()
-    .trim()
-    .min(10, { message: 'Telefone é obrigatório' })
-    .refine((value) => value.replace(/\D/g, '').length >= 10, { message: 'Telefone inválido' }),
+  clinicCnpj: z.string().trim().min(14, { message: 'CNPJ é obrigatório' }),
+  clinicPhoneNumber: z.string().trim().min(10, { message: 'Telefone é obrigatório' }),
   clinicAddress: z.string().trim().min(1, { message: 'Endereço é obrigatório' }),
 });
 
@@ -70,7 +60,7 @@ const SignUpForm = () => {
       },
       {
         onSuccess: () => {
-          router.push('/configuracoes/clinica?onboarding=1');
+          router.push('/');
           router.refresh();
         },
         onError: (ctx) => {
@@ -88,14 +78,25 @@ const SignUpForm = () => {
               toast.error('Falha de rede ao falar com o Firebase.');
               return;
             case 'REGISTER_FAILED':
-              toast.error('Não foi possível criar o usuário no servidor. Verifique o Firebase Admin.', {
-                duration: 10000,
-              });
+              toast.error('Não foi possível criar o usuário no servidor. Verifique o Firebase Admin.', { duration: 10000 });
+              return;
+            case 'MISSING_CLINIC_NAME':
+              toast.error('Informe o nome da clínica.');
+              return;
+            case 'MISSING_CLINIC_CNPJ':
+              toast.error('Informe o CNPJ da clínica.');
+              return;
+            case 'MISSING_CLINIC_PHONE':
+              toast.error('Informe o telefone da clínica.');
+              return;
+            case 'MISSING_CLINIC_ADDRESS':
+              toast.error('Informe o endereço da clínica.');
               return;
             case 'ACCOUNT_CREATED_BUT_SESSION_FAILED':
-              toast.error('Usuário criado, mas a sessão do servidor falhou. Tente fazer login novamente.', {
-                duration: 10000,
-              });
+              toast.error(
+                'Usuário criado, mas a sessão do servidor falhou. Tente fazer login novamente.',
+                { duration: 10000 },
+              );
               return;
             default:
               toast.error(ctx.error.message || 'Erro ao criar conta.', {
@@ -113,9 +114,7 @@ const SignUpForm = () => {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <CardHeader>
             <CardTitle>Criar conta da clínica</CardTitle>
-            <CardDescription>
-              Cadastre o responsável e os dados principais da clínica para liberar a assinatura no Asaas.
-            </CardDescription>
+            <CardDescription>Cadastre o responsável e os dados básicos da clínica para seguir direto para a assinatura.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
@@ -183,7 +182,6 @@ const SignUpForm = () => {
                         format="##.###.###/####-##"
                         value={field.value ?? ''}
                         onValueChange={(value) => field.onChange(value.value)}
-                        placeholder="00.000.000/0000-00"
                       />
                     </FormControl>
                     <FormMessage />
@@ -202,7 +200,6 @@ const SignUpForm = () => {
                         format="(##) #####-####"
                         value={field.value ?? ''}
                         onValueChange={(value) => field.onChange(value.value)}
-                        placeholder="(11) 99999-9999"
                       />
                     </FormControl>
                     <FormMessage />
@@ -210,7 +207,6 @@ const SignUpForm = () => {
                 )}
               />
             </div>
-
             <FormField
               control={form.control}
               name="clinicAddress"
@@ -227,7 +223,11 @@ const SignUpForm = () => {
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
             <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Criar conta'}
+              {form.formState.isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                'Criar conta e ir para assinatura'
+              )}
             </Button>
             <p className="text-muted-foreground text-center text-sm">
               Já tem acesso?{' '}

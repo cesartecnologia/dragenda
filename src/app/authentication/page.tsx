@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import { getServerSession } from '@/lib/auth';
+import { getAuthenticatedRedirectPath, getServerSession } from '@/lib/auth';
 
 import LoginForm from './components/login-form';
 
@@ -8,7 +8,7 @@ const AuthenticationPage = async () => {
   const session = await getServerSession();
 
   if (session?.user) {
-    redirect('/painel');
+    redirect(getAuthenticatedRedirectPath(session));
   }
 
   return (

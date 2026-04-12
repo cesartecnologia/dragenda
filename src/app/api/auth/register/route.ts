@@ -42,11 +42,11 @@ export const POST = async (request: Request) => {
       return NextResponse.json({ error: 'MISSING_CLINIC_NAME' }, { status: 400 });
     }
 
-    if (clinicCnpj.length !== 14) {
+    if (!clinicCnpj) {
       return NextResponse.json({ error: 'MISSING_CLINIC_CNPJ' }, { status: 400 });
     }
 
-    if (clinicPhoneNumber.length < 10) {
+    if (!clinicPhoneNumber) {
       return NextResponse.json({ error: 'MISSING_CLINIC_PHONE' }, { status: 400 });
     }
 
