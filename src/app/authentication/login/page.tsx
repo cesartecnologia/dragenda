@@ -15,8 +15,8 @@ const AuthenticationLoginPage = async () => {
   return (
     <AuthShell
       eyebrow="Área do cliente"
-      title="Acesse sua clínica e continue de onde parou."
-      description="Entre com seu e-mail e senha para acompanhar a rotina da clínica no Dr. Agenda."
+      title="Entre na sua clínica e continue de onde parou."
+      description="Acesse sua conta com e-mail e senha para gerenciar a rotina da clínica no Dr. Agenda."
     >
       <LoginForm />
     </AuthShell>

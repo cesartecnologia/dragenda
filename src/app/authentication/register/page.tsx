@@ -15,8 +15,8 @@ const RegisterPage = async () => {
   return (
     <AuthShell
       eyebrow="Primeiro acesso"
-      title="Comece com a estrutura certa para operar sua clínica com confiança."
-      description="Cadastre os dados da clínica, prepare sua assinatura e deixe o Dr. Agenda pronto para uso desde o primeiro acesso."
+      title="Cadastre sua clínica para seguir com a contratação."
+      description="Preencha os dados do responsável e da clínica. Ao concluir, você será direcionado automaticamente para a assinatura do plano."
     >
       <SignUpForm />
     </AuthShell>
