@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowRight, Loader2, LockKeyhole, Mail } from 'lucide-react';
+import { ArrowRight, KeyRound, Loader2, Mail, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -63,14 +63,23 @@ const LoginForm = () => {
   };
 
   return (
-    <Card className="border-sky-100 bg-white shadow-[0_20px_70px_rgba(14,165,233,0.10)]">
+    <Card className="overflow-hidden border-sky-100 bg-white shadow-[0_24px_80px_rgba(14,165,233,0.10)]">
+      <div className="h-1.5 w-full bg-[linear-gradient(90deg,#38bdf8_0%,#60a5fa_50%,#93c5fd_100%)]" />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <CardHeader className="space-y-2">
-            <CardTitle className="text-xl text-slate-900">Entrar no sistema</CardTitle>
-            <CardDescription className="text-sm leading-6 text-slate-600">
-              Acesse sua clínica com seu e-mail e sua senha.
-            </CardDescription>
+          <CardHeader className="space-y-3 pb-4">
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
+              <ShieldCheck className="h-4 w-4" />
+              Acesso seguro da clínica
+            </div>
+            <div className="space-y-1.5">
+              <CardTitle className="text-2xl font-semibold tracking-[-0.02em] text-slate-950">
+                Bem-vindo de volta
+              </CardTitle>
+              <CardDescription className="text-sm leading-6 text-slate-600">
+                Entre com seus dados para continuar usando o Dr. Agenda com praticidade e segurança.
+              </CardDescription>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormField
@@ -78,11 +87,15 @@ const LoginForm = () => {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>E-mail</FormLabel>
+                  <FormLabel className="text-slate-700">E-mail</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                      <Input className="pl-10" placeholder="Digite seu e-mail" {...field} />
+                      <Mail className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-sky-600" />
+                      <Input
+                        className="h-12 rounded-xl border-slate-200 pl-11 text-[15px] placeholder:text-slate-400"
+                        placeholder="voce@clinica.com"
+                        {...field}
+                      />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -94,26 +107,39 @@ const LoginForm = () => {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Senha</FormLabel>
+                  <FormLabel className="text-slate-700">Senha</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                      <Input className="pl-10" placeholder="Digite sua senha" type="password" {...field} />
+                      <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-sky-600" />
+                      <Input
+                        className="h-12 rounded-xl border-slate-200 pl-11 text-[15px] placeholder:text-slate-400"
+                        placeholder="Digite sua senha"
+                        type="password"
+                        {...field}
+                      />
                     </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3 text-sm text-slate-600">
+              Use o e-mail cadastrado pela clínica para acessar sua conta.
+            </div>
           </CardContent>
-          <CardFooter className="flex flex-col gap-3">
-            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ArrowRight className="mr-2 h-4 w-4" />}
-              Entrar
+          <CardFooter className="flex flex-col gap-3 pt-2">
+            <Button type="submit" className="h-12 w-full rounded-xl" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <ArrowRight className="mr-2 h-4 w-4" />
+              )}
+              Entrar no sistema
             </Button>
             <p className="text-center text-sm text-slate-500">
               Ainda não tem acesso?{' '}
-              <Link href="/primeiro-acesso" className="font-medium text-sky-700 underline-offset-4 hover:underline">
+              <Link href="/primeiro-acesso" className="font-semibold text-sky-700 underline-offset-4 hover:underline">
                 Fazer primeiro acesso
               </Link>
             </p>
