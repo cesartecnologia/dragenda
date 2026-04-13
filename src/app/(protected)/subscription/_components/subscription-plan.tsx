@@ -41,9 +41,9 @@ export function SubscriptionPlan({
   const features = [
     'Cadastro ilimitado de médicos',
     'Agendamentos ilimitados',
-    'Dashboard com métricas da clínica',
+    'Visão completa da rotina da clínica',
     'Cadastro completo de pacientes',
-    'Gestão de agenda e atendimento',
+    'Gestão da equipe e atendimentos',
     'Suporte prioritário',
   ];
 
@@ -66,7 +66,7 @@ export function SubscriptionPlan({
   return (
     <Card className={className}>
       <CardHeader className="space-y-6">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
               <Sparkles className="size-3.5" />
@@ -74,7 +74,7 @@ export function SubscriptionPlan({
             </div>
             <div>
               <h3 className="text-2xl font-bold text-gray-900">{statusLabel}</h3>
-              <p className="mt-1 text-sm text-gray-600">Tenha acesso completo aos principais recursos da Clínica Smart.</p>
+              <p className="mt-1 text-sm text-gray-600">Tenha acesso completo aos principais recursos do Dr. Agenda.</p>
             </div>
           </div>
           {bypassSubscription ? (
@@ -83,9 +83,9 @@ export function SubscriptionPlan({
               Acesso Master
             </Badge>
           ) : active ? (
-            <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Ativa</Badge>
+            <Badge className="w-fit bg-green-100 text-green-700 hover:bg-green-100">Ativa</Badge>
           ) : subscriptionStatus === 'checkout_pending' ? (
-            <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">Aguardando pagamento</Badge>
+            <Badge className="w-fit bg-amber-100 text-amber-700 hover:bg-amber-100">Aguardando pagamento</Badge>
           ) : null}
         </div>
 

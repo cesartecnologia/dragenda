@@ -21,8 +21,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
-import type { AppSession } from '@/lib/auth';
-import { canAccessClinicSettings, canAccessDashboard, canAccessFinancial, canAccessReports, canAccessUserManagement } from '@/lib/access';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -37,12 +35,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import type { AppSession } from '@/lib/auth';
 import { authClient } from '@/lib/auth-client';
+import { canAccessClinicSettings, canAccessDashboard, canAccessFinancial, canAccessReports, canAccessUserManagement } from '@/lib/access';
 
 const roleLabel: Record<AppSession['user']['role'], string> = {
   master: 'Master',
   support: 'Suporte',
-  owner: 'Cliente',
+  owner: 'Proprietário',
   admin: 'Admin',
   attendant: 'Atendente',
   user: 'Usuário',
@@ -64,7 +64,7 @@ export function AppSidebar({ session }: { session: AppSession }) {
         { title: 'Médicos', url: '/medicos', icon: Stethoscope },
         { title: 'Pacientes', url: '/pacientes', icon: UsersRound },
         canAccessReports(role) ? { title: 'Relatórios', url: '/relatorios', icon: FileText } : null,
-        canAccessUserManagement(role) ? { title: 'Funcionários', url: '/funcionarios', icon: Users } : null,
+        canAccessUserManagement(role) ? { title: 'Usuários', url: '/funcionarios', icon: Users } : null,
         canAccessClinicSettings(role) ? { title: 'Configurações', url: '/configuracoes/clinica', icon: Settings2 } : null,
       ]
     : [
@@ -72,10 +72,10 @@ export function AppSidebar({ session }: { session: AppSession }) {
       ]).filter(Boolean) as { title: string; url: string; icon: ComponentType<{ className?: string }> }[];
 
   useEffect(() => {
-    const urls = menuItems.map((item) => item.url);
+    const urls = [...new Set([...menuItems.map((item) => item.url), '/agendamentos', '/pacientes', '/medicos'])];
     urls.forEach((url) => router.prefetch(url));
     if (canAccessFinancial(role)) router.prefetch('/assinatura');
-  }, [router, role]);
+  }, [menuItems, router, role]);
 
   const handleSignOut = async () => {
     await authClient.signOut({ fetchOptions: { onSuccess: () => router.push('/autenticacao') } });
@@ -84,7 +84,7 @@ export function AppSidebar({ session }: { session: AppSession }) {
   return (
     <Sidebar>
       <SidebarHeader className="border-b bg-white/90 p-4">
-        <Image src="/logo.svg" alt="Clínica Smart" width={136} height={28} priority />
+        <Image src="/logo.svg" alt="Dr. Agenda" width={136} height={28} priority />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup className="pt-2">
@@ -139,7 +139,7 @@ export function AppSidebar({ session }: { session: AppSession }) {
                     </div>
                     {session.user.clinic?.name ? <p className="text-muted-foreground truncate text-[14px]" title={session.user.clinic.name}>{session.user.clinic.name}</p> : null}
                     <p className="text-muted-foreground truncate text-[14px]" title={session.user.email}>{session.user.email}</p>
-                    <div className="mt-1 flex items-center gap-2">
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
                       <Badge variant="secondary">{roleLabel[session.user.role]}</Badge>
                       {session.user.bypassSubscription ? <Badge className="bg-primary/10 text-primary hover:bg-primary/10">Sem bloqueio</Badge> : null}
                     </div>

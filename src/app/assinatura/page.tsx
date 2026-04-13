@@ -1,6 +1,9 @@
+import { redirect } from 'next/navigation';
+
 import { Badge } from '@/components/ui/badge';
-import { requireSession } from '@/lib/auth';
 import { SubscriptionPlan } from '@/app/(protected)/subscription/_components/subscription-plan';
+import { canAccessFinancial } from '@/lib/access';
+import { requireSession } from '@/lib/auth';
 import { getSubscriptionSummaryForUser } from '@/server/subscription-data';
 
 import { CheckoutSuccessSync } from './_components/checkout-success-sync';
@@ -23,6 +26,11 @@ export default async function AssinaturaPage({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const session = await requireSession();
+
+  if (!session.user.bypassSubscription && !canAccessFinancial(session.user.role)) {
+    redirect('/agendamentos');
+  }
+
   const params = (await searchParams) ?? {};
   const checkoutState = Array.isArray(params.checkout) ? params.checkout[0] : params.checkout;
   const firstAccess = Array.isArray(params.firstAccess) ? params.firstAccess[0] : params.firstAccess;
@@ -30,11 +38,11 @@ export default async function AssinaturaPage({
   const nextRenewal = formatRenewalDate(summary.subscription?.nextDueDate ?? summary.latestPayment?.dueDate ?? null);
 
   return (
-    <div className="min-h-screen bg-muted/30 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-3xl flex-col gap-6">
+    <div className="min-h-screen bg-muted/30 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
         <div className="text-center">
-          <h1 className="text-3xl font-semibold tracking-tight">Plano da clínica</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Gerencie a assinatura do plano premium da sua clínica.</p>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Plano da clínica</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Gerencie a assinatura premium da sua clínica com uma experiência simples e direta.</p>
         </div>
 
         {firstAccess === '1' ? (

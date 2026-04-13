@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 import type { DecodedIdToken } from 'firebase-admin/auth';
 
 import type { UserRole } from '@/db/schema';
-import { resolvePrivilegedAccess } from '@/lib/access';
+import { getDefaultPostLoginRoute, resolvePrivilegedAccess } from '@/lib/access';
 import { adminAuth } from '@/lib/firebase-admin';
 import { getClinicById, getUserProfileById, upsertUserProfile } from '@/server/clinic-data';
 
@@ -179,3 +179,5 @@ export const auth = {
     getSession: async () => getServerSession(),
   },
 };
+
+export { getDefaultPostLoginRoute } from '@/lib/access';

@@ -121,7 +121,7 @@ export interface EmployeeRecord {
   clinicId: string;
   name: string;
   email: string;
-  role: Extract<UserRole, 'admin' | 'attendant'>;
+  role: Extract<UserRole, 'admin' | 'attendant' | 'user'>;
   active: boolean;
   createdAt: Date;
   updatedAt: Date;

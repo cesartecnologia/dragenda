@@ -1,15 +1,9 @@
 import './globals.css';
 
-import { Manrope } from 'next/font/google';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { Toaster } from 'sonner';
 
 import QueryProvider from '@/components/providers/query-provider';
-
-const manrope = Manrope({
-  variable: '--font-manrope',
-  subsets: ['latin'],
-});
 
 export default function RootLayout({
   children,
@@ -18,7 +12,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-br">
-      <body className={`${manrope.variable}`}>
+      <body className="font-sans">
         <QueryProvider>
           <NuqsAdapter>{children}</NuqsAdapter>
           <Toaster position="bottom-center" richColors theme="light" />

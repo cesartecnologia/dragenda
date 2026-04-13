@@ -19,7 +19,7 @@ import { employeesTable } from '@/db/schema';
 const formSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
-  role: z.enum(['admin', 'attendant']),
+  role: z.enum(['admin', 'attendant', 'user']),
   createAccessNow: z.boolean().default(false),
   temporaryPassword: z.string().optional(),
 }).superRefine((value, ctx) => {
@@ -31,6 +31,24 @@ const formSchema = z.object({
     });
   }
 });
+
+const roleOptions = [
+  {
+    value: 'user',
+    label: 'Usuário',
+    description: 'Acessa agenda, pacientes e médicos sem visualizar assinatura, painel, relatórios ou usuários.',
+  },
+  {
+    value: 'attendant',
+    label: 'Atendente',
+    description: 'Indicado para operação da recepção e apoio diário da clínica.',
+  },
+  {
+    value: 'admin',
+    label: 'Administrador',
+    description: 'Gerencia a operação e configurações da clínica.',
+  },
+] as const;
 
 export default function EmployeeForm({ employee }: { employee?: typeof employeesTable.$inferSelect }) {
   type EmployeeFormInput = z.input<typeof formSchema>;
@@ -44,30 +62,34 @@ export default function EmployeeForm({ employee }: { employee?: typeof employees
     defaultValues: {
       name: employee?.name ?? '',
       email: employee?.email ?? '',
-      role: employee?.role ?? 'attendant',
+      role: employee?.role ?? 'user',
       createAccessNow: false,
       temporaryPassword: '',
     },
   });
 
+  const selectedRole = form.watch('role');
   const shouldProvisionAccess = form.watch('createAccessNow');
   const credentialsText = useMemo(() => {
     if (!generatedAccess) return '';
-    return `Acesso ao sistema da clínica\nEmail: ${generatedAccess.email}\nSenha temporária: ${generatedAccess.password}\nEntrada: /autenticacao`;
+    return `Acesso ao sistema da clínica
+Email: ${generatedAccess.email}
+Senha temporária: ${generatedAccess.password}
+Entrada: /autenticacao`;
   }, [generatedAccess]);
 
   const action = useAction(upsertEmployee, {
     onSuccess: ({ data }) => {
-      toast.success('Funcionário salvo com sucesso.');
+      toast.success('Usuário salvo com sucesso.');
       if (data?.createdAccess && data.temporaryPassword && data.loginEmail) {
         setGeneratedAccess({ email: data.loginEmail, password: data.temporaryPassword });
-        toast.success('Acesso do funcionário atualizado com sucesso.');
+        toast.success('Acesso configurado com sucesso.');
         return;
       }
       setGeneratedAccess(null);
       setOpen(false);
     },
-    onError: ({ error }) => toast.error(error.serverError ?? 'Erro ao salvar funcionário.'),
+    onError: ({ error }) => toast.error(error.serverError ?? 'Erro ao salvar usuário.'),
   });
 
   const handleCopy = async () => {
@@ -81,11 +103,11 @@ export default function EmployeeForm({ employee }: { employee?: typeof employees
       setOpen(nextOpen);
       if (!nextOpen) setGeneratedAccess(null);
     }}>
-      <DialogTrigger asChild><Button>{employee ? 'Editar' : 'Novo funcionário'}</Button></DialogTrigger>
-      <DialogContent>
+      <DialogTrigger asChild><Button>{employee ? 'Editar usuário' : 'Novo usuário'}</Button></DialogTrigger>
+      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>{employee ? 'Editar funcionário' : 'Novo funcionário'}</DialogTitle>
-          <DialogDescription>Preencha os dados do colaborador e defina o perfil de acesso.</DialogDescription>
+          <DialogTitle>{employee ? 'Editar usuário' : 'Novo usuário'}</DialogTitle>
+          <DialogDescription>Vincule o usuário à clínica e defina o nível de acesso ideal.</DialogDescription>
         </DialogHeader>
 
         {generatedAccess ? (
@@ -98,7 +120,7 @@ export default function EmployeeForm({ employee }: { employee?: typeof employees
               <p><strong>Email:</strong> {generatedAccess.email}</p>
               <p><strong>Senha temporária:</strong> {generatedAccess.password}</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Button type="button" onClick={handleCopy}><CopyIcon className="mr-2 h-4 w-4" />Copiar credenciais</Button>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Concluir</Button>
             </div>
@@ -114,17 +136,37 @@ export default function EmployeeForm({ employee }: { employee?: typeof employees
             }))} className="space-y-4">
               <FormField control={form.control} name="name" render={({ field }) => <FormItem><FormLabel>Nome</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
               <FormField control={form.control} name="email" render={({ field }) => <FormItem><FormLabel>Email</FormLabel><FormControl><Input {...field} type="email" /></FormControl><FormMessage /></FormItem>} />
-              <FormField control={form.control} name="role" render={({ field }) => <FormItem><FormLabel>Perfil</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="admin">Admin</SelectItem><SelectItem value="attendant">Atendente</SelectItem></SelectContent></Select><FormMessage /></FormItem>} />
-              <label className="flex items-center gap-3 rounded-lg border p-3 text-sm">
-                <input type="checkbox" checked={shouldProvisionAccess} onChange={(event) => form.setValue('createAccessNow', event.target.checked)} />
-                <span>Liberar acesso deste colaborador agora</span>
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Perfil</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {roleOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs leading-5 text-muted-foreground">
+                      {roleOptions.find((option) => option.value === selectedRole)?.description}
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <label className="flex items-start gap-3 rounded-lg border p-3 text-sm leading-6">
+                <input type="checkbox" checked={shouldProvisionAccess} onChange={(event) => form.setValue('createAccessNow', event.target.checked)} className="mt-1" />
+                <span>Liberar acesso deste usuário agora</span>
               </label>
               {shouldProvisionAccess ? (
                 <FormField control={form.control} name="temporaryPassword" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Senha temporária</FormLabel>
                     <FormControl><Input {...field} type="text" placeholder="Ex.: Clinica@2026" /></FormControl>
-                    <p className="text-xs text-muted-foreground">Defina uma senha temporária para o primeiro acesso do colaborador.</p>
+                    <p className="text-xs text-muted-foreground">Defina uma senha temporária para o primeiro acesso do usuário.</p>
                     <FormMessage />
                   </FormItem>
                 )} />

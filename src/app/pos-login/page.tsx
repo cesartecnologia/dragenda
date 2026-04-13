@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 
-import { hasPrivilegedAccess, requireSession } from '@/lib/auth';
+import { requireSession } from '@/lib/auth';
+import { getDefaultPostLoginRoute, hasPrivilegedAccess } from '@/lib/auth';
 import { getClinicById } from '@/server/clinic-data';
 
 export default async function PosLoginPage() {
@@ -34,5 +35,5 @@ export default async function PosLoginPage() {
     redirect('/assinatura?firstAccess=1');
   }
 
-  redirect('/painel');
+  redirect(getDefaultPostLoginRoute(session.user.role));
 }

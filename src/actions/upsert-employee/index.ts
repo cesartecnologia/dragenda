@@ -12,13 +12,14 @@ export const upsertEmployee = actionClient.schema(z.object({
   id: z.string().uuid().optional(),
   name: z.string().min(1),
   email: z.string().email(),
-  role: z.enum(['admin', 'attendant']),
+  role: z.enum(['admin', 'attendant', 'user']),
   active: z.boolean().default(true),
   createAccessNow: z.boolean().default(false),
   temporaryPassword: z.string().min(8).optional(),
 })).action(async ({ parsedInput }) => {
   const session = await auth.api.getSession();
   if (!session?.user?.clinic?.id) throw new Error('Clinic not found');
+
   const employee = await upsertEmployeeRecord({
     id: parsedInput.id,
     clinicId: session.user.clinic.id,

@@ -46,17 +46,21 @@ export const hasPrivilegedRole = (user?: MinimalUser | null) => {
   return access.bypassSubscription || access.role === 'master' || access.role === 'support';
 };
 
-const isPrivilegedRole = (role?: UserRole | null) => ['master', 'support', 'owner', 'admin'].includes(role ?? 'owner');
+const privilegedRoleList: UserRole[] = ['master', 'support', 'owner', 'admin'];
+const operationalRoleList: UserRole[] = [...privilegedRoleList, 'attendant', 'user'];
 
-export const canAccessFinancial = (role?: UserRole | null) => isPrivilegedRole(role);
-export const canAccessDashboard = (role?: UserRole | null) => isPrivilegedRole(role);
-export const canAccessReports = (role?: UserRole | null) => isPrivilegedRole(role);
-export const canAccessUserManagement = (role?: UserRole | null) => ['master', 'support', 'owner', 'admin'].includes(role ?? 'owner');
-export const canAccessClinicSettings = (role?: UserRole | null) => ['master', 'support', 'owner', 'admin'].includes(role ?? 'owner');
-export const canManageFinancialActions = (role?: UserRole | null) => ['master', 'support', 'owner', 'admin'].includes(role ?? 'owner');
-export const canManagePatients = (role?: UserRole | null) => ['master', 'support', 'owner', 'admin', 'attendant'].includes(role ?? 'owner');
-export const canManageDoctors = (role?: UserRole | null) => ['master', 'support', 'owner', 'admin', 'attendant'].includes(role ?? 'owner');
-export const canManageAppointments = (role?: UserRole | null) => ['master', 'support', 'owner', 'admin', 'attendant'].includes(role ?? 'owner');
-export const canDeleteRecords = (role?: UserRole | null) => ['master', 'support', 'owner', 'admin'].includes(role ?? 'owner');
+const hasRole = (role: UserRole | null | undefined, allowed: UserRole[]) => allowed.includes((role ?? 'owner') as UserRole);
+
+export const canAccessFinancial = (role?: UserRole | null) => hasRole(role, privilegedRoleList);
+export const canAccessDashboard = (role?: UserRole | null) => hasRole(role, privilegedRoleList);
+export const canAccessReports = (role?: UserRole | null) => hasRole(role, privilegedRoleList);
+export const canAccessUserManagement = (role?: UserRole | null) => hasRole(role, privilegedRoleList);
+export const canAccessClinicSettings = (role?: UserRole | null) => hasRole(role, privilegedRoleList);
+export const canManageFinancialActions = (role?: UserRole | null) => hasRole(role, privilegedRoleList);
+export const canManagePatients = (role?: UserRole | null) => hasRole(role, operationalRoleList);
+export const canManageDoctors = (role?: UserRole | null) => hasRole(role, operationalRoleList);
+export const canManageAppointments = (role?: UserRole | null) => hasRole(role, operationalRoleList);
+export const canDeleteRecords = (role?: UserRole | null) => hasRole(role, privilegedRoleList);
 
 export const isAdminRole = (role?: UserRole | null) => role === 'admin';
+export const getDefaultPostLoginRoute = (role?: UserRole | null) => (canAccessDashboard(role) ? '/painel' : '/agendamentos');

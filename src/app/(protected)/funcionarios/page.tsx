@@ -8,6 +8,12 @@ import { listEmployeesByClinicId } from '@/server/clinic-data';
 
 import EmployeeForm from './_components/employee-form';
 
+const roleLabel: Record<'admin' | 'attendant' | 'user', string> = {
+  admin: 'Administrador',
+  attendant: 'Atendente',
+  user: 'Usuário',
+};
+
 export default async function FuncionariosPage() {
   const session = await requireSubscribedSession();
   if (!canAccessUserManagement(session.user.role)) redirect('/agendamentos');
@@ -16,14 +22,21 @@ export default async function FuncionariosPage() {
     <PageContainer>
       <PageHeader>
         <PageHeaderContent>
-          <PageTitle>Funcionários</PageTitle>
+          <PageTitle>Usuários</PageTitle>
         </PageHeaderContent>
         <PageActions><EmployeeForm /></PageActions>
       </PageHeader>
       <PageContent>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {employees.map((employee) => (
-            <Card key={employee.id}><CardHeader><CardTitle className="text-base">{employee.name}</CardTitle></CardHeader><CardContent className="space-y-2 text-sm"><p>{employee.email}</p><p>Perfil: {employee.role === 'admin' ? 'Admin' : 'Atendente'}</p><EmployeeForm employee={employee} /></CardContent></Card>
+            <Card key={employee.id} className="rounded-2xl">
+              <CardHeader><CardTitle className="text-base">{employee.name}</CardTitle></CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <p className="break-all text-muted-foreground">{employee.email}</p>
+                <p>Perfil: {roleLabel[employee.role]}</p>
+                <EmployeeForm employee={employee} />
+              </CardContent>
+            </Card>
           ))}
         </div>
       </PageContent>
