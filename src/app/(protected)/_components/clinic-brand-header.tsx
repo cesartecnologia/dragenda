@@ -4,7 +4,6 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 import { formatCnpj, formatPhoneNumber } from '@/helpers/format';
-import { formatClinicAddress } from '@/helpers/clinic-address';
 
 interface Props {
   clinic: {
@@ -12,10 +11,6 @@ interface Props {
     cnpj?: string | null;
     phoneNumber?: string | null;
     address?: string | null;
-    addressNumber?: string | null;
-    addressComplement?: string | null;
-    province?: string | null;
-    postalCode?: string | null;
     logoUrl?: string | null;
   } | null;
 }
@@ -44,7 +39,7 @@ export default function ClinicBrandHeader({ clinic }: Props) {
                 {clinic.cnpj ? <span>CNPJ: {formatCnpj(clinic.cnpj)}</span> : null}
                 {clinic.phoneNumber ? <span>Telefone: {formatPhoneNumber(clinic.phoneNumber)}</span> : null}
               </div>
-              {formatClinicAddress(clinic) ? <div>{formatClinicAddress(clinic)}</div> : null}
+              {clinic.address ? <div>{clinic.address}</div> : null}
             </div>
           </div>
         </div>

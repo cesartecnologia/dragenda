@@ -1,7 +1,13 @@
 import { Badge } from '@/components/ui/badge';
 import { requireSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+
 import { SubscriptionPlan } from '@/app/(protected)/subscription/_components/subscription-plan';
+import { updateUserAsaasSubscription } from '@/server/clinic-data';
 import { getSubscriptionSummaryForUser } from '@/server/subscription-data';
+
+import { CheckoutSuccessSync } from './_components/checkout-success-sync';
+import { SubscriptionManager } from './_components/subscription-manager';
 
 export default async function AssinaturaPage({
   searchParams,
@@ -11,7 +17,22 @@ export default async function AssinaturaPage({
   const session = await requireSession();
   const params = (await searchParams) ?? {};
   const checkoutState = Array.isArray(params.checkout) ? params.checkout[0] : params.checkout;
-  const summary = await getSubscriptionSummaryForUser(session.user.id);
+  let summary = await getSubscriptionSummaryForUser(session.user.id);
+
+  if (checkoutState === 'success') {
+    await updateUserAsaasSubscription(session.user.id, {
+      asaasCustomerId: summary.asaasCustomerId ?? undefined,
+      asaasSubscriptionId: summary.asaasSubscriptionId ?? undefined,
+      subscriptionStatus: summary.resolvedStatus,
+      plan: summary.accessReleased ? 'essential' : null,
+    });
+
+    summary = await getSubscriptionSummaryForUser(session.user.id);
+
+    if (summary.accessReleased) {
+      redirect('/painel?checkout=success');
+    }
+  }
 
   return (
     <div className="min-h-screen bg-muted/30 px-4 py-8 sm:px-6 lg:px-8">
@@ -22,9 +43,12 @@ export default async function AssinaturaPage({
         </div>
 
         {checkoutState === 'success' ? (
-          <Badge className="mx-auto w-fit rounded-full bg-emerald-100 px-4 py-1.5 text-emerald-700 hover:bg-emerald-100">
-            Checkout concluído. Agora basta aguardar a confirmação do Asaas para liberar o acesso.
-          </Badge>
+          <>
+            <Badge className="mx-auto w-fit rounded-full bg-emerald-100 px-4 py-1.5 text-emerald-700 hover:bg-emerald-100">
+              Checkout concluído. Estamos confirmando o pagamento no Asaas para liberar o acesso automaticamente.
+            </Badge>
+            <CheckoutSuccessSync />
+          </>
         ) : null}
         {checkoutState === 'cancelled' ? (
           <Badge className="mx-auto w-fit rounded-full bg-amber-100 px-4 py-1.5 text-amber-700 hover:bg-amber-100">
@@ -45,6 +69,12 @@ export default async function AssinaturaPage({
           subscriptionStatus={summary.resolvedStatus ?? summary.storedStatus}
           className="mx-auto w-full max-w-2xl"
         />
+        <div className="mx-auto w-full max-w-2xl">
+          <SubscriptionManager
+            canCancel={Boolean(summary.asaasSubscriptionId)}
+            bypassSubscription={session.user.bypassSubscription}
+          />
+        </div>
       </div>
     </div>
   );

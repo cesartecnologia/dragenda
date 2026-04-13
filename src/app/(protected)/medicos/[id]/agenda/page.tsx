@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/input';
 import { PageContainer, PageContent, PageHeader, PageHeaderContent, PageTitle } from '@/components/ui/page-container';
 import { formatCurrencyInCents } from '@/helpers/currency';
 import { formatCnpj, formatPhoneNumber } from '@/helpers/format';
-import { formatClinicAddress } from '@/helpers/clinic-address';
 import { formatDateBr, formatDateTimeBr } from '@/helpers/time';
 import { requireSubscribedSession } from '@/lib/auth';
 import { getClinicById, getDoctorById, getPatientById, listAppointmentsByDoctorId } from '@/server/clinic-data';
@@ -72,7 +71,7 @@ export default async function AgendaMedicoPage({ params, searchParams }: Props) 
             <div className="space-y-1 text-sm text-muted-foreground">
               <p>{doctor.specialty} • CRM {doctor.crm}</p>
               <p>Consulta padrão: {formatCurrencyInCents(doctor.appointmentPriceInCents)}</p>
-              {clinic ? <><p>{clinic.name}</p>{clinic.cnpj ? <p>CNPJ: {formatCnpj(clinic.cnpj)}</p> : null}{clinic.phoneNumber ? <p>Telefone: {formatPhoneNumber(clinic.phoneNumber)}</p> : null}{formatClinicAddress(clinic) ? <p>{formatClinicAddress(clinic)}</p> : null}</> : null}
+              {clinic ? <><p>{clinic.name}</p>{clinic.cnpj ? <p>CNPJ: {formatCnpj(clinic.cnpj)}</p> : null}{clinic.phoneNumber ? <p>Telefone: {formatPhoneNumber(clinic.phoneNumber)}</p> : null}{clinic.address ? <p>{clinic.address}</p> : null}</> : null}
             </div>
           </CardHeader>
           <CardContent>

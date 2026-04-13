@@ -11,7 +11,6 @@ import { appointmentsTable, doctorsTable, patientsTable } from '@/db/schema';
 import { getAppointmentPaymentMethodLabel, getAppointmentStatusLabel } from '@/helpers/appointments';
 import { formatCurrencyInCents } from '@/helpers/currency';
 import { formatPhoneNumber } from '@/helpers/format';
-import { formatClinicAddress } from '@/helpers/clinic-address';
 import { formatDateTimeBr } from '@/helpers/time';
 import { requireSubscribedSession } from '@/lib/auth';
 import { getAppointmentByIdWithRelations, getClinicById, getUserProfileById, listDoctorsByClinicId, listPatientsByClinicId } from '@/server/clinic-data';
@@ -214,7 +213,7 @@ export default async function AgendamentoDetalhesPage({ params }: Props) {
                 <CardContent className="space-y-2 text-sm">
                   <p><span className="font-medium">Nome:</span> {clinic.name}</p>
                   <p><span className="font-medium">Telefone:</span> {formatPhoneNumber(clinic.phoneNumber) || 'Não informado'}</p>
-                  <p><span className="font-medium">Endereço:</span> {formatClinicAddress(clinic) || 'Não informado'}</p>
+                  <p><span className="font-medium">Endereço:</span> {clinic.address || 'Não informado'}</p>
                 </CardContent>
               </Card>
             ) : null}

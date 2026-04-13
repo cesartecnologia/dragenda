@@ -46,7 +46,7 @@ const LoginForm = () => {
       },
       {
         onSuccess: () => {
-          router.push('/pos-login');
+          router.push('/painel');
           router.refresh();
         },
         onError: (ctx) => {

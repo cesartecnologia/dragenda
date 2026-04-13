@@ -1,5 +1,4 @@
 import { generateAppointmentReceiptPdf } from '@/lib/pdf-documents';
-import { formatClinicAddress } from '@/helpers/clinic-address';
 import { requireSession } from '@/lib/auth';
 import { getAppointmentById, getClinicById, getDoctorById, getPatientById, getUserProfileById } from '@/server/clinic-data';
 
@@ -26,7 +25,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       name: clinic.name,
       cnpj: clinic.cnpj,
       phoneNumber: clinic.phoneNumber,
-      address: formatClinicAddress(clinic),
+      address: clinic.address,
       logoUrl: clinic.logoUrl,
     },
     patient: {

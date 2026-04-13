@@ -23,10 +23,6 @@ export const updateClinicSettingsAction = actionClient.schema(z.object({
   name: z.string().trim().min(1),
   cnpj: optionalText,
   address: optionalText,
-  addressNumber: optionalText,
-  addressComplement: optionalText,
-  postalCode: optionalText,
-  province: optionalText,
   phoneNumber: optionalText,
   logoUrl: optionalUrl,
   cloudinaryPublicId: optionalText,
@@ -34,5 +30,5 @@ export const updateClinicSettingsAction = actionClient.schema(z.object({
   const session = await auth.api.getSession();
   if (!session?.user?.clinic?.id) throw new Error('Clinic not found');
   await updateClinicSettings(session.user.clinic.id, parsedInput);
-  ['/configuracoes/clinica', '/clinic-form', '/painel', '/dashboard', '/assinatura'].forEach((path) => revalidatePath(path));
+  ['/configuracoes/clinica', '/clinic-form', '/painel', '/dashboard'].forEach((path) => revalidatePath(path));
 });

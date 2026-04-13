@@ -2,7 +2,6 @@ import jsPDF from 'jspdf';
 
 import { formatCurrencyInCents } from '@/helpers/currency';
 import { formatCnpj, formatPhoneNumber } from '@/helpers/format';
-import { formatClinicAddress } from '@/helpers/clinic-address';
 import { formatDateBr, formatDateTimeBr } from '@/helpers/time';
 
 const TEXT: [number, number, number] = [45, 55, 72];
@@ -163,9 +162,8 @@ async function drawClinicBlock(doc: jsPDF, clinic: ClinicPdfData, yStart: number
     setText(doc, line2, textX, yStart + 8.5, { size: 8.5, color: MUTED });
     endY = yStart + 8.5;
   }
-  const formattedClinicAddress = formatClinicAddress(clinic);
-  if (formattedClinicAddress) {
-    endY = writeWrapped(doc, formattedClinicAddress, textX, yStart + 13, pageWidth - textX - 10, { size: 8.5, color: MUTED });
+  if (clinic.address) {
+    endY = writeWrapped(doc, clinic.address, textX, yStart + 13, pageWidth - textX - 10, { size: 8.5, color: MUTED });
   }
   return endY;
 }

@@ -4,12 +4,6 @@ export type AsaasCustomer = {
   email?: string;
   cpfCnpj?: string;
   mobilePhone?: string;
-  phone?: string;
-  address?: string;
-  addressNumber?: string;
-  complement?: string;
-  province?: string;
-  postalCode?: string;
 };
 
 export type AsaasCheckout = {
@@ -41,18 +35,6 @@ export type AsaasSubscriptionPayment = {
   billingType?: string;
   dateCreated?: string;
   invoiceUrl?: string;
-};
-
-export type AsaasCheckoutCustomerData = {
-  name: string;
-  cpfCnpj: string;
-  email: string;
-  phone: string;
-  address: string;
-  addressNumber: string;
-  complement?: string | null;
-  postalCode: string;
-  province: string;
 };
 
 const trimSlash = (value: string) => value.replace(/\/+$/, '');
@@ -119,28 +101,17 @@ export const upsertAsaasCustomer = async (params: {
   email: string;
   cpfCnpj?: string | null;
   mobilePhone?: string | null;
-  address?: string | null;
-  addressNumber?: string | null;
-  complement?: string | null;
-  postalCode?: string | null;
-  province?: string | null;
 }) => {
   const payload = {
     name: params.name,
     email: params.email,
     cpfCnpj: onlyDigits(params.cpfCnpj) || undefined,
     mobilePhone: onlyDigits(params.mobilePhone) || undefined,
-    phone: onlyDigits(params.mobilePhone) || undefined,
-    address: params.address?.trim() || undefined,
-    addressNumber: params.addressNumber?.trim() || undefined,
-    complement: params.complement?.trim() || undefined,
-    postalCode: onlyDigits(params.postalCode) || undefined,
-    province: params.province?.trim() || undefined,
   };
 
   if (params.asaasCustomerId) {
     return await asaasRequest<AsaasCustomer>(`/customers/${params.asaasCustomerId}`, {
-      method: 'PUT',
+      method: 'POST',
       body: JSON.stringify(payload),
       headers: getHeaders(true),
     });
@@ -154,7 +125,7 @@ export const upsertAsaasCustomer = async (params: {
 };
 
 export const createAsaasRecurringCheckout = async (params: {
-  customerData: AsaasCheckoutCustomerData;
+  customerId: string;
   planName: string;
   description: string;
   value: number;
@@ -169,12 +140,7 @@ export const createAsaasRecurringCheckout = async (params: {
   const checkout = await asaasRequest<AsaasCheckout>('/checkouts', {
     method: 'POST',
     body: JSON.stringify({
-      customerData: {
-        ...params.customerData,
-        cpfCnpj: onlyDigits(params.customerData.cpfCnpj),
-        phone: onlyDigits(params.customerData.phone),
-        postalCode: onlyDigits(params.customerData.postalCode),
-      },
+      customer: params.customerId,
       billingTypes: ['CREDIT_CARD'],
       chargeTypes: ['RECURRENT'],
       minutesToExpire: 60,
@@ -194,7 +160,7 @@ export const createAsaasRecurringCheckout = async (params: {
       subscription: {
         cycle: 'MONTHLY',
         nextDueDate,
-      },
+      }
     }),
     headers: getHeaders(true),
   });

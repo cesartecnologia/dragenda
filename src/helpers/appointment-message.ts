@@ -1,17 +1,12 @@
 import { formatCurrencyInCents } from './currency';
 import { formatPhoneNumber } from './format';
 import { formatDateTimeBr } from './time';
-import { formatClinicAddress } from './clinic-address';
 
 interface ClinicInfo {
   name?: string | null;
   cnpj?: string | null;
   phoneNumber?: string | null;
   address?: string | null;
-  addressNumber?: string | null;
-  addressComplement?: string | null;
-  province?: string | null;
-  postalCode?: string | null;
 }
 
 interface AppointmentMessageInput {
@@ -51,7 +46,7 @@ export const buildAppointmentWhatsappText = ({
     `• Valor: ${formatCurrencyInCents(appointmentPriceInCents)}`,
     `• Pagamento: ${paymentConfirmed ? 'Confirmado' : 'Pendente'}`,
     clinic?.phoneNumber ? `• Contato: ${formatPhoneNumber(clinic.phoneNumber)}` : null,
-    formatClinicAddress(clinic) ? `• Endereço: ${formatClinicAddress(clinic)}` : null,
+    clinic?.address ? `• Endereço: ${clinic.address}` : null,
     notes ? `• Observações: ${notes}` : null,
     '',
     isCancelled

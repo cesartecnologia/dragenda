@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 
 import { formatCurrencyInCents } from '@/helpers/currency';
-import { formatClinicAddress } from '@/helpers/clinic-address';
 import { formatCnpj, formatPhoneNumber } from '@/helpers/format';
 import { getAppointmentPaymentMethodLabel, getAppointmentStatusLabel } from '@/helpers/appointments';
 import { formatDateTimeBr } from '@/helpers/time';
@@ -53,8 +52,6 @@ export async function GET(_request: Request, context: RouteContext) {
   if (!clinic) {
     return new NextResponse('Clínica não encontrada.', { status: 404 });
   }
-
-  const formattedClinicAddress = formatClinicAddress(clinic);
 
   const logoMarkup = clinic.logoUrl
     ? `
@@ -236,7 +233,7 @@ export async function GET(_request: Request, context: RouteContext) {
             <h1 class="clinic-name">${escapeHtml(clinic.name)}</h1>
             ${clinic.cnpj ? `<p class="muted">CNPJ: ${escapeHtml(formatCnpj(clinic.cnpj))}</p>` : ''}
             ${clinic.phoneNumber ? `<p class="muted">Telefone: ${escapeHtml(formatPhoneNumber(clinic.phoneNumber))}</p>` : ''}
-            ${formattedClinicAddress ? `<p class="muted">${escapeHtml(formattedClinicAddress)}</p>` : ''}
+            ${clinic.address ? `<p class="muted">${escapeHtml(clinic.address)}</p>` : ''}
           </div>
         </div>
         <div class="stamp">

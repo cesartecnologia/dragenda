@@ -22,10 +22,6 @@ export default async function Layout({ children }: { children: React.ReactNode }
           cnpj: clinic.cnpj,
           phoneNumber: clinic.phoneNumber,
           address: clinic.address,
-          addressNumber: clinic.addressNumber,
-          addressComplement: clinic.addressComplement,
-          province: clinic.province,
-          postalCode: clinic.postalCode,
           logoUrl: clinic.logoUrl,
         } : null} />
         {children}

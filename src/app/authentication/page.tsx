@@ -8,7 +8,7 @@ const AuthenticationPage = async () => {
   const session = await getServerSession();
 
   if (session?.user) {
-    redirect('/pos-login');
+    redirect('/painel');
   }
 
   return (
