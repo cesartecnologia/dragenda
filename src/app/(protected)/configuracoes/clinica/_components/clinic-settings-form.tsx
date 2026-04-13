@@ -17,6 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { clinicsTable } from '@/db/schema';
+import { formatClinicAddress, formatPostalCode } from '@/helpers/format';
 
 const optionalTextField = z.string().optional();
 const optionalUrlField = z
@@ -31,6 +32,10 @@ const formSchema = z.object({
   name: z.string().trim().min(1, { message: 'Nome é obrigatório.' }),
   cnpj: optionalTextField,
   address: optionalTextField,
+  addressNumber: optionalTextField,
+  addressComplement: optionalTextField,
+  postalCode: optionalTextField,
+  province: optionalTextField,
   phoneNumber: optionalTextField,
   logoUrl: optionalUrlField,
   cloudinaryPublicId: optionalTextField,
@@ -59,6 +64,10 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
       name: clinic?.name ?? '',
       cnpj: clinic?.cnpj ?? '',
       address: clinic?.address ?? '',
+      addressNumber: clinic?.addressNumber ?? '',
+      addressComplement: clinic?.addressComplement ?? '',
+      postalCode: clinic?.postalCode ?? '',
+      province: clinic?.province ?? '',
       phoneNumber: clinic?.phoneNumber ?? '',
       logoUrl: clinic?.logoUrl ?? '',
       cloudinaryPublicId: clinic?.cloudinaryPublicId ?? '',
@@ -97,37 +106,51 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
     }
   };
 
+  const normalizePayload = (values: ClinicSettingsFormValues) => ({
+    name: values.name.trim(),
+    cnpj: normalizeOptionalText(values.cnpj),
+    address: normalizeOptionalText(values.address),
+    addressNumber: normalizeOptionalText(values.addressNumber),
+    addressComplement: normalizeOptionalText(values.addressComplement),
+    postalCode: normalizeOptionalText(values.postalCode),
+    province: normalizeOptionalText(values.province),
+    phoneNumber: normalizeOptionalText(values.phoneNumber),
+    logoUrl: normalizeOptionalUrl(values.logoUrl),
+    cloudinaryPublicId: normalizeOptionalText(values.cloudinaryPublicId),
+  });
+
   const handleSubmit = (values: ClinicSettingsFormValues) => {
+    const payload = normalizePayload(values);
+
     if (clinic) {
-      action.execute({
-        name: values.name.trim(),
-        cnpj: normalizeOptionalText(values.cnpj),
-        address: normalizeOptionalText(values.address),
-        phoneNumber: normalizeOptionalText(values.phoneNumber),
-        logoUrl: normalizeOptionalUrl(values.logoUrl),
-        cloudinaryPublicId: normalizeOptionalText(values.cloudinaryPublicId),
-      });
+      action.execute(payload);
       return;
     }
 
-    createClinic(values.name.trim());
+    createClinic(payload);
   };
 
   const logoUrl = form.watch('logoUrl');
   const previewName = form.watch('name');
   const previewCnpj = form.watch('cnpj');
   const previewPhone = form.watch('phoneNumber');
-  const previewAddress = form.watch('address');
+  const previewAddress = formatClinicAddress({
+    address: form.watch('address'),
+    addressNumber: form.watch('addressNumber'),
+    addressComplement: form.watch('addressComplement'),
+    province: form.watch('province'),
+    postalCode: form.watch('postalCode'),
+  });
 
   return (
     <>
       <Card>
         <CardHeader>
-          <CardTitle>{clinic ? 'Dados da clínica' : 'Criar clínica'}</CardTitle>
+          <CardTitle>{clinic ? 'Dados da clínica' : 'Primeiro acesso da clínica'}</CardTitle>
           <CardDescription>
             {clinic
               ? 'Atualize os dados principais e a identidade visual.'
-              : 'Comece criando a clínica principal do sistema.'}
+              : 'Cadastre os dados completos da empresa para liberar a integração com o Asaas.'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -186,7 +209,82 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
                   )}
                 />
 
-                <div className="space-y-2">
+                <FormField
+                  control={form.control}
+                  name="postalCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CEP</FormLabel>
+                      <FormControl>
+                        <PatternFormat
+                          customInput={Input}
+                          format="#####-###"
+                          value={field.value ?? ''}
+                          onValueChange={(value) => field.onChange(value.value)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Logradouro</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value ?? ''} placeholder="Rua, avenida, praça..." />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="addressNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Número</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value ?? ''} placeholder="123" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="province"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bairro</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value ?? ''} placeholder="Centro" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="addressComplement"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Complemento</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value ?? ''} placeholder="Sala, bloco, conjunto" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="space-y-2 md:col-span-2">
                   <FormLabel>Logo da clínica</FormLabel>
                   <Input type="file" accept="image/*" onChange={(event) => handleUpload(event.target.files?.[0])} />
                   {uploading ? <p className="text-sm text-muted-foreground">Enviando logo...</p> : null}
@@ -198,31 +296,13 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
                 </div>
               </div>
 
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Endereço</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        value={field.value ?? ''}
-                        placeholder="Rua, número, bairro, cidade e CEP"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <input type="hidden" {...form.register('logoUrl')} />
               <input type="hidden" {...form.register('cloudinaryPublicId')} />
 
               <div className="flex justify-end">
                 <Button type="submit" disabled={action.isExecuting || uploading}>
                   {action.isExecuting ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-                  {clinic ? 'Salvar configurações' : 'Criar clínica'}
+                  {clinic ? 'Salvar configurações' : 'Concluir cadastro da clínica'}
                 </Button>
               </div>
             </form>
@@ -258,10 +338,11 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
             {previewAddress ? (
               <p className="text-sm text-muted-foreground">Endereço: {previewAddress}</p>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                O endereço aparecerá no cabeçalho dos comprovantes e relatórios.
-              </p>
+              <p className="text-sm text-muted-foreground">Endereço ainda não informado.</p>
             )}
+            {form.watch('postalCode') ? (
+              <p className="text-sm text-muted-foreground">CEP: {formatPostalCode(form.watch('postalCode'))}</p>
+            ) : null}
           </div>
         </CardContent>
       </Card>

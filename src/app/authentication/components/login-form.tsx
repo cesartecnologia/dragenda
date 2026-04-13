@@ -46,7 +46,7 @@ const LoginForm = () => {
       },
       {
         onSuccess: () => {
-          router.push('/painel');
+          router.push('/pos-login');
           router.refresh();
         },
         onError: (ctx) => {
@@ -116,8 +116,8 @@ const LoginForm = () => {
             </Button>
             <p className="text-muted-foreground text-center text-sm">
               Não tem acesso ainda?{' '}
-              <Link href="/autenticacao/cadastro" className="font-medium text-primary underline-offset-4 hover:underline">
-                Criar usuário
+              <Link href="/primeiro-acesso" className="font-medium text-primary underline-offset-4 hover:underline">
+                Fazer primeiro acesso
               </Link>
             </p>
           </CardFooter>

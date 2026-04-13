@@ -266,6 +266,10 @@ export const createClinicForUser = async (params: { userId: string; name: string
     name: params.name,
     cnpj: null,
     address: null,
+    addressNumber: null,
+    addressComplement: null,
+    postalCode: null,
+    province: null,
     phoneNumber: null,
     logoUrl: null,
     cloudinaryPublicId: null,
@@ -366,6 +370,7 @@ export const updateUserAsaasSubscription = async (
           params.asaasCustomerId === undefined ? existingClinic.asaasCustomerId : params.asaasCustomerId,
         asaasSubscriptionId:
           params.asaasSubscriptionId === undefined ? existingClinic.asaasSubscriptionId : params.asaasSubscriptionId,
+        asaasCheckoutId: params.asaasCheckoutId === undefined ? existingClinic.asaasCheckoutId : params.asaasCheckoutId,
         subscriptionStatus:
           params.subscriptionStatus === undefined ? existingClinic.subscriptionStatus : params.subscriptionStatus,
         plan: params.plan === undefined ? existingClinic.plan : params.plan,

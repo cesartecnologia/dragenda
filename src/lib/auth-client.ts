@@ -158,7 +158,19 @@ export const authClient = {
   },
   signUp: {
     email: async (
-      values: { email: string; password: string; name: string },
+      values: {
+        email: string;
+        password: string;
+        name: string;
+        clinicName: string;
+        clinicCnpj: string;
+        clinicPhoneNumber: string;
+        clinicAddress: string;
+        clinicAddressNumber: string;
+        clinicAddressComplement?: string;
+        clinicPostalCode: string;
+        clinicProvince: string;
+      },
       callbacks?: {
         onSuccess?: () => void;
         onError?: (ctx: CallbackContext) => void;

@@ -1,3 +1,4 @@
+import { formatClinicAddress } from '@/helpers/format';
 import dayjs from 'dayjs';
 
 import { getServerSession } from '@/lib/auth';
@@ -27,7 +28,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
       name: clinic?.name ?? 'Clínica',
       cnpj: clinic?.cnpj,
       phoneNumber: clinic?.phoneNumber,
-      address: clinic?.address,
+      address: formatClinicAddress(clinic),
       logoUrl: clinic?.logoUrl,
     },
     patient: {

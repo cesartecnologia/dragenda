@@ -1,4 +1,3 @@
-
 'use server';
 
 import { requireSession } from '@/lib/auth';
@@ -9,6 +8,8 @@ import { createClinicForUser, getClinicById, getUserProfileById, updateUserAsaas
 const PLAN_NAME = 'essential';
 const PLAN_LABEL = 'Plano Profissional';
 const PLAN_VALUE = Number(process.env.ASAAS_PLAN_VALUE ?? '99');
+
+const normalizeDigits = (value?: string | null) => (value ?? '').replace(/\D/g, '');
 
 export const createAsaasCheckout = actionClient.action(async () => {
   const session = await requireSession();
@@ -37,12 +38,23 @@ export const createAsaasCheckout = actionClient.action(async () => {
 
   if (!clinicId || !clinic) throw new Error('Clínica não encontrada.');
 
+  if (!clinic.cnpj || !clinic.phoneNumber || !clinic.address || !clinic.addressNumber || !clinic.postalCode || !clinic.province) {
+    throw new Error('Complete CNPJ, telefone, logradouro, número, CEP e bairro da clínica antes de assinar.');
+  }
+
   const customer = await upsertAsaasCustomer({
     asaasCustomerId: clinic.asaasCustomerId ?? userProfile.asaasCustomerId,
     name: clinic.name || session.user.name,
     email: session.user.email,
-    cpfCnpj: clinic.cnpj,
-    mobilePhone: clinic.phoneNumber,
+    cpfCnpj: normalizeDigits(clinic.cnpj),
+    phone: normalizeDigits(clinic.phoneNumber),
+    mobilePhone: normalizeDigits(clinic.phoneNumber),
+    address: clinic.address,
+    addressNumber: clinic.addressNumber,
+    complement: clinic.addressComplement,
+    province: clinic.province,
+    postalCode: normalizeDigits(clinic.postalCode),
+    externalReference: clinic.id,
   });
 
   await updateUserAsaasSubscription(session.user.id, {
@@ -59,7 +71,6 @@ export const createAsaasCheckout = actionClient.action(async () => {
     successUrl: `${appUrl}/assinatura?checkout=success`,
     cancelUrl: `${appUrl}/assinatura?checkout=cancelled`,
     expiredUrl: `${appUrl}/assinatura?checkout=expired`,
-    clinicName: clinic.name,
   });
 
   await updateUserAsaasSubscription(session.user.id, {

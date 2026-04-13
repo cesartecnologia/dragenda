@@ -3,7 +3,13 @@ export type AsaasCustomer = {
   name?: string;
   email?: string;
   cpfCnpj?: string;
+  phone?: string;
   mobilePhone?: string;
+  address?: string;
+  addressNumber?: string;
+  complement?: string;
+  province?: string;
+  postalCode?: string;
 };
 
 export type AsaasCheckout = {
@@ -99,19 +105,33 @@ export const upsertAsaasCustomer = async (params: {
   asaasCustomerId?: string | null;
   name: string;
   email: string;
-  cpfCnpj?: string | null;
+  cpfCnpj: string;
+  phone: string;
   mobilePhone?: string | null;
+  address: string;
+  addressNumber: string;
+  complement?: string | null;
+  province: string;
+  postalCode: string;
+  externalReference?: string | null;
 }) => {
   const payload = {
     name: params.name,
     email: params.email,
-    cpfCnpj: onlyDigits(params.cpfCnpj) || undefined,
-    mobilePhone: onlyDigits(params.mobilePhone) || undefined,
+    cpfCnpj: onlyDigits(params.cpfCnpj),
+    phone: onlyDigits(params.phone),
+    mobilePhone: onlyDigits(params.mobilePhone ?? params.phone),
+    address: params.address.trim(),
+    addressNumber: params.addressNumber.trim(),
+    complement: params.complement?.trim() || undefined,
+    province: params.province.trim(),
+    postalCode: onlyDigits(params.postalCode),
+    externalReference: params.externalReference?.trim() || undefined,
   };
 
   if (params.asaasCustomerId) {
     return await asaasRequest<AsaasCustomer>(`/customers/${params.asaasCustomerId}`, {
-      method: 'POST',
+      method: 'PUT',
       body: JSON.stringify(payload),
       headers: getHeaders(true),
     });
@@ -132,7 +152,6 @@ export const createAsaasRecurringCheckout = async (params: {
   successUrl: string;
   cancelUrl: string;
   expiredUrl: string;
-  clinicName?: string | null;
 }) => {
   const now = new Date(Date.now() + 5 * 60 * 1000);
   const nextDueDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
@@ -160,7 +179,7 @@ export const createAsaasRecurringCheckout = async (params: {
       subscription: {
         cycle: 'MONTHLY',
         nextDueDate,
-      }
+      },
     }),
     headers: getHeaders(true),
   });

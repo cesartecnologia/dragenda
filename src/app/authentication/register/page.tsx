@@ -8,12 +8,12 @@ const RegisterPage = async () => {
   const session = await getServerSession();
 
   if (session?.user) {
-    redirect('/painel');
+    redirect('/pos-login');
   }
 
   return (
     <div className="flex min-h-screen w-screen items-center justify-center p-4">
-      <div className="w-full max-w-[400px]">
+      <div className="w-full max-w-4xl">
         <SignUpForm />
       </div>
     </div>

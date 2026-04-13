@@ -55,17 +55,21 @@ export function AppSidebar({ session }: { session: AppSession }) {
   const router = useRouter();
   const pathname = usePathname();
   const role = session.user.role;
+  const hasFullAccess = session.user.hasSubscriptionAccess || session.user.bypassSubscription;
 
-  const menuItems = [
-    canAccessDashboard(role) ? { title: 'Painel', url: '/painel', icon: LayoutDashboard } : null,
-    { title: 'Agendamentos', url: '/agendamentos', icon: CalendarDays },
-    { title: 'Médicos', url: '/medicos', icon: Stethoscope },
-    { title: 'Pacientes', url: '/pacientes', icon: UsersRound },
-    canAccessReports(role) ? { title: 'Relatórios', url: '/relatorios', icon: FileText } : null,
-    canAccessUserManagement(role) ? { title: 'Funcionários', url: '/funcionarios', icon: Users } : null,
-    canAccessClinicSettings(role) ? { title: 'Configurações', url: '/configuracoes/clinica', icon: Settings2 } : null,
-  ].filter(Boolean) as { title: string; url: string; icon: ComponentType<{ className?: string }> }[];
-
+  const menuItems = (hasFullAccess
+    ? [
+        canAccessDashboard(role) ? { title: 'Painel', url: '/painel', icon: LayoutDashboard } : null,
+        { title: 'Agendamentos', url: '/agendamentos', icon: CalendarDays },
+        { title: 'Médicos', url: '/medicos', icon: Stethoscope },
+        { title: 'Pacientes', url: '/pacientes', icon: UsersRound },
+        canAccessReports(role) ? { title: 'Relatórios', url: '/relatorios', icon: FileText } : null,
+        canAccessUserManagement(role) ? { title: 'Funcionários', url: '/funcionarios', icon: Users } : null,
+        canAccessClinicSettings(role) ? { title: 'Configurações', url: '/configuracoes/clinica', icon: Settings2 } : null,
+      ]
+    : [
+        canAccessClinicSettings(role) ? { title: 'Configurações', url: '/configuracoes/clinica', icon: Settings2 } : null,
+      ]).filter(Boolean) as { title: string; url: string; icon: ComponentType<{ className?: string }> }[];
 
   useEffect(() => {
     const urls = menuItems.map((item) => item.url);
@@ -100,7 +104,7 @@ export function AppSidebar({ session }: { session: AppSession }) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {canAccessFinancial(role) ? (
+        {canAccessFinancial(role) || !hasFullAccess ? (
           <SidebarGroup className="pt-3">
             <SidebarGroupContent>
               <SidebarMenu className="gap-2.5 px-3">
