@@ -27,18 +27,27 @@ type AuthShellProps = {
   title: string;
   description: string;
   children: React.ReactNode;
+  headerLinkHref?: string;
+  headerLinkLabel?: string;
 };
 
-export function AuthShell({ eyebrow, title, description, children }: AuthShellProps) {
+export function AuthShell({
+  eyebrow,
+  title,
+  description,
+  children,
+  headerLinkHref = '/autenticacao',
+  headerLinkLabel = 'Ver plano',
+}: AuthShellProps) {
   return (
     <div className="min-h-screen bg-[#f5f5f5] px-4 py-4 sm:px-6 sm:py-6">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <header className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm sm:px-5">
           <Image src="/logo.svg" alt="Dr. Agenda" width={150} height={36} priority className="h-auto w-[132px] sm:w-[150px]" />
           <Button asChild variant="outline" className="rounded-full border-slate-300 bg-white text-slate-700 hover:bg-slate-50">
-            <Link href="/autenticacao/login">
+            <Link href={headerLinkHref}>
               <LogIn className="mr-2 h-4 w-4" />
-              Login
+              {headerLinkLabel}
             </Link>
           </Button>
         </header>

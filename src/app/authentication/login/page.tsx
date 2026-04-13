@@ -15,8 +15,10 @@ const AuthenticationLoginPage = async () => {
   return (
     <AuthShell
       eyebrow="Área do cliente"
-      title="Entre na sua clínica e continue de onde parou."
-      description="Acesse sua conta com e-mail e senha para gerenciar a rotina da clínica no Dr. Agenda."
+      title="Entre na sua clínica"
+      description="Acesse sua conta para continuar a rotina da clínica no Dr. Agenda."
+      headerLinkHref="/autenticacao"
+      headerLinkLabel="Ver plano"
     >
       <LoginForm />
     </AuthShell>

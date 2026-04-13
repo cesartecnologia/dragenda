@@ -15,8 +15,10 @@ const RegisterPage = async () => {
   return (
     <AuthShell
       eyebrow="Primeiro acesso"
-      title="Cadastre sua clínica para seguir com a contratação."
-      description="Preencha os dados do responsável e da clínica. Ao concluir, você será direcionado automaticamente para a assinatura do plano."
+      title="Cadastre sua clínica"
+      description="Informe os dados do responsável e da clínica para continuar."
+      headerLinkHref="/autenticacao/login"
+      headerLinkLabel="Área do cliente"
     >
       <SignUpForm />
     </AuthShell>

@@ -52,22 +52,22 @@ export default async function AssinaturaPage({
     <div className="min-h-screen bg-muted/30 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Plano da clínica</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Gerencie a assinatura premium da sua clínica com uma experiência simples e direta.</p>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Assinatura Premium</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Acompanhe o status do plano da sua clínica.</p>
         </div>
 
         {startCheckout === '1' && !summary.accessReleased && !session.user.bypassSubscription ? <AutoStartCheckout /> : null}
 
         {firstAccess === '1' ? (
           <Badge className="mx-auto w-fit rounded-full bg-blue-100 px-4 py-1.5 text-blue-700 hover:bg-blue-100">
-            Primeiro acesso concluído. Falta apenas finalizar a assinatura para liberar o sistema.
+            Cadastro concluído. Falta apenas finalizar a assinatura.
           </Badge>
         ) : null}
         {checkoutState === 'success' ? (
           <>
             <CheckoutSuccessSync />
             <Badge className="mx-auto w-fit rounded-full bg-emerald-100 px-4 py-1.5 text-emerald-700 hover:bg-emerald-100">
-              Pagamento concluído. Estamos validando sua assinatura para liberar o acesso.
+              Pagamento concluído. Estamos validando sua assinatura.
             </Badge>
           </>
         ) : null}

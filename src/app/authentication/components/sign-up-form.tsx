@@ -118,9 +118,9 @@ const SignUpForm = () => {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <CardHeader>
-            <CardTitle className="text-xl text-slate-900">Primeiro acesso da clínica</CardTitle>
+            <CardTitle className="text-xl text-slate-900">Cadastro da clínica</CardTitle>
             <CardDescription className="text-sm leading-6 text-slate-600">
-              Preencha os dados do responsável e da clínica para liberar a contratação do plano e começar a usar o sistema.
+              Informe os dados do responsável e da clínica para continuar.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -302,13 +302,13 @@ const SignUpForm = () => {
               {form.formState.isSubmitting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                'Continuar para assinatura'
+                'Continuar'
               )}
             </Button>
             <p className="text-muted-foreground text-center text-sm">
               Já tem acesso?{' '}
-              <Link href="/autenticacao" className="font-medium text-primary underline-offset-4 hover:underline">
-                Voltar para o login
+              <Link href="/autenticacao/login" className="font-medium text-primary underline-offset-4 hover:underline">
+                Entrar na área do cliente
               </Link>
             </p>
           </CardFooter>

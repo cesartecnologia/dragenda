@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { CheckCircle2, CreditCard, LogIn, ShieldCheck, Sparkles, Stethoscope } from 'lucide-react';
+import { CheckCircle2, CreditCard, ShieldCheck, Sparkles, Stethoscope } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -20,11 +20,11 @@ type PublicSubscriptionViewProps = {
 
 export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscriptionViewProps) {
   const loginHref = '/autenticacao/login';
-  const heading = source === 'login' ? 'Plano da clínica' : 'Plano da clínica';
+  const heading = 'Assinatura Premium';
   const description =
     source === 'login'
-      ? 'Conheça o plano premium da sua clínica e siga para o cadastro quando decidir contratar.'
-      : 'Gerencie a assinatura premium da sua clínica com uma experiência simples e direta.';
+      ? 'Centralize agenda, pacientes, equipe e operação da clínica em uma única plataforma.'
+      : 'Tenha controle da operação da clínica em um único lugar.';
 
   return (
     <div className="min-h-screen bg-[#f5f5f5] px-4 py-4 sm:px-6 sm:py-6">
@@ -34,17 +34,9 @@ export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscr
             <Image src="/logo.svg" alt="Dr. Agenda" width={150} height={36} priority className="h-auto w-[132px] sm:w-[150px]" />
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="hidden rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600 sm:block">
-              Área do cliente
-            </div>
-            <Button asChild variant="outline" className="rounded-full border-slate-300 bg-white text-slate-700 hover:bg-slate-50">
-              <Link href={loginHref}>
-                <LogIn className="mr-2 h-4 w-4" />
-                Login
-              </Link>
-            </Button>
-          </div>
+          <Button asChild variant="outline" className="rounded-full border-slate-300 bg-white text-slate-700 hover:bg-slate-50">
+            <Link href={loginHref}>Área do cliente</Link>
+          </Button>
         </header>
 
         <div className="mx-auto max-w-3xl text-center">
@@ -62,7 +54,7 @@ export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscr
             <div className="space-y-2">
               <h2 className="text-3xl font-bold tracking-[-0.03em] text-slate-950">Plano Premium</h2>
               <p className="text-base leading-7 text-slate-600">
-                Tenha acesso completo aos principais recursos do Dr. Agenda.
+                Tudo o que sua clínica precisa para organizar atendimentos, pacientes e equipe.
               </p>
             </div>
 
@@ -74,9 +66,6 @@ export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscr
               <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600">
                 Ideal para clínicas que querem concentrar agenda, pacientes, equipe e visão do negócio em uma única plataforma.
               </p>
-              <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                Cadastro da clínica e contratação no mesmo fluxo, sem etapas desnecessárias.
-              </div>
             </div>
           </CardHeader>
 
@@ -90,12 +79,6 @@ export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscr
                   </div>
                 ))}
               </div>
-            </div>
-
-            <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-4 text-sm text-slate-700">
-              <p className="font-medium text-slate-900">
-                Sua clínica terá acesso completo ao sistema enquanto o plano estiver ativo.
-              </p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
