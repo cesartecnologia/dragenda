@@ -71,12 +71,12 @@ const LoginForm = () => {
   };
 
   return (
-    <Card>
+    <Card className="border-slate-200 bg-white/95 shadow-xl shadow-slate-200/60">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <CardHeader>
-            <CardTitle>Login</CardTitle>
-            <CardDescription>Entre com e-mail e senha.</CardDescription>
+            <CardTitle className="text-2xl">Acessar conta</CardTitle>
+            <CardDescription>Entre com seu e-mail e sua senha para continuar.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormField
@@ -115,7 +115,7 @@ const LoginForm = () => {
               )}
             </Button>
             <p className="text-muted-foreground text-center text-sm">
-              Não tem acesso ainda?{' '}
+              Ainda não tem acesso?{' '}
               <Link href="/primeiro-acesso" className="font-medium text-primary underline-offset-4 hover:underline">
                 Fazer primeiro acesso
               </Link>

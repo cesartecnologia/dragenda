@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2, CreditCard, Loader2, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, CreditCard, Loader2, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAction } from 'next-safe-action/hooks';
 import { toast } from 'sonner';
 
@@ -14,27 +14,27 @@ interface SubscriptionPlanProps {
   className?: string;
   userEmail: string;
   bypassSubscription?: boolean;
-  asaasSubscriptionId?: string | null;
   subscriptionStatus?: string | null;
+  nextRenewal?: string | null;
 }
 
 export function SubscriptionPlan({
   active = false,
   className,
   bypassSubscription = false,
-  asaasSubscriptionId,
   subscriptionStatus,
+  nextRenewal,
 }: SubscriptionPlanProps) {
   const checkoutAction = useAction(createAsaasCheckout, {
     onSuccess: ({ data }) => {
       if (!data?.checkoutUrl) {
-        toast.error('Link do checkout não encontrado.');
+        toast.error('Link de pagamento não encontrado.');
         return;
       }
       window.location.href = data.checkoutUrl;
     },
     onError: ({ error }) => {
-      toast.error(error.serverError ?? 'Não foi possível gerar o checkout do Asaas.');
+      toast.error(error.serverError ?? 'Não foi possível abrir a contratação do plano.');
     },
   });
 
@@ -44,24 +44,38 @@ export function SubscriptionPlan({
     'Dashboard com métricas da clínica',
     'Cadastro completo de pacientes',
     'Gestão de agenda e atendimento',
-    'Suporte prioritário via e-mail',
+    'Suporte prioritário',
   ];
 
   const statusLabel = active
-    ? 'Assinatura ativa'
+    ? 'Assinatura Premium ativa'
     : subscriptionStatus === 'overdue'
-      ? 'Pagamento em atraso'
+      ? 'Pagamento pendente'
       : subscriptionStatus === 'checkout_pending'
-        ? 'Checkout em aberto'
-        : 'Plano Profissional';
+        ? 'Contratação em andamento'
+        : 'Plano Premium';
+
+  const ctaLabel = bypassSubscription
+    ? 'Plano não exigido para seu perfil'
+    : active
+      ? 'Assinatura Premium ativa'
+      : subscriptionStatus === 'checkout_pending'
+        ? 'Continuar contratação'
+        : 'Assinar plano Premium';
 
   return (
     <Card className={className}>
-      <CardHeader>
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h3 className="text-2xl font-bold text-gray-900">{statusLabel}</h3>
-            <p className="mt-1 text-sm text-primary">Cobrança recorrente via Asaas</p>
+      <CardHeader className="space-y-6">
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
+              <Sparkles className="size-3.5" />
+              Plano principal da clínica
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900">{statusLabel}</h3>
+              <p className="mt-1 text-sm text-gray-600">Tenha acesso completo aos principais recursos da Clínica Smart.</p>
+            </div>
           </div>
           {bypassSubscription ? (
             <Badge className="gap-1 bg-blue-100 text-blue-700 hover:bg-blue-100">
@@ -74,10 +88,20 @@ export function SubscriptionPlan({
             <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">Aguardando pagamento</Badge>
           ) : null}
         </div>
-        <p className="text-gray-600">Tenha acesso completo ao sistema, com gestão clínica, agenda e métricas.</p>
-        <div className="flex items-baseline">
-          <span className="text-3xl font-bold text-gray-900">R$99</span>
-          <span className="ml-1 text-gray-600">/ mês</span>
+
+        <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+          <div className="flex items-baseline gap-1">
+            <span className="text-4xl font-bold tracking-tight text-slate-900">R$ 99,90</span>
+            <span className="text-sm text-slate-500">/mês</span>
+          </div>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            Ideal para clínicas que querem concentrar agenda, pacientes, equipe e visão do negócio em uma única plataforma.
+          </p>
+          {nextRenewal ? (
+            <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+              <span className="font-medium">Próxima renovação:</span> {nextRenewal}
+            </div>
+          ) : null}
         </div>
       </CardHeader>
 
@@ -95,7 +119,7 @@ export function SubscriptionPlan({
 
         <div className="mt-8 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground">
           <p className="font-medium text-foreground">
-            O acesso da clínica é liberado automaticamente quando o Asaas confirmar o pagamento da assinatura.
+            Sua clínica continua com acesso ativo enquanto a assinatura estiver regularizada.
           </p>
         </div>
 
@@ -111,28 +135,14 @@ export function SubscriptionPlan({
             ) : (
               <CreditCard className="mr-1 h-4 w-4" />
             )}
-            {bypassSubscription
-              ? 'Plano não exigido para seu perfil'
-              : active
-                ? 'Assinatura ativa no Asaas'
-                : subscriptionStatus === 'checkout_pending'
-                  ? 'Gerar novo checkout Asaas'
-                  : 'Assinar plano pelo Asaas'}
+            {ctaLabel}
           </Button>
-
-          {asaasSubscriptionId ? (
-            <p className="text-center text-xs text-muted-foreground">Assinatura vinculada: {asaasSubscriptionId}</p>
-          ) : null}
 
           {bypassSubscription ? (
             <p className="text-center text-xs text-muted-foreground">
-              Seu perfil Master/Suporte ignora o bloqueio comercial e pode acessar o sistema sem assinatura ativa.
+              Seu perfil possui liberação administrativa e não depende de cobrança para acessar o sistema.
             </p>
-          ) : (
-            <p className="text-center text-xs text-muted-foreground">
-              Cobrança recorrente mensal com confirmação e bloqueio automáticos via webhook do Asaas.
-            </p>
-          )}
+          ) : null}
         </div>
       </CardContent>
     </Card>

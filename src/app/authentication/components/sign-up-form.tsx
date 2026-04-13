@@ -109,18 +109,18 @@ const SignUpForm = () => {
   }
 
   return (
-    <Card>
+    <Card className="border-slate-200 bg-white/95 shadow-xl shadow-slate-200/60">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <CardHeader>
-            <CardTitle>Primeiro acesso</CardTitle>
+            <CardTitle className="text-2xl">Primeiro acesso da clínica</CardTitle>
             <CardDescription>
-              Cadastre o responsável e a empresa com todos os dados necessários para a integração com o Asaas.
+              Preencha os dados do responsável e da clínica para liberar a contratação do plano e começar a usar o sistema.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground">Responsável</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Responsável</h3>
               <div className="grid gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
@@ -165,7 +165,7 @@ const SignUpForm = () => {
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground">Empresa</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Empresa</h3>
               <div className="grid gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
@@ -297,7 +297,7 @@ const SignUpForm = () => {
               {form.formState.isSubmitting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                'Concluir primeiro acesso'
+                'Continuar para assinatura'
               )}
             </Button>
             <p className="text-muted-foreground text-center text-sm">

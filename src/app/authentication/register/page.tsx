@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 
 import { getServerSession } from '@/lib/auth';
 
+import { AuthShell } from '../components/auth-shell';
 import SignUpForm from '../components/sign-up-form';
 
 const RegisterPage = async () => {
@@ -12,11 +13,13 @@ const RegisterPage = async () => {
   }
 
   return (
-    <div className="flex min-h-screen w-screen items-center justify-center p-4">
-      <div className="w-full max-w-4xl">
-        <SignUpForm />
-      </div>
-    </div>
+    <AuthShell
+      eyebrow="Primeiro acesso"
+      title="Configure sua clínica e ative o plano ideal em poucos minutos."
+      description="No primeiro acesso você cadastra os dados da clínica, prepara a assinatura e deixa tudo pronto para começar a operar sem retrabalho."
+    >
+      <SignUpForm />
+    </AuthShell>
   );
 };
 
