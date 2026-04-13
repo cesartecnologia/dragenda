@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowRight, CreditCard, KeyRound, Loader2, Mail, ShieldCheck } from 'lucide-react';
+import { ArrowRight, KeyRound, Loader2, Mail, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -9,10 +9,15 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { FormControl, FormMessage } from '@/components/ui/form';
-import { FormItem, FormLabel } from '@/components/ui/form';
-import { Form, FormField } from '@/components/ui/form';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { authClient } from '@/lib/auth-client';
 
@@ -70,11 +75,11 @@ const LoginForm = () => {
           <CardHeader className="space-y-3 pb-4">
             <div className="inline-flex w-fit items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
               <ShieldCheck className="h-4 w-4" />
-              Acesso seguro da clínica
+              Área do cliente
             </div>
             <div className="space-y-1.5">
               <CardTitle className="text-2xl font-semibold tracking-[-0.02em] text-slate-950">
-                Bem-vindo de volta
+                Fazer login
               </CardTitle>
               <CardDescription className="text-sm leading-6 text-slate-600">
                 Entre com seus dados para continuar usando o Dr. Agenda com praticidade e segurança.
@@ -139,10 +144,7 @@ const LoginForm = () => {
             </Button>
             <div className="grid w-full gap-3 sm:grid-cols-2">
               <Button asChild type="button" variant="outline" className="h-11 rounded-xl border-sky-200 text-sky-700 hover:bg-sky-50">
-                <Link href="/assinatura">
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  Ver assinatura
-                </Link>
+                <Link href="/autenticacao">Ver assinatura</Link>
               </Button>
               <Button asChild type="button" variant="ghost" className="h-11 rounded-xl text-slate-600 hover:bg-slate-50">
                 <Link href="/primeiro-acesso">Fazer primeiro acesso</Link>
