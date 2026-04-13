@@ -12,6 +12,11 @@ const parseList = (value?: string) =>
     .map((item) => item.trim().toLowerCase())
     .filter(Boolean);
 
+const normalizeRole = (role?: UserRole | null): UserRole => {
+  if (role === 'user') return 'attendant';
+  return (role ?? 'owner') as UserRole;
+};
+
 export const getPrivilegedEmails = () => {
   const masterEmails = [process.env.MASTER_EMAIL, ...parseList(process.env.MASTER_EMAILS)];
   const supportEmails = [process.env.SUPPORT_EMAIL, ...parseList(process.env.SUPPORT_EMAILS)];
@@ -31,11 +36,18 @@ export const resolvePrivilegedAccess = (
 
   if (normalizedEmail && supportEmails.has(normalizedEmail)) return { role: 'support', bypassSubscription: true };
   if (normalizedEmail && masterEmails.has(normalizedEmail)) return { role: 'master', bypassSubscription: true };
-  if (existing?.role === 'master' || existing?.role === 'support') return { role: existing.role, bypassSubscription: true };
-  if (existing?.bypassSubscription) return { role: (existing.role as UserRole | undefined) ?? 'owner', bypassSubscription: true };
+  const normalizedExistingRole = normalizeRole(existing?.role);
+
+  if (normalizedExistingRole === 'master' || normalizedExistingRole === 'support') {
+    return { role: normalizedExistingRole, bypassSubscription: true };
+  }
+
+  if (existing?.bypassSubscription) {
+    return { role: normalizedExistingRole, bypassSubscription: true };
+  }
 
   return {
-    role: (existing?.role as UserRole | undefined) ?? 'owner',
+    role: normalizedExistingRole,
     bypassSubscription: Boolean(existing?.bypassSubscription),
   };
 };
@@ -49,7 +61,7 @@ export const hasPrivilegedRole = (user?: MinimalUser | null) => {
 const privilegedRoleList: UserRole[] = ['master', 'support', 'owner', 'admin'];
 const operationalRoleList: UserRole[] = [...privilegedRoleList, 'attendant', 'user'];
 
-const hasRole = (role: UserRole | null | undefined, allowed: UserRole[]) => allowed.includes((role ?? 'owner') as UserRole);
+const hasRole = (role: UserRole | null | undefined, allowed: UserRole[]) => allowed.includes(normalizeRole(role));
 
 export const canAccessFinancial = (role?: UserRole | null) => hasRole(role, privilegedRoleList);
 export const canAccessDashboard = (role?: UserRole | null) => hasRole(role, privilegedRoleList);

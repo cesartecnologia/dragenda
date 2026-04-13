@@ -19,7 +19,7 @@ import { employeesTable } from '@/db/schema';
 const formSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
-  role: z.enum(['admin', 'attendant', 'user']),
+  role: z.enum(['admin', 'attendant']),
   createAccessNow: z.boolean().default(false),
   temporaryPassword: z.string().optional(),
 }).superRefine((value, ctx) => {
@@ -34,21 +34,16 @@ const formSchema = z.object({
 
 const roleOptions = [
   {
-    value: 'user',
-    label: 'Usuário',
-    description: 'Acessa agenda, pacientes e médicos sem visualizar assinatura, painel, relatórios ou usuários.',
-  },
-  {
     value: 'attendant',
     label: 'Atendente',
-    description: 'Indicado para operação da recepção e apoio diário da clínica.',
+    description: 'Acessa a operação diária da clínica sem visualizar assinatura, painel, relatórios ou usuários.',
   },
   {
     value: 'admin',
     label: 'Administrador',
-    description: 'Gerencia a operação e configurações da clínica.',
+    description: 'Gerencia a operação, usuários e configurações da clínica.',
   },
-] as const;
+] as const;;
 
 export default function EmployeeForm({ employee }: { employee?: typeof employeesTable.$inferSelect }) {
   type EmployeeFormInput = z.input<typeof formSchema>;
@@ -62,7 +57,7 @@ export default function EmployeeForm({ employee }: { employee?: typeof employees
     defaultValues: {
       name: employee?.name ?? '',
       email: employee?.email ?? '',
-      role: employee?.role ?? 'user',
+      role: employee?.role === 'admin' ? 'admin' : 'attendant',
       createAccessNow: false,
       temporaryPassword: '',
     },

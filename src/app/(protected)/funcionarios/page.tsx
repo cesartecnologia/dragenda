@@ -11,7 +11,7 @@ import EmployeeForm from './_components/employee-form';
 const roleLabel: Record<'admin' | 'attendant' | 'user', string> = {
   admin: 'Administrador',
   attendant: 'Atendente',
-  user: 'Usuário',
+  user: 'Atendente',
 };
 
 export default async function FuncionariosPage() {

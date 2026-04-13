@@ -45,7 +45,7 @@ const roleLabel: Record<AppSession['user']['role'], string> = {
   owner: 'Proprietário',
   admin: 'Admin',
   attendant: 'Atendente',
-  user: 'Usuário',
+  user: 'Atendente',
 };
 
 const navButtonClass =

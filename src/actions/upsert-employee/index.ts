@@ -12,7 +12,7 @@ export const upsertEmployee = actionClient.schema(z.object({
   id: z.string().uuid().optional(),
   name: z.string().min(1),
   email: z.string().email(),
-  role: z.enum(['admin', 'attendant', 'user']),
+  role: z.enum(['admin', 'attendant']),
   active: z.boolean().default(true),
   createAccessNow: z.boolean().default(false),
   temporaryPassword: z.string().min(8).optional(),
