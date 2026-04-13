@@ -8,10 +8,9 @@ import { listEmployeesByClinicId } from '@/server/clinic-data';
 
 import EmployeeForm from './_components/employee-form';
 
-const roleLabel: Record<'admin' | 'attendant' | 'user', string> = {
+const roleLabel: Record<'admin' | 'attendant', string> = {
   admin: 'Administrador',
   attendant: 'Atendente',
-  user: 'Atendente',
 };
 
 export default async function FuncionariosPage() {

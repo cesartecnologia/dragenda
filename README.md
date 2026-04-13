@@ -1,88 +1,76 @@
-## SmartPark v5
+# Dr. Agenda - Firebase edition
 
-Tema ajustado para azul em vez de verde.
+Sistema de clinica em Next.js com:
+- Firebase Authentication (email/senha + Google)
+- Firebase Firestore para os dados da aplicacao
+- Firebase Admin SDK para sessoes seguras no servidor
+- Asaas para assinatura
+- Deploy preparado para Vercel
 
-# SmartPark v5
+## Estrutura de dados no Firestore
+- users
+- clinics
+- doctors
+- patients
+- appointments
 
-Sistema SaaS fullstack para gestão de estacionamento com Next.js, TypeScript, Tailwind e Firebase.
+## Variaveis de ambiente
+Copie `.env.example` e preencha no ambiente local ou na Vercel.
 
-## Stack
-- Next.js App Router
-- TypeScript
-- Tailwind CSS
-- Firebase Auth + Firestore
-- Lucide React
-- jsPDF + QRCode
-- html5-qrcode
+### Firebase Web SDK
+- NEXT_PUBLIC_FIREBASE_API_KEY
+- NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+- NEXT_PUBLIC_FIREBASE_PROJECT_ID
+- NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+- NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+- NEXT_PUBLIC_FIREBASE_APP_ID
 
-## Novidades da versão 3
-- Cadastro de usuários pelo painel admin (`/usuarios`)
-- Seed inicial de preços em `/configuracoes`
-- Arquivos `firestore.rules` e `firestore.indexes.json`
-- Scanner QR com câmera e leitura por imagem
-- Controle de usuário inativo via Firestore
-- Estrutura pronta para Git e Vercel
+### Firebase Admin SDK
+- FIREBASE_PROJECT_ID
+- FIREBASE_CLIENT_EMAIL
+- FIREBASE_PRIVATE_KEY
 
-## Firebase já configurado
-As credenciais web do Firebase já estão em `lib/firebase.ts`.
+### App
+- NEXT_PUBLIC_APP_URL
+- SESSION_COOKIE_NAME
 
-Projeto Firebase:
-- `smartpark-3ef6a`
+### Asaas
+- STRIPE_SECRET_KEY
+- STRIPE_WEBHOOK_SECRET
+- NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+- NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL
+- ESSENTIAL_PLAN_PRICE_ID
 
-## Credenciais administrativas esperadas
-Crie no Firebase Authentication:
-- Email: `admin@parksmart.com`
-- Senha: `Kimosabe`
-
-Depois crie na collection `users` um documento com o UID desse usuário:
-
-```json
-{
-  "name": "Cesar",
-  "email": "admin@parksmart.com",
-  "role": "admin",
-  "active": true,
-  "createdAt": "2026-03-12T00:00:00.000Z"
-}
-```
-
-## Collections usadas
-- `users`
-- `priceSettings`
-- `cashRegisters`
-- `parkingTickets`
-- `monthlyCustomers`
-
-## Instalação local
+## Rodando o projeto
 ```bash
 npm install
 npm run dev
 ```
 
-## Deploy no Git
-```bash
-git init
-git add .
-git commit -m "smartpark enterprise v5"
-```
+## Deploy na Vercel
+1. Suba o projeto no GitHub.
+2. Importe o repositorio na Vercel.
+3. Configure as variaveis de ambiente.
+4. Habilite Email/Password e Google no Firebase Authentication.
+5. Adicione os dominios da Vercel em Authorized Domains no Firebase Authentication.
+6. Gere uma service account do Firebase/Google Cloud e configure no Admin SDK.
 
-## Deploy no Vercel
-1. Suba o projeto para GitHub/GitLab/Bitbucket
-2. Importe no Vercel
-3. Faça o deploy
+## Observacoes
+- O login usa cookie de sessao HTTP-only criado no servidor.
+- As paginas protegidas leem a sessao no servidor e continuam funcionando no App Router.
+- Os dados antigos do banco SQL nao sao migrados: o sistema nasce limpo no Firestore.
 
-## Regras Firestore
-Publique o arquivo `firestore.rules` no console do Firebase ou com Firebase CLI.
-
-## Observações
-- O Dashboard e Relatórios não usam dados hardcoded.
-- Quando não houver dados no Firestore, a interface exibe `Nenhum registro`.
-- Vendedor não vê Relatórios, Configurações nem Usuários.
-- Entrada, Saída e recebimento de mensalista ficam bloqueados sem caixa aberto para o operador.
-- A inativação de usuário é controlada pela coleção `users`.
-- A criação de usuário pelo painel cria a conta no Firebase Authentication usando um app secundário no client.
+Mais detalhes em `FIREBASE_VERCEL_SETUP.md`.
 
 
-## v5.1
-- cálculo proporcional por minuto corrigido
-- layout de impressão 80mm com fontes menores
+## Controle de acesso
+
+- Usuarios com `MASTER_EMAIL`, `MASTER_EMAILS`, `SUPPORT_EMAIL` ou `SUPPORT_EMAILS` recebem bypass de assinatura automaticamente no Firestore.
+- Esses perfis entram normalmente com email/senha, mas nao sao bloqueados por plano ativo.
+- Clientes comuns continuam seguindo o fluxo clinica + assinatura.
+
+## Otimizacoes aplicadas
+
+- Sessao do sidebar passada pelo servidor, eliminando requisicao extra no carregamento.
+- Checagem de acesso centralizada para reduzir duplicacao e inconsistencias entre rotas.
+- Leituras basicas de usuario e clinica memoizadas por requisicao.

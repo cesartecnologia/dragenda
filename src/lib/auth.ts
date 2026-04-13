@@ -21,14 +21,13 @@ export interface AppSession {
     email: string;
     image: string | null;
     plan: string | null;
-    stripeCustomerId: string | null;
-    stripeSubscriptionId: string | null;
     asaasCustomerId: string | null;
     asaasSubscriptionId: string | null;
     subscriptionStatus: string | null;
     role: UserRole;
     bypassSubscription: boolean;
     hasSubscriptionAccess: boolean;
+    mustChangePassword: boolean;
     clinic?: {
       id: string;
       name: string;
@@ -62,14 +61,13 @@ const buildFallbackSession = (decodedToken: DecodedIdToken): AppSession | null =
       email,
       image: typeof decodedToken.picture === 'string' ? decodedToken.picture : null,
       plan: null,
-      stripeCustomerId: null,
-      stripeSubscriptionId: null,
       asaasCustomerId: null,
       asaasSubscriptionId: null,
       subscriptionStatus: null,
       role: access.role,
       bypassSubscription: access.bypassSubscription,
       hasSubscriptionAccess: hasAccessBySubscription({ bypassSubscription: access.bypassSubscription }),
+      mustChangePassword: false,
     },
   };
 };
@@ -134,8 +132,6 @@ export const getServerSession = cache(async (): Promise<AppSession | null> => {
         email: userProfile.email,
         image: userProfile.image,
         plan,
-        stripeCustomerId: userProfile.stripeCustomerId,
-        stripeSubscriptionId: userProfile.stripeSubscriptionId,
         asaasCustomerId: clinic?.asaasCustomerId ?? userProfile.asaasCustomerId ?? null,
         asaasSubscriptionId: clinic?.asaasSubscriptionId ?? userProfile.asaasSubscriptionId ?? null,
         subscriptionStatus,
@@ -146,6 +142,7 @@ export const getServerSession = cache(async (): Promise<AppSession | null> => {
           subscriptionStatus,
           bypassSubscription: access.bypassSubscription,
         }),
+        mustChangePassword: Boolean(userProfile.mustChangePassword),
         clinic: clinic ? { id: clinic.id, name: clinic.name } : undefined,
       },
     };
@@ -169,6 +166,7 @@ export const requireClinicSession = cache(async () => {
 
 export const requireSubscribedSession = cache(async () => {
   const session = await requireSession();
+  if (session.user.mustChangePassword) redirect('/primeiro-login');
   if (!session.user.hasSubscriptionAccess) redirect('/assinatura');
   if (!session.user.clinic && !hasPrivilegedAccess(session)) redirect('/configuracoes/clinica');
   return session;

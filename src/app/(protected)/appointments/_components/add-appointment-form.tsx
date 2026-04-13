@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { CalendarIcon, Check, Clock3, CreditCard, Search, Stethoscope, X } from 'lucide-react';
 import { useAction } from 'next-safe-action/hooks';
-import { useEffect, useMemo, useRef, useState, type SelectHTMLAttributes } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm, type DefaultValues } from 'react-hook-form';
 import { NumericFormat } from 'react-number-format';
@@ -15,6 +15,7 @@ import { z } from 'zod';
 import { addAppointment } from '@/actions/add-appointment';
 import { getAvailableTimes } from '@/actions/get-available-times';
 import { Badge } from '@/components/ui/badge';
+import { PaymentMethodPicker } from '@/components/payments/payment-method-picker';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -196,20 +197,6 @@ function SearchSelect<T extends SearchableItem>(props: {
         </div>
       ) : null}
     </div>
-  );
-}
-
-function NativeSelect(props: SelectHTMLAttributes<HTMLSelectElement>) {
-  return (
-    <select
-      {...props}
-      className={cn(
-        inputClass,
-        'appearance-none pr-10 text-sm',
-        props.disabled && 'cursor-not-allowed bg-slate-50 text-slate-400',
-        props.className,
-      )}
-    />
   );
 }
 
@@ -645,17 +632,11 @@ export default function AddAppointmentForm({ patients, doctors, appointment, onS
                         <FormItem>
                           <FormLabel className="text-sm font-medium text-slate-700">Forma de pagamento</FormLabel>
                           <FormControl>
-                            <NativeSelect
-                              value={field.value ?? 'pix'}
+                            <PaymentMethodPicker
+                              value={(field.value ?? 'pix') as any}
                               disabled={!paymentConfirmed}
-                              onChange={(event) => field.onChange(event.target.value)}
-                            >
-                              <option value="pix">Pix</option>
-                              <option value="cash">Dinheiro</option>
-                              <option value="card">Cartão</option>
-                              <option value="insurance">Convênio</option>
-                              <option value="other">Outro</option>
-                            </NativeSelect>
+                              onChange={(value) => field.onChange(value)}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

@@ -6,6 +6,7 @@ import {
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   type User,
+  updatePassword,
 } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 
@@ -39,6 +40,8 @@ const normalizeErrorCode = (code?: string) => {
       return 'SESSION_LOGIN_FAILED';
     case 'ACCOUNT_CREATED_BUT_SESSION_FAILED':
       return 'ACCOUNT_CREATED_BUT_SESSION_FAILED';
+    case 'FIRST_LOGIN_COMPLETE_FAILED':
+      return 'FIRST_LOGIN_COMPLETE_FAILED';
     default:
       return code ?? 'UNKNOWN_ERROR';
   }
@@ -88,7 +91,6 @@ const exchangeIdTokenForSession = async (user: User) => {
 
   await firebaseSignOut(firebaseAuth);
 };
-
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -200,6 +202,35 @@ export const authClient = {
         });
       }
     },
+  },
+  completeFirstLogin: async (
+    values: { email: string; temporaryPassword: string; newPassword: string },
+    callbacks?: {
+      onSuccess?: () => void;
+      onError?: (ctx: CallbackContext) => void;
+    },
+  ) => {
+    try {
+      await setPersistence(firebaseAuth, inMemoryPersistence);
+      const credentials = await signInWithRetry(values.email, values.temporaryPassword);
+      await updatePassword(credentials.user, values.newPassword);
+      await exchangeIdTokenForSession(credentials.user);
+
+      const response = await fetch('/api/auth/complete-first-login', {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const { code, details } = await parseResponseError(response);
+        throw new Error(details ? `${code}:${details}` : code);
+      }
+
+      callbacks?.onSuccess?.();
+    } catch (error) {
+      callbacks?.onError?.({
+        error: toCallbackError(error),
+      });
+    }
   },
   signOut: async (options?: {
     fetchOptions?: {

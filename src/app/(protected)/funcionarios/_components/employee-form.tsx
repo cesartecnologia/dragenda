@@ -70,7 +70,8 @@ export default function EmployeeForm({ employee }: { employee?: typeof employees
     return `Acesso ao sistema da clínica
 Email: ${generatedAccess.email}
 Senha temporária: ${generatedAccess.password}
-Entrada: /autenticacao`;
+Entrada: /autenticacao
+No primeiro login o sistema solicitará a criação da senha definitiva`;
   }, [generatedAccess]);
 
   const action = useAction(upsertEmployee, {
@@ -109,7 +110,7 @@ Entrada: /autenticacao`;
           <div className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
             <div>
               <h4 className="font-medium">Acesso configurado</h4>
-              <p className="text-sm text-muted-foreground">Compartilhe estes dados com o colaborador para o primeiro acesso.</p>
+              <p className="text-sm text-muted-foreground">Compartilhe estes dados com o colaborador. No primeiro login, ele deverá definir a senha definitiva.</p>
             </div>
             <div className="space-y-1 text-sm">
               <p><strong>Email:</strong> {generatedAccess.email}</p>
@@ -161,7 +162,7 @@ Entrada: /autenticacao`;
                   <FormItem>
                     <FormLabel>Senha temporária</FormLabel>
                     <FormControl><Input {...field} type="text" placeholder="Ex.: Clinica@2026" /></FormControl>
-                    <p className="text-xs text-muted-foreground">Defina uma senha temporária para o primeiro acesso do usuário.</p>
+                    <p className="text-xs text-muted-foreground">Defina uma senha temporária. No primeiro login, o sistema pedirá uma nova senha definitiva.</p>
                     <FormMessage />
                   </FormItem>
                 )} />

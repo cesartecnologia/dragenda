@@ -109,12 +109,12 @@ const SignUpForm = () => {
   }
 
   return (
-    <Card className="border-slate-200 bg-white/95 shadow-xl shadow-slate-200/60">
+    <Card className="border-sky-100 bg-white shadow-[0_20px_70px_rgba(14,165,233,0.10)]">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <CardHeader>
-            <CardTitle className="text-2xl">Primeiro acesso da clínica</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-xl text-slate-900">Primeiro acesso da clínica</CardTitle>
+            <CardDescription className="text-sm leading-6 text-slate-600">
               Preencha os dados do responsável e da clínica para liberar a contratação do plano e começar a usar o sistema.
             </CardDescription>
           </CardHeader>

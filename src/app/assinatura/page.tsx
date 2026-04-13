@@ -27,6 +27,10 @@ export default async function AssinaturaPage({
 }) {
   const session = await requireSession();
 
+  if (session.user.mustChangePassword) {
+    redirect('/primeiro-login');
+  }
+
   if (!session.user.bypassSubscription && !canAccessFinancial(session.user.role)) {
     redirect('/agendamentos');
   }

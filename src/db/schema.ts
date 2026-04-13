@@ -6,7 +6,7 @@ const defineTable = <T,>(): TableShim<T> => ({
   $inferSelect: {} as T,
 });
 
-export type UserRole = 'master' | 'support' | 'owner' | 'admin' | 'attendant' | 'user';
+export type UserRole = 'master' | 'support' | 'owner' | 'admin' | 'attendant';
 
 export interface UserRecord {
   id: string;
@@ -16,8 +16,7 @@ export interface UserRecord {
   image: string | null;
   role: UserRole;
   bypassSubscription: boolean;
-  stripeCustomerId: string | null;
-  stripeSubscriptionId: string | null;
+  mustChangePassword: boolean;
   asaasCustomerId: string | null;
   asaasSubscriptionId: string | null;
   asaasCheckoutId: string | null;
@@ -40,8 +39,6 @@ export interface ClinicRecord {
   phoneNumber: string | null;
   logoUrl: string | null;
   cloudinaryPublicId: string | null;
-  stripeCustomerId: string | null;
-  stripeSubscriptionId: string | null;
   asaasCustomerId: string | null;
   asaasSubscriptionId: string | null;
   asaasCheckoutId: string | null;
@@ -121,8 +118,9 @@ export interface EmployeeRecord {
   clinicId: string;
   name: string;
   email: string;
-  role: Extract<UserRole, 'admin' | 'attendant' | 'user'>;
+  role: Extract<UserRole, 'admin' | 'attendant'>;
   active: boolean;
+  mustChangePassword: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

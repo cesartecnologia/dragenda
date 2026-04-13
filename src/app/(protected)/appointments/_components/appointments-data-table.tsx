@@ -12,11 +12,11 @@ import { toast } from 'sonner';
 import { deleteAppointment } from '@/actions/delete-appointment';
 import { changeAppointmentStatus, updateAppointmentPayment } from '@/actions/update-appointment';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { PaymentMethodPicker } from '@/components/payments/payment-method-picker';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { appointmentsTable, clinicsTable, doctorsTable, patientsTable, type AppointmentPaymentMethod, type PatientSex, type UserRole } from '@/db/schema';
 import { buildAppointmentWhatsappText } from '@/helpers/appointment-message';
 import { formatCurrencyInCents } from '@/helpers/currency';
@@ -281,18 +281,7 @@ export default function AppointmentsDataTable({
           </DialogHeader>
           <div className="space-y-3">
             <label className="text-sm font-medium text-slate-700">Forma de pagamento</label>
-            <Select value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as AppointmentPaymentMethod)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione a forma de pagamento" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pix">Pix</SelectItem>
-                <SelectItem value="cash">Dinheiro</SelectItem>
-                <SelectItem value="card">Cartão</SelectItem>
-                <SelectItem value="insurance">Convênio</SelectItem>
-                <SelectItem value="other">Outro</SelectItem>
-              </SelectContent>
-            </Select>
+            <PaymentMethodPicker value={paymentMethod} onChange={setPaymentMethod} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setPaymentTarget(null)}>Cancelar</Button>

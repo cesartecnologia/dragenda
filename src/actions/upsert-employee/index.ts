@@ -27,6 +27,7 @@ export const upsertEmployee = actionClient.schema(z.object({
     email: parsedInput.email,
     role: parsedInput.role,
     active: parsedInput.active,
+    mustChangePassword: parsedInput.createAccessNow ? true : undefined,
   });
 
   let access = null;

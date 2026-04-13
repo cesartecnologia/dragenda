@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2, LockKeyhole, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -9,14 +9,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormControl, FormMessage } from '@/components/ui/form';
 import { FormItem, FormLabel } from '@/components/ui/form';
 import { Form, FormField } from '@/components/ui/form';
@@ -55,10 +48,9 @@ const LoginForm = () => {
               toast.error('E-mail ou senha inválidos.');
               return;
             case 'SESSION_LOGIN_FAILED':
-              toast.error(
-                'O login no Firebase funcionou, mas a sessão do servidor falhou. Verifique o Firebase Admin e o Firestore.',
-                { duration: 10000 },
-              );
+              toast.error('Seu acesso foi validado, mas a sessão do sistema falhou. Tente novamente.', {
+                duration: 10000,
+              });
               return;
             default:
               toast.error(ctx.error.message || 'Não foi possível entrar.', {
@@ -71,12 +63,14 @@ const LoginForm = () => {
   };
 
   return (
-    <Card className="border-slate-200 bg-white/95 shadow-xl shadow-slate-200/60">
+    <Card className="border-sky-100 bg-white shadow-[0_20px_70px_rgba(14,165,233,0.10)]">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <CardHeader>
-            <CardTitle className="text-2xl">Acessar conta</CardTitle>
-            <CardDescription>Entre com seu e-mail e sua senha para continuar.</CardDescription>
+          <CardHeader className="space-y-2">
+            <CardTitle className="text-xl text-slate-900">Entrar no sistema</CardTitle>
+            <CardDescription className="text-sm leading-6 text-slate-600">
+              Acesse sua clínica com seu e-mail e sua senha.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormField
@@ -86,7 +80,10 @@ const LoginForm = () => {
                 <FormItem>
                   <FormLabel>E-mail</FormLabel>
                   <FormControl>
-                    <Input placeholder="Digite seu e-mail" {...field} />
+                    <div className="relative">
+                      <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                      <Input className="pl-10" placeholder="Digite seu e-mail" {...field} />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -99,7 +96,10 @@ const LoginForm = () => {
                 <FormItem>
                   <FormLabel>Senha</FormLabel>
                   <FormControl>
-                    <Input placeholder="Digite sua senha" type="password" {...field} />
+                    <div className="relative">
+                      <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                      <Input className="pl-10" placeholder="Digite sua senha" type="password" {...field} />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -108,15 +108,12 @@ const LoginForm = () => {
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
             <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                'Entrar'
-              )}
+              {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ArrowRight className="mr-2 h-4 w-4" />}
+              Entrar
             </Button>
-            <p className="text-muted-foreground text-center text-sm">
+            <p className="text-center text-sm text-slate-500">
               Ainda não tem acesso?{' '}
-              <Link href="/primeiro-acesso" className="font-medium text-primary underline-offset-4 hover:underline">
+              <Link href="/primeiro-acesso" className="font-medium text-sky-700 underline-offset-4 hover:underline">
                 Fazer primeiro acesso
               </Link>
             </p>

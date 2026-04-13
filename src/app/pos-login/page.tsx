@@ -7,6 +7,10 @@ import { getClinicById } from '@/server/clinic-data';
 export default async function PosLoginPage() {
   const session = await requireSession();
 
+  if (session.user.mustChangePassword) {
+    redirect('/primeiro-login');
+  }
+
   if (hasPrivilegedAccess(session)) {
     redirect('/painel');
   }

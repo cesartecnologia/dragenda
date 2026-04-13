@@ -205,8 +205,7 @@ export const upsertUserProfile = async (params: {
     image: params.image ?? existing?.image ?? null,
     role: access.role === 'owner' && employee?.role ? employee.role : access.role,
     bypassSubscription: access.bypassSubscription,
-    stripeCustomerId: existing?.stripeCustomerId ?? null,
-    stripeSubscriptionId: existing?.stripeSubscriptionId ?? null,
+    mustChangePassword: existing?.mustChangePassword ?? employee?.mustChangePassword ?? false,
     asaasCustomerId: existing?.asaasCustomerId ?? null,
     asaasSubscriptionId: existing?.asaasSubscriptionId ?? null,
     asaasCheckoutId: existing?.asaasCheckoutId ?? null,
@@ -219,31 +218,6 @@ export const upsertUserProfile = async (params: {
 
   await ref.set(sanitizeFirestoreValue(userProfile) as DocumentData);
   invalidateUserScopedCache(params.id);
-  invalidateClinicScopedCache(userProfile.clinicId);
-  return userProfile;
-};
-
-export const updateUserSubscription = async (
-  userId: string,
-  params: { stripeCustomerId: string | null; stripeSubscriptionId: string | null; plan: string | null },
-) => {
-  const ref = getFirestoreDb().collection(COLLECTIONS.users).doc(userId);
-  const existing = fromDoc<AppUser>(await ref.get());
-  if (!existing) throw new Error('User not found');
-
-  const userProfile: AppUser = {
-    ...existing,
-    stripeCustomerId: params.stripeCustomerId,
-    stripeSubscriptionId: params.stripeSubscriptionId,
-    plan: params.plan,
-    updatedAt: new Date(),
-  };
-
-  await ref.set(sanitizeFirestoreValue(userProfile) as DocumentData);
-  if (userProfile.clinicId) {
-    await updateClinicSubscription(userProfile.clinicId, params);
-  }
-  invalidateUserScopedCache(userId);
   invalidateClinicScopedCache(userProfile.clinicId);
   return userProfile;
 };
@@ -273,8 +247,6 @@ export const createClinicForUser = async (params: { userId: string; name: string
     phoneNumber: null,
     logoUrl: null,
     cloudinaryPublicId: null,
-    stripeCustomerId: null,
-    stripeSubscriptionId: null,
     asaasCustomerId: null,
     asaasSubscriptionId: null,
     asaasCheckoutId: null,
@@ -305,28 +277,6 @@ export const updateClinicSettings = async (clinicId: string, params: Partial<Omi
     id: clinicId,
     updatedAt: new Date(),
   };
-  await ref.set(sanitizeFirestoreValue(clinic) as DocumentData);
-  invalidateClinicScopedCache(clinicId);
-  return clinic;
-};
-
-
-export const updateClinicSubscription = async (
-  clinicId: string,
-  params: { stripeCustomerId: string | null; stripeSubscriptionId: string | null; plan: string | null },
-) => {
-  const ref = getFirestoreDb().collection(COLLECTIONS.clinics).doc(clinicId);
-  const existing = fromDoc<Clinic>(await ref.get());
-  if (!existing) throw new Error('Clinic not found');
-
-  const clinic: Clinic = {
-    ...existing,
-    stripeCustomerId: params.stripeCustomerId,
-    stripeSubscriptionId: params.stripeSubscriptionId,
-    plan: params.plan,
-    updatedAt: new Date(),
-  };
-
   await ref.set(sanitizeFirestoreValue(clinic) as DocumentData);
   invalidateClinicScopedCache(clinicId);
   return clinic;
@@ -765,7 +715,15 @@ export const listEmployeesByClinicId = async (clinicId: string): Promise<Employe
   });
 };
 
-export const upsertEmployeeRecord = async (params: { id?: string; clinicId: string; name: string; email: string; role: Employee['role']; active?: boolean }) => {
+export const upsertEmployeeRecord = async (params: {
+  id?: string;
+  clinicId: string;
+  name: string;
+  email: string;
+  role: Employee['role'];
+  active?: boolean;
+  mustChangePassword?: boolean;
+}) => {
   const employeeId = params.id ?? randomUUID();
   const ref = getFirestoreDb().collection(COLLECTIONS.employees).doc(employeeId);
   const existing = fromDoc<Employee>(await ref.get());
@@ -793,6 +751,7 @@ export const upsertEmployeeRecord = async (params: { id?: string; clinicId: stri
     email: normalizedEmail,
     role: params.role,
     active: params.active ?? existing?.active ?? true,
+    mustChangePassword: params.mustChangePassword ?? existing?.mustChangePassword ?? false,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
@@ -808,6 +767,7 @@ export const upsertEmployeeRecord = async (params: { id?: string; clinicId: stri
         name: params.name || existingUser.name,
         clinicId: params.clinicId,
         role: params.role,
+        mustChangePassword: params.mustChangePassword ?? existingUser.mustChangePassword ?? false,
         updatedAt: now,
       }) as DocumentData,
     );
@@ -815,6 +775,46 @@ export const upsertEmployeeRecord = async (params: { id?: string; clinicId: stri
 
   invalidateServerCache();
   return employee;
+};
+
+export const completeUserFirstLogin = async (params: { userId: string; email: string }) => {
+  const now = new Date();
+  const normalizedEmail = params.email.trim().toLowerCase();
+
+  const userRef = getFirestoreDb().collection(COLLECTIONS.users).doc(params.userId);
+  const existingUser = fromDoc<AppUser>(await userRef.get());
+  if (existingUser) {
+    await userRef.set(
+      sanitizeFirestoreValue({
+        ...existingUser,
+        mustChangePassword: false,
+        updatedAt: now,
+      }) as DocumentData,
+    );
+    invalidateUserScopedCache(params.userId);
+    invalidateClinicScopedCache(existingUser.clinicId);
+  }
+
+  const employeeSnapshot = await getFirestoreDb()
+    .collection(COLLECTIONS.employees)
+    .where('email', '==', normalizedEmail)
+    .limit(1)
+    .get();
+  const employeeDoc = employeeSnapshot.docs[0];
+  const employee = employeeDoc ? fromDoc<Employee>(employeeDoc) : null;
+
+  if (employee && employee.mustChangePassword) {
+    await employeeDoc.ref.set(
+      sanitizeFirestoreValue({
+        ...employee,
+        mustChangePassword: false,
+        updatedAt: now,
+      }) as DocumentData,
+    );
+    invalidateClinicScopedCache(employee.clinicId);
+  }
+
+  invalidateServerCache();
 };
 
 export const getDashboardData = async (params: { clinicId: string; from: string; to: string }) => {

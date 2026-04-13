@@ -30,7 +30,7 @@ Cadastre estas variaveis no projeto da Vercel.
 - NEXT_PUBLIC_APP_URL
 - SESSION_COOKIE_NAME
 
-### Stripe
+### Asaas
 - STRIPE_SECRET_KEY
 - STRIPE_WEBHOOK_SECRET
 - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
