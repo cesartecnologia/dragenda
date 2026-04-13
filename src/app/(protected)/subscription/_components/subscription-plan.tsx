@@ -53,7 +53,7 @@ export function SubscriptionPlan({
       ? 'Pagamento pendente'
       : subscriptionStatus === 'checkout_pending'
         ? 'Contratação em andamento'
-        : 'Plano Premium';
+        : 'Assinatura Premium';
 
   const ctaLabel = bypassSubscription
     ? 'Plano não exigido para seu perfil'
@@ -66,17 +66,19 @@ export function SubscriptionPlan({
   return (
     <Card className={className}>
       <CardHeader className="space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
-              <Sparkles className="size-3.5" />
-              Plano principal da clínica
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900">{statusLabel}</h3>
-              <p className="mt-1 text-sm text-gray-600">Tenha acesso completo aos principais recursos do Dr. Agenda.</p>
-            </div>
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
+            <Sparkles className="size-3.5" />
+            Plano principal da clínica
           </div>
+
+          <div className="space-y-2">
+            <h3 className="text-2xl font-bold text-gray-900 sm:text-3xl">{statusLabel}</h3>
+            <p className="mx-auto max-w-2xl text-sm leading-6 text-gray-600 sm:text-base">
+              Tudo o que sua clínica precisa para organizar agenda, pacientes, equipe e atendimentos em um só lugar.
+            </p>
+          </div>
+
           {bypassSubscription ? (
             <Badge className="gap-1 bg-blue-100 text-blue-700 hover:bg-blue-100">
               <ShieldCheck className="size-3.5" />
@@ -89,43 +91,39 @@ export function SubscriptionPlan({
           ) : null}
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-          <div className="flex items-baseline gap-1">
-            <span className="text-4xl font-bold tracking-tight text-slate-900">R$ 99,90</span>
-            <span className="text-sm text-slate-500">/mês</span>
-          </div>
-          <p className="mt-3 text-sm leading-6 text-slate-600">
-            Ideal para clínicas que querem concentrar agenda, pacientes, equipe e visão do negócio em uma única plataforma.
-          </p>
-          {nextRenewal ? (
-            <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-              <span className="font-medium">Próxima renovação:</span> {nextRenewal}
+        <div className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-8 sm:px-8">
+          <div className="flex flex-col items-center justify-center text-center">
+            <div className="flex items-end justify-center gap-1.5">
+              <span className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">R$ 99,90</span>
+              <span className="pb-1 text-sm text-slate-500 sm:text-base">/mês</span>
             </div>
-          ) : null}
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
+              Ideal para clínicas que querem concentrar agenda, pacientes, equipe e visão do negócio em uma única plataforma.
+            </p>
+            {nextRenewal ? (
+              <div className="mt-5 w-full max-w-xl rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm text-emerald-800">
+                <span className="font-medium">Próxima renovação:</span> {nextRenewal}
+              </div>
+            ) : null}
+          </div>
         </div>
       </CardHeader>
 
-      <CardContent>
-        <div className="space-y-4 border-t border-gray-200 pt-6">
-          {features.map((feature) => (
-            <div key={feature} className="flex items-start">
-              <div className="flex-shrink-0">
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
+      <CardContent className="space-y-6">
+        <div className="border-t border-gray-200 pt-6">
+          <div className="mx-auto grid max-w-3xl gap-4 sm:grid-cols-2">
+            {features.map((feature) => (
+              <div key={feature} className="flex items-start gap-3 rounded-xl">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-500" />
+                <p className="text-gray-700">{feature}</p>
               </div>
-              <p className="ml-3 text-gray-600">{feature}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
-        <div className="mt-8 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground">
-          <p className="font-medium text-foreground">
-            Sua clínica continua com acesso ativo enquanto a assinatura estiver regularizada.
-          </p>
-        </div>
-
-        <div className="mt-6 space-y-3">
+        <div className="mx-auto w-full max-w-xl space-y-3">
           <Button
-            className="w-full"
+            className="h-11 w-full"
             variant={active || bypassSubscription ? 'outline' : 'default'}
             onClick={() => checkoutAction.execute()}
             disabled={checkoutAction.isExecuting || bypassSubscription || active}
