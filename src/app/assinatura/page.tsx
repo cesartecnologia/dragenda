@@ -3,10 +3,12 @@ import { redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { SubscriptionPlan } from '@/app/(protected)/subscription/_components/subscription-plan';
 import { canAccessFinancial } from '@/lib/access';
-import { requireSession } from '@/lib/auth';
+import { getServerSession, requireSession } from '@/lib/auth';
 import { getSubscriptionSummaryForUser } from '@/server/subscription-data';
 
+import { AutoStartCheckout } from './_components/auto-start-checkout';
 import { CheckoutSuccessSync } from './_components/checkout-success-sync';
+import { PublicSubscriptionView } from './_components/public-subscription-view';
 import { SubscriptionManager } from './_components/subscription-manager';
 
 const formatRenewalDate = (value?: string | null) => {
@@ -25,7 +27,12 @@ export default async function AssinaturaPage({
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const session = await requireSession();
+  const session = await getServerSession();
+  const params = (await searchParams) ?? {};
+
+  if (!session?.user) {
+    return <PublicSubscriptionView />;
+  }
 
   if (session.user.mustChangePassword) {
     redirect('/primeiro-login');
@@ -35,9 +42,9 @@ export default async function AssinaturaPage({
     redirect('/agendamentos');
   }
 
-  const params = (await searchParams) ?? {};
   const checkoutState = Array.isArray(params.checkout) ? params.checkout[0] : params.checkout;
   const firstAccess = Array.isArray(params.firstAccess) ? params.firstAccess[0] : params.firstAccess;
+  const startCheckout = Array.isArray(params.startCheckout) ? params.startCheckout[0] : params.startCheckout;
   const summary = await getSubscriptionSummaryForUser(session.user.id);
   const nextRenewal = formatRenewalDate(summary.subscription?.nextDueDate ?? summary.latestPayment?.dueDate ?? null);
 
@@ -48,6 +55,8 @@ export default async function AssinaturaPage({
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Plano da clínica</h1>
           <p className="mt-2 text-sm text-muted-foreground">Gerencie a assinatura premium da sua clínica com uma experiência simples e direta.</p>
         </div>
+
+        {startCheckout === '1' && !summary.accessReleased && !session.user.bypassSubscription ? <AutoStartCheckout /> : null}
 
         {firstAccess === '1' ? (
           <Badge className="mx-auto w-fit rounded-full bg-blue-100 px-4 py-1.5 text-blue-700 hover:bg-blue-100">

@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { PatternFormat } from 'react-number-format';
 import { toast } from 'sonner';
@@ -38,6 +38,7 @@ const registerSchema = z.object({
 
 const SignUpForm = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -72,7 +73,11 @@ const SignUpForm = () => {
       },
       {
         onSuccess: () => {
-          router.push('/pos-login');
+          const intent = searchParams.get('intent');
+          const next = searchParams.get('next');
+          const shouldStartCheckout = intent === 'checkout' || next === 'assinatura';
+
+          router.push(shouldStartCheckout ? '/assinatura?firstAccess=1&startCheckout=1' : '/pos-login');
           router.refresh();
         },
         onError: (ctx) => {

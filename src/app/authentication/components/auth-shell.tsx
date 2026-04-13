@@ -79,8 +79,8 @@ export function AuthShell({ eyebrow, title, description, children }: AuthShellPr
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-sky-100 bg-white/90 p-4 shadow-sm backdrop-blur-sm">
+            <div className="grid auto-rows-fr gap-3 sm:grid-cols-3">
+              <div className="h-full rounded-2xl border border-sky-100 bg-white/90 p-4 shadow-sm backdrop-blur-sm">
                 <div className="flex items-center gap-3">
                   <div className="rounded-2xl bg-sky-50 p-3 text-sky-700">
                     <Activity className="h-5 w-5" />
@@ -92,7 +92,7 @@ export function AuthShell({ eyebrow, title, description, children }: AuthShellPr
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-sky-100 bg-white/90 p-4 shadow-sm backdrop-blur-sm">
+              <div className="h-full rounded-2xl border border-sky-100 bg-white/90 p-4 shadow-sm backdrop-blur-sm">
                 <div className="flex items-center gap-3">
                   <div className="rounded-2xl bg-sky-50 p-3 text-sky-700">
                     <UsersRound className="h-5 w-5" />
@@ -104,7 +104,7 @@ export function AuthShell({ eyebrow, title, description, children }: AuthShellPr
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-sky-100 bg-white/90 p-4 shadow-sm backdrop-blur-sm sm:col-span-3 lg:col-span-1">
+              <div className="h-full rounded-2xl border border-sky-100 bg-white/90 p-4 shadow-sm backdrop-blur-sm">
                 <div className="flex items-center gap-3">
                   <div className="rounded-2xl bg-sky-50 p-3 text-sky-700">
                     <Smartphone className="h-5 w-5" />
@@ -117,11 +117,11 @@ export function AuthShell({ eyebrow, title, description, children }: AuthShellPr
               </div>
             </div>
 
-            <div className="grid gap-3 sm:gap-4 xl:grid-cols-2">
+            <div className="grid auto-rows-fr gap-3 sm:gap-4 xl:grid-cols-2">
               {highlights.map(({ icon: Icon, title: itemTitle, description: itemDescription }) => (
                 <div
                   key={itemTitle}
-                  className="rounded-2xl border border-sky-100 bg-white/92 p-4 shadow-sm backdrop-blur-sm"
+                  className="h-full rounded-2xl border border-sky-100 bg-white/92 p-4 shadow-sm backdrop-blur-sm"
                 >
                   <div className="flex items-start gap-3.5">
                     <div className="mt-0.5 rounded-2xl bg-sky-50 p-3 text-sky-700 shadow-sm">

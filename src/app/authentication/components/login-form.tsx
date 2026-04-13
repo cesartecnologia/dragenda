@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowRight, KeyRound, Loader2, Mail, ShieldCheck } from 'lucide-react';
+import { ArrowRight, CreditCard, KeyRound, Loader2, Mail, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -137,12 +137,17 @@ const LoginForm = () => {
               )}
               Entrar no sistema
             </Button>
-            <p className="text-center text-sm text-slate-500">
-              Ainda não tem acesso?{' '}
-              <Link href="/primeiro-acesso" className="font-semibold text-sky-700 underline-offset-4 hover:underline">
-                Fazer primeiro acesso
-              </Link>
-            </p>
+            <div className="grid w-full gap-3 sm:grid-cols-2">
+              <Button asChild type="button" variant="outline" className="h-11 rounded-xl border-sky-200 text-sky-700 hover:bg-sky-50">
+                <Link href="/assinatura">
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Ver assinatura
+                </Link>
+              </Button>
+              <Button asChild type="button" variant="ghost" className="h-11 rounded-xl text-slate-600 hover:bg-slate-50">
+                <Link href="/primeiro-acesso">Fazer primeiro acesso</Link>
+              </Button>
+            </div>
           </CardFooter>
         </form>
       </Form>
