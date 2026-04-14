@@ -45,7 +45,7 @@ export function AuthShell({
 
   return (
     <div className="min-h-screen bg-[#f5f5f5] px-3 py-4 sm:px-5 sm:py-6">
-      <div className={`mx-auto flex w-full flex-col gap-6 ${isSingle ? 'max-w-4xl' : 'max-w-[1180px]'}`}>
+      <div className={`mx-auto flex w-full flex-col gap-6 ${isSingle ? 'max-w-5xl' : 'max-w-[1180px]'}`}>
         <header className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm sm:px-5">
           <Image src="/logo.svg" alt="Dr. Agenda" width={150} height={36} priority className="h-auto w-[132px] sm:w-[150px]" />
           <Button asChild variant="outline" className="rounded-full border-slate-300 bg-white text-slate-700 hover:bg-slate-50">

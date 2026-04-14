@@ -114,7 +114,7 @@ const SignUpForm = () => {
   }
 
   return (
-    <Card className="w-full border-sky-100 bg-white shadow-[0_20px_70px_rgba(14,165,233,0.10)]">
+    <Card className="mx-auto w-full max-w-[960px] border-sky-100 bg-white shadow-[0_20px_70px_rgba(14,165,233,0.10)]">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <CardHeader className="space-y-2 pb-4">
@@ -126,7 +126,7 @@ const SignUpForm = () => {
           <CardContent className="space-y-6">
             <div className="space-y-4">
               <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Responsável</h3>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+              <div className="grid gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="name"
@@ -171,12 +171,12 @@ const SignUpForm = () => {
 
             <div className="space-y-4">
               <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Empresa</h3>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+              <div className="grid gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="clinicName"
                   render={({ field }) => (
-                    <FormItem className="lg:col-span-3">
+                    <FormItem>
                       <FormLabel>Nome da clínica</FormLabel>
                       <FormControl>
                         <Input placeholder="Nome fantasia da clínica" {...field} />
@@ -189,7 +189,7 @@ const SignUpForm = () => {
                   control={form.control}
                   name="clinicCnpj"
                   render={({ field }) => (
-                    <FormItem className="lg:col-span-3">
+                    <FormItem>
                       <FormLabel>CNPJ</FormLabel>
                       <FormControl>
                         <PatternFormat
@@ -208,7 +208,7 @@ const SignUpForm = () => {
                   control={form.control}
                   name="clinicPhoneNumber"
                   render={({ field }) => (
-                    <FormItem className="lg:col-span-3">
+                    <FormItem>
                       <FormLabel>Telefone</FormLabel>
                       <FormControl>
                         <PatternFormat
@@ -227,7 +227,7 @@ const SignUpForm = () => {
                   control={form.control}
                   name="clinicPostalCode"
                   render={({ field }) => (
-                    <FormItem className="lg:col-span-3">
+                    <FormItem>
                       <FormLabel>CEP</FormLabel>
                       <FormControl>
                         <PatternFormat
@@ -246,7 +246,7 @@ const SignUpForm = () => {
                   control={form.control}
                   name="clinicAddress"
                   render={({ field }) => (
-                    <FormItem className="md:col-span-2 lg:col-span-6">
+                    <FormItem className="md:col-span-2">
                       <FormLabel>Logradouro</FormLabel>
                       <FormControl>
                         <Input placeholder="Rua, avenida, praça..." {...field} />
@@ -255,45 +255,47 @@ const SignUpForm = () => {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="clinicAddressNumber"
-                  render={({ field }) => (
-                    <FormItem className="lg:col-span-2">
-                      <FormLabel>Número</FormLabel>
-                      <FormControl>
-                        <Input placeholder="123" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="clinicProvince"
-                  render={({ field }) => (
-                    <FormItem className="lg:col-span-2">
-                      <FormLabel>Bairro</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Centro" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="clinicAddressComplement"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2 lg:col-span-2">
-                      <FormLabel>Complemento</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Sala, bloco, conjunto (opcional)" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid gap-4 md:col-span-2 md:grid-cols-3">
+                  <FormField
+                    control={form.control}
+                    name="clinicAddressNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Número</FormLabel>
+                        <FormControl>
+                          <Input placeholder="123" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="clinicProvince"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bairro</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Centro" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="clinicAddressComplement"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Complemento</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Sala, bloco, conjunto (opcional)" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
             </div>
           </CardContent>

@@ -242,47 +242,49 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="addressNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Número</FormLabel>
-                      <FormControl>
-                        <Input {...field} value={field.value ?? ''} placeholder="123" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid gap-4 md:col-span-2 md:grid-cols-3">
+                  <FormField
+                    control={form.control}
+                    name="addressNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Número</FormLabel>
+                        <FormControl>
+                          <Input {...field} value={field.value ?? ''} placeholder="123" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="province"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bairro</FormLabel>
-                      <FormControl>
-                        <Input {...field} value={field.value ?? ''} placeholder="Centro" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="province"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bairro</FormLabel>
+                        <FormControl>
+                          <Input {...field} value={field.value ?? ''} placeholder="Centro" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="addressComplement"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2">
-                      <FormLabel>Complemento</FormLabel>
-                      <FormControl>
-                        <Input {...field} value={field.value ?? ''} placeholder="Sala, bloco, conjunto" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="addressComplement"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Complemento</FormLabel>
+                        <FormControl>
+                          <Input {...field} value={field.value ?? ''} placeholder="Sala, bloco, conjunto" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="space-y-2 md:col-span-2">
                   <FormLabel>Logo da clínica</FormLabel>
