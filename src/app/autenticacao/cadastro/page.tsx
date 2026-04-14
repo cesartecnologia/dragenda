@@ -1,1 +1,5 @@
-export { default } from '../../authentication/register/page';
+import { redirect } from 'next/navigation';
+
+export default function AutenticacaoCadastroRedirectPage() {
+  redirect('/primeiro-acesso');
+}

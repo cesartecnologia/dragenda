@@ -14,7 +14,7 @@ const RegisterPage = async () => {
 
   return (
     <AuthShell
-      headerLinkHref="/autenticacao/login"
+      headerLinkHref="/login"
       headerLinkLabel="Área do cliente"
       mode="single"
     >

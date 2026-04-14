@@ -1,1 +1,5 @@
-export { default } from '../authentication/page';
+import { redirect } from 'next/navigation';
+
+export default function AutenticacaoRedirectPage() {
+  redirect('/assinatura');
+}

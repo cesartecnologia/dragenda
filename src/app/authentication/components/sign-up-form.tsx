@@ -114,7 +114,7 @@ const SignUpForm = () => {
   }
 
   return (
-    <Card className="mx-auto w-full max-w-[960px] border-sky-100 bg-white shadow-[0_20px_70px_rgba(14,165,233,0.10)]">
+    <Card className="w-full border-sky-100 bg-white shadow-[0_20px_70px_rgba(14,165,233,0.10)]">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <CardHeader className="space-y-2 pb-4">
@@ -309,7 +309,7 @@ const SignUpForm = () => {
             </Button>
             <p className="text-muted-foreground text-center text-sm">
               Já tem acesso?{' '}
-              <Link href="/autenticacao/login" className="font-medium text-primary underline-offset-4 hover:underline">
+              <Link href="/login" className="font-medium text-primary underline-offset-4 hover:underline">
                 Entrar na área do cliente
               </Link>
             </p>

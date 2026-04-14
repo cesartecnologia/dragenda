@@ -154,7 +154,7 @@ export const getServerSession = cache(async (): Promise<AppSession | null> => {
 
 export const requireSession = cache(async () => {
   const session = await getServerSession();
-  if (!session?.user) redirect('/autenticacao');
+  if (!session?.user) redirect('/login');
   return session;
 });
 

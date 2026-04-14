@@ -37,7 +37,7 @@ export function AuthShell({
   title,
   description,
   children,
-  headerLinkHref = '/autenticacao',
+  headerLinkHref = '/assinatura',
   headerLinkLabel = 'Ver plano',
   mode = 'split',
 }: AuthShellProps) {

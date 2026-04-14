@@ -19,7 +19,7 @@ type PublicSubscriptionViewProps = {
 };
 
 export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscriptionViewProps) {
-  const loginHref = '/autenticacao/login';
+  const loginHref = '/login';
   const description =
     source === 'login'
       ? 'Centralize agenda, pacientes, equipe e operação da clínica em uma única plataforma.'
