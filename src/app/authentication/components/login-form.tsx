@@ -67,7 +67,7 @@ const LoginForm = () => {
   };
 
   return (
-    <Card className="flex h-full min-h-[540px] overflow-hidden border-sky-100 bg-white shadow-[0_24px_80px_rgba(14,165,233,0.10)]">
+    <Card className="flex h-full min-h-[540px] w-full overflow-hidden border-sky-100 bg-white shadow-[0_24px_80px_rgba(14,165,233,0.10)]">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="flex h-full w-full flex-col">
           <CardHeader className="space-y-2 pb-4">
@@ -76,7 +76,7 @@ const LoginForm = () => {
                 Entrar
               </CardTitle>
               <CardDescription className="text-sm leading-6 text-slate-600">
-                Use seu e-mail e senha para acessar sua conta.
+                Use seu e-mail e senha para entrar na sua conta.
               </CardDescription>
             </div>
           </CardHeader>

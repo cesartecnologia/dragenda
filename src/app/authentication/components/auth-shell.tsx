@@ -40,8 +40,8 @@ export function AuthShell({
   headerLinkLabel = 'Ver plano',
 }: AuthShellProps) {
   return (
-    <div className="min-h-screen bg-[#f5f5f5] px-4 py-4 sm:px-6 sm:py-6">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+    <div className="min-h-screen bg-[#f5f5f5] px-3 py-4 sm:px-5 sm:py-6">
+      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-6">
         <header className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm sm:px-5">
           <Image src="/logo.svg" alt="Dr. Agenda" width={150} height={36} priority className="h-auto w-[132px] sm:w-[150px]" />
           <Button asChild variant="outline" className="rounded-full border-slate-300 bg-white text-slate-700 hover:bg-slate-50">
@@ -52,7 +52,7 @@ export function AuthShell({
           </Button>
         </header>
 
-        <div className="grid gap-5 lg:grid-cols-[1fr_1fr] lg:items-stretch">
+        <div className="grid gap-5 lg:grid-cols-[0.94fr_1.06fr] lg:items-stretch">
           <section className="flex h-full min-h-[540px] flex-col rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.06)] sm:p-6">
             {eyebrow ? (
               <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[11px] font-medium text-blue-700">
@@ -84,7 +84,7 @@ export function AuthShell({
           </section>
 
           <section className="flex h-full items-stretch justify-center">
-            <div className="flex h-full w-full max-w-2xl">{children}</div>
+            <div className="flex h-full w-full max-w-[540px]">{children}</div>
           </section>
         </div>
       </div>
