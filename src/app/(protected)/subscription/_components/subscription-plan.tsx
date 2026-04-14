@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2, CreditCard, Loader2, ShieldCheck } from 'lucide-react';
+import { Banknote, CheckCircle2, CreditCard, Loader2, QrCode, ShieldCheck } from 'lucide-react';
 import { useAction } from 'next-safe-action/hooks';
 import { toast } from 'sonner';
 
@@ -116,7 +116,33 @@ export function SubscriptionPlan({
           </div>
         </div>
 
-        <div className="mx-auto w-full max-w-xl space-y-3">
+        <div className="mx-auto w-full max-w-xl space-y-4">
+          {!bypassSubscription ? (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <CreditCard className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">Cartão de crédito</p>
+                    <p className="text-xs text-slate-500">Renovação automática mensal.</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <Banknote className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">Boleto bancário</p>
+                    <p className="text-xs text-slate-500">Boleto também pode ser pago por Pix.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center gap-2 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+                <QrCode className="h-4 w-4" />
+                <span>Boleto também pode ser pago por Pix.</span>
+              </div>
+            </>
+          ) : null}
+
           <Button
             className="h-11 w-full"
             variant={active || bypassSubscription ? 'outline' : 'default'}

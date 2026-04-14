@@ -7,7 +7,7 @@ import { createClinicForUser, getClinicById, getUserProfileById, updateUserAsaas
 
 const PLAN_NAME = 'essential';
 const PLAN_LABEL = 'Plano Profissional';
-const PLAN_VALUE = Number(process.env.ASAAS_PLAN_VALUE ?? '99');
+const PLAN_VALUE = Number(process.env.ASAAS_PLAN_VALUE ?? '99.90');
 
 const normalizeDigits = (value?: string | null) => (value ?? '').replace(/\D/g, '');
 

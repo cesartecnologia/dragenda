@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { CheckCircle2, CreditCard, Stethoscope } from 'lucide-react';
+import { Banknote, CheckCircle2, CreditCard, QrCode, Stethoscope } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -84,7 +84,29 @@ export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscr
               </div>
             </div>
 
-            <div className="mx-auto w-full max-w-2xl">
+            <div className="mx-auto w-full max-w-2xl space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <CreditCard className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">Cartão de crédito</p>
+                    <p className="text-xs text-slate-500">Renovação automática mensal.</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <Banknote className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">Boleto bancário</p>
+                    <p className="text-xs text-slate-500">Boleto também pode ser pago por Pix.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center gap-2 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+                <QrCode className="h-4 w-4" />
+                <span>Boleto também pode ser pago por Pix.</span>
+              </div>
+
               <Button asChild size="lg" className="h-12 w-full rounded-xl bg-blue-600 text-base hover:bg-blue-700">
                 <Link href="/assinatura/iniciar">
                   <CreditCard className="mr-2 h-4 w-4" />
