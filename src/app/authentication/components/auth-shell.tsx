@@ -52,7 +52,7 @@ export function AuthShell({
           </Button>
         </header>
 
-        <div className="grid gap-5 lg:grid-cols-[0.94fr_1.06fr] lg:items-stretch">
+        <div className="grid gap-5 lg:grid-cols-2 lg:items-stretch">
           <section className="flex h-full min-h-[540px] flex-col rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.06)] sm:p-6">
             {eyebrow ? (
               <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[11px] font-medium text-blue-700">
@@ -83,8 +83,8 @@ export function AuthShell({
             </div>
           </section>
 
-          <section className="flex h-full items-stretch justify-center">
-            <div className="flex h-full w-full max-w-[540px]">{children}</div>
+          <section className="flex h-full items-stretch">
+            <div className="flex h-full w-full">{children}</div>
           </section>
         </div>
       </div>
