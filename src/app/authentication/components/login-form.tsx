@@ -2,7 +2,6 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRight, KeyRound, Loader2, Mail } from 'lucide-react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -69,7 +68,6 @@ const LoginForm = () => {
 
   return (
     <Card className="overflow-hidden border-sky-100 bg-white shadow-[0_24px_80px_rgba(14,165,233,0.10)]">
-      <div className="h-1.5 w-full bg-[linear-gradient(90deg,#38bdf8_0%,#60a5fa_50%,#93c5fd_100%)]" />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <CardHeader className="space-y-2 pb-4">
@@ -126,7 +124,7 @@ const LoginForm = () => {
             />
 
           </CardContent>
-          <CardFooter className="flex flex-col gap-3 pt-2">
+          <CardFooter className="pt-2">
             <Button type="submit" className="h-12 w-full rounded-xl" disabled={form.formState.isSubmitting}>
               {form.formState.isSubmitting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -135,14 +133,6 @@ const LoginForm = () => {
               )}
               Entrar
             </Button>
-            <div className="grid w-full gap-3 sm:grid-cols-2">
-              <Button asChild type="button" variant="outline" className="h-11 rounded-xl border-sky-200 text-sky-700 hover:bg-sky-50">
-                <Link href="/autenticacao">Ver assinatura</Link>
-              </Button>
-              <Button asChild type="button" variant="ghost" className="h-11 rounded-xl text-slate-600 hover:bg-slate-50">
-                <Link href="/primeiro-acesso">Primeiro acesso</Link>
-              </Button>
-            </div>
           </CardFooter>
         </form>
       </Form>
