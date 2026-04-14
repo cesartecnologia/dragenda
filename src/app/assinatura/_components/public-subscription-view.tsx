@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { CheckCircle2, CreditCard, Stethoscope } from 'lucide-react';
+import { CheckCircle2, CreditCard, FileText, Stethoscope } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -40,29 +40,22 @@ export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscr
             />
           </div>
 
-          <Button
-            asChild
-            variant="outline"
-            className="rounded-full border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-          >
+          <Button asChild variant="outline" className="rounded-full border-slate-300 bg-white text-slate-700 hover:bg-slate-50">
             <Link href={loginHref}>Área do cliente</Link>
           </Button>
         </header>
+
         <Card className="w-full rounded-[22px] border border-slate-200 bg-white shadow-[0_10px_35px_rgba(15,23,42,0.06)]">
           <CardHeader className="space-y-5 p-6 sm:p-8">
             <div className="space-y-2 text-center">
               <h2 className="text-3xl font-bold tracking-[-0.03em] text-slate-950">Plano Premium</h2>
-              <p className="mx-auto max-w-2xl text-base leading-7 text-slate-600">
-                Tudo o que sua clínica precisa para organizar atendimentos, pacientes e equipe.
-              </p>
+              <p className="mx-auto max-w-2xl text-base leading-7 text-slate-600">{description}</p>
             </div>
 
             <div className="rounded-[28px] border border-slate-200 bg-slate-50 px-5 py-8 sm:px-6">
               <div className="flex flex-col items-center justify-center text-center">
                 <div className="flex items-end justify-center gap-1.5">
-                  <span className="text-4xl font-bold tracking-[-0.04em] text-slate-950 sm:text-5xl">
-                    R$ 99,90
-                  </span>
+                  <span className="text-4xl font-bold tracking-[-0.04em] text-slate-950 sm:text-5xl">R$ 99,90</span>
                   <span className="pb-1 text-sm text-slate-500 sm:text-base">/mês</span>
                 </div>
                 <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600">
@@ -84,21 +77,39 @@ export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscr
               </div>
             </div>
 
-            <div className="mx-auto w-full max-w-2xl space-y-4">
-              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <CreditCard className="h-5 w-5 text-blue-600" />
-                <div>
-                  <p className="text-sm font-medium text-slate-900">Cartão de crédito</p>
-                  <p className="text-xs text-slate-500">Pagamento recorrente com renovação automática mensal.</p>
+            <div className="mx-auto grid w-full max-w-3xl gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-start gap-3">
+                  <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-900">Cartão de crédito</p>
+                    <p className="text-xs leading-5 text-slate-500">Pagamento recorrente com renovação automática mensal.</p>
+                  </div>
                 </div>
+                <Button asChild size="lg" className="mt-4 h-11 w-full rounded-xl bg-blue-600 text-sm hover:bg-blue-700">
+                  <Link href="/assinatura/cartao">
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Assinar com cartão
+                  </Link>
+                </Button>
               </div>
 
-              <Button asChild size="lg" className="h-12 w-full rounded-xl bg-blue-600 text-base hover:bg-blue-700">
-                <Link href="/assinatura/iniciar">
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  Assinar plano Premium
-                </Link>
-              </Button>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-start gap-3">
+                  <FileText className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-900">Boleto bancário</p>
+                    <p className="text-xs leading-5 text-slate-500">Assinatura mensal com emissão do boleto a cada cobrança.</p>
+                  </div>
+                </div>
+                <p className="mt-3 text-xs text-slate-500">Boleto também pode ser pago por Pix.</p>
+                <Button asChild size="lg" variant="outline" className="mt-4 h-11 w-full rounded-xl border-slate-300 text-sm">
+                  <Link href="/assinatura/boleto">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Assinar com boleto
+                  </Link>
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

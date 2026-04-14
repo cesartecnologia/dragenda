@@ -5,7 +5,7 @@ import {
   findUserProfileByAsaasSubscriptionId,
   updateUserAsaasSubscription,
 } from '@/server/clinic-data';
-import { markPendingSignupFromCheckoutWebhook } from '@/server/pending-signups';
+import { markPendingSignupFromCheckoutWebhook, markPendingSignupFromPaymentWebhook } from '@/server/pending-signups';
 
 const PLAN_NAME = 'essential';
 
@@ -71,6 +71,11 @@ export const POST = async (request: Request) => {
     return NextResponse.json({ received: true });
   }
 
+
+  const paymentId = typeof resource?.id === 'string' && event.startsWith('PAYMENT_') ? resource.id : null;
+  const paymentStatus = typeof resource?.status === 'string' ? resource.status : null;
+  const invoiceUrl = typeof resource?.invoiceUrl === 'string' ? resource.invoiceUrl : null;
+
   const customerId = typeof resource?.customer === 'string' ? resource.customer : null;
   const subscriptionId = typeof resource?.subscription === 'string'
     ? resource.subscription
@@ -78,11 +83,21 @@ export const POST = async (request: Request) => {
       ? resource.id
       : null;
 
+  const pendingSignup = event.startsWith('PAYMENT_') || event.startsWith('SUBSCRIPTION_')
+    ? await markPendingSignupFromPaymentWebhook({
+        paymentId,
+        paymentStatus,
+        customerId,
+        subscriptionId,
+        invoiceUrl,
+      })
+    : null;
+
   const user =
     (subscriptionId ? await findUserProfileByAsaasSubscriptionId(subscriptionId) : null) ??
     (customerId ? await findUserProfileByAsaasCustomerId(customerId) : null);
 
-  if (!user) return NextResponse.json({ received: true, ignored: true });
+  if (!user) return NextResponse.json({ received: true, ignored: !pendingSignup });
 
   if (TRACKING_EVENTS.has(event)) {
     await updateUserAsaasSubscription(user.id, {

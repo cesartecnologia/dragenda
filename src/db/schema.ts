@@ -148,9 +148,13 @@ export type PendingSignupStatus =
   | 'checkout_expired'
   | 'registration_completed';
 
+export type PendingSignupPaymentMethod = 'credit_card' | 'boleto';
+
 export interface PendingSignupRecord {
   id: string;
+  paymentMethod: PendingSignupPaymentMethod | null;
   checkoutId: string | null;
+  invoiceUrl: string | null;
   asaasCustomerId: string | null;
   asaasSubscriptionId: string | null;
   paymentId: string | null;
@@ -160,6 +164,8 @@ export interface PendingSignupRecord {
   payerEmail: string | null;
   payerPhone: string | null;
   payerCpfCnpj: string | null;
+  clinicName: string | null;
+  clinicCnpj: string | null;
   address: string | null;
   addressNumber: string | null;
   complement: string | null;

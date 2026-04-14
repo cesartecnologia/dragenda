@@ -148,8 +148,29 @@ export const upsertAsaasCustomer = async (params: {
   });
 };
 
+const formatAsaasDateTime = (date: Date) => {
+  const safeDate = new Date(date);
+  return `${safeDate.getFullYear()}-${String(safeDate.getMonth() + 1).padStart(2, '0')}-${String(safeDate.getDate()).padStart(2, '0')} ${String(safeDate.getHours()).padStart(2, '0')}:${String(safeDate.getMinutes()).padStart(2, '0')}:00`;
+};
+
+const formatAsaasDate = (date: Date) => {
+  const safeDate = new Date(date);
+  return `${safeDate.getFullYear()}-${String(safeDate.getMonth() + 1).padStart(2, '0')}-${String(safeDate.getDate()).padStart(2, '0')}`;
+};
+
 export const createAsaasRecurringCheckout = async (params: {
   customerId?: string | null;
+  customerData?: {
+    name: string;
+    email: string;
+    cpfCnpj: string;
+    phone: string;
+    address: string;
+    addressNumber: string;
+    complement?: string | null;
+    province: string;
+    postalCode: string;
+  } | null;
   planName: string;
   description: string;
   value: number;
@@ -158,12 +179,21 @@ export const createAsaasRecurringCheckout = async (params: {
   expiredUrl: string;
 }) => {
   const now = new Date(Date.now() + 5 * 60 * 1000);
-  const nextDueDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
+  const nextDueDate = formatAsaasDateTime(now);
 
   const checkout = await asaasRequest<AsaasCheckout>('/checkouts', {
     method: 'POST',
     body: JSON.stringify({
       customer: params.customerId || undefined,
+      customerData: params.customerData
+        ? {
+            ...params.customerData,
+            cpfCnpj: onlyDigits(params.customerData.cpfCnpj),
+            phone: onlyDigits(params.customerData.phone),
+            postalCode: onlyDigits(params.customerData.postalCode),
+            complement: params.customerData.complement?.trim() || undefined,
+          }
+        : undefined,
       billingTypes: ['CREDIT_CARD'],
       chargeTypes: ['RECURRENT'],
       minutesToExpire: 60,
@@ -194,6 +224,29 @@ export const createAsaasRecurringCheckout = async (params: {
   };
 };
 
+export const createAsaasSubscription = async (params: {
+  customerId: string;
+  billingType: 'BOLETO' | 'PIX' | 'CREDIT_CARD';
+  value: number;
+  description: string;
+  nextDueDate?: Date;
+  cycle?: 'MONTHLY' | 'WEEKLY' | 'BIWEEKLY' | 'QUARTERLY' | 'SEMIANNUALLY' | 'YEARLY';
+}) => {
+  const subscription = await asaasRequest<AsaasSubscription>('/subscriptions', {
+    method: 'POST',
+    body: JSON.stringify({
+      customer: params.customerId,
+      billingType: params.billingType,
+      nextDueDate: formatAsaasDate(params.nextDueDate ?? new Date(Date.now() + 24 * 60 * 60 * 1000)),
+      value: params.value,
+      cycle: params.cycle ?? 'MONTHLY',
+      description: params.description,
+    }),
+    headers: getHeaders(true),
+  });
+
+  return subscription;
+};
 
 export const getAsaasCustomer = async (customerId: string) => {
   return await asaasRequest<AsaasCustomer>(`/customers/${customerId}`, { method: 'GET' });

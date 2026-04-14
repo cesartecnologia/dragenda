@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+import { AuthShell } from '@/app/authentication/components/auth-shell';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getServerSession } from '@/lib/auth';
-import { AuthShell } from '@/app/authentication/components/auth-shell';
 import { getPendingSignupById, syncPendingSignupWithAsaas } from '@/server/pending-signups';
 
 import { CompletePaidSignupForm } from './_components/complete-paid-signup-form';
@@ -23,7 +23,6 @@ export default async function PrimeiroAcessoPage({
 
   const params = (await searchParams) ?? {};
   const intentId = Array.isArray(params.intentId) ? params.intentId[0] : params.intentId;
-  const checkoutState = Array.isArray(params.checkout) ? params.checkout[0] : params.checkout;
 
   if (!intentId) {
     redirect('/assinatura');
@@ -49,7 +48,7 @@ export default async function PrimeiroAcessoPage({
     );
   }
 
-  if (checkoutState === 'success' && intent.status !== 'registration_completed') {
+  if (intent.status !== 'registration_completed') {
     try {
       const synced = await syncPendingSignupWithAsaas(intent.id);
       if (synced) intent = synced;
@@ -79,7 +78,7 @@ export default async function PrimeiroAcessoPage({
   if (intent.status !== 'checkout_paid') {
     return (
       <AuthShell headerLinkHref="/login" headerLinkLabel="Área do cliente" mode="single">
-        <PaymentWaitingCard />
+        <PaymentWaitingCard paymentMethod={intent.paymentMethod} invoiceUrl={intent.invoiceUrl} />
       </AuthShell>
     );
   }
@@ -92,6 +91,8 @@ export default async function PrimeiroAcessoPage({
           name: intent.payerName,
           email: intent.payerEmail,
           phone: intent.payerPhone,
+          clinicName: intent.clinicName,
+          clinicCnpj: intent.clinicCnpj,
           address: intent.address,
           addressNumber: intent.addressNumber,
           complement: intent.complement,

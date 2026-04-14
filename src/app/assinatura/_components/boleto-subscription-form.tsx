@@ -1,8 +1,7 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
+import { Building2, FileText, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { PatternFormat } from 'react-number-format';
@@ -13,13 +12,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { authClient } from '@/lib/auth-client';
 
 const formSchema = z.object({
-  intentId: z.string().trim().min(1),
-  name: z.string().trim().min(1, { message: 'Nome do responsável é obrigatório' }),
+  responsibleName: z.string().trim().min(1, { message: 'Nome do responsável é obrigatório' }),
   email: z.string().trim().min(1, { message: 'E-mail é obrigatório' }).email({ message: 'E-mail inválido' }),
-  password: z.string().trim().min(8, { message: 'A senha deve ter pelo menos 8 caracteres' }),
   clinicName: z.string().trim().min(1, { message: 'Nome da clínica é obrigatório' }),
   clinicCnpj: z.string().trim().min(14, { message: 'CNPJ é obrigatório' }),
   clinicPhoneNumber: z.string().trim().min(10, { message: 'Telefone é obrigatório' }),
@@ -30,74 +26,61 @@ const formSchema = z.object({
   clinicProvince: z.string().trim().min(1, { message: 'Bairro é obrigatório' }),
 });
 
-type CompletePaidSignupFormProps = {
-  intentId: string;
-  defaults: {
-    name?: string | null;
-    email?: string | null;
-    phone?: string | null;
-    clinicName?: string | null;
-    clinicCnpj?: string | null;
-    address?: string | null;
-    addressNumber?: string | null;
-    complement?: string | null;
-    postalCode?: string | null;
-    province?: string | null;
-  };
-};
-
-export function CompletePaidSignupForm({ intentId, defaults }: CompletePaidSignupFormProps) {
+export function BoletoSubscriptionForm() {
   const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      intentId,
-      name: defaults.name ?? '',
-      email: defaults.email ?? '',
-      password: '',
-      clinicName: defaults.clinicName ?? '',
-      clinicCnpj: defaults.clinicCnpj ?? '',
-      clinicPhoneNumber: defaults.phone ?? '',
-      clinicAddress: defaults.address ?? '',
-      clinicAddressNumber: defaults.addressNumber ?? '',
-      clinicAddressComplement: defaults.complement ?? '',
-      clinicPostalCode: defaults.postalCode ?? '',
-      clinicProvince: defaults.province ?? '',
+      responsibleName: '',
+      email: '',
+      clinicName: '',
+      clinicCnpj: '',
+      clinicPhoneNumber: '',
+      clinicAddress: '',
+      clinicAddressNumber: '',
+      clinicAddressComplement: '',
+      clinicPostalCode: '',
+      clinicProvince: '',
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await authClient.completePaidSignup(values, {
-      onSuccess: () => {
-        router.push('/pos-login');
-        router.refresh();
-      },
-      onError: ({ error }) => {
-        switch (error.code) {
-          case 'USER_ALREADY_EXISTS':
-            toast.error('Já existe uma conta com este e-mail.');
-            return;
-          case 'PENDING_SIGNUP_NOT_READY':
-            toast.error('A assinatura ainda está sendo confirmada. Tente novamente em alguns instantes.');
-            return;
-          case 'PENDING_SIGNUP_NOT_FOUND':
-            toast.error('Não encontramos essa contratação. Gere um novo checkout.');
-            return;
-          default:
-            toast.error(error.message || 'Não foi possível concluir o cadastro agora.');
-        }
-      },
-    });
+    try {
+      const response = await fetch('/api/asaas/public-boleto-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+
+      const payload = (await response.json().catch(() => null)) as { error?: string; intentId?: string } | null;
+
+      if (!response.ok || !payload?.intentId) {
+        throw new Error(payload?.error || 'Não foi possível gerar o boleto agora.');
+      }
+
+      router.push(`/primeiro-acesso?intentId=${payload.intentId}&checkout=boleto`);
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível gerar o boleto agora.');
+    }
   }
 
   return (
-    <Card className="w-full border-sky-100 bg-white shadow-[0_20px_70px_rgba(14,165,233,0.10)]">
+    <Card className="w-full border-slate-200 bg-white shadow-[0_20px_70px_rgba(14,165,233,0.10)]">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <CardHeader className="space-y-2 pb-4">
-            <CardTitle className="text-2xl font-semibold tracking-[-0.02em] text-slate-900 sm:text-[2rem]">Cadastro da clínica</CardTitle>
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-amber-100 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
+              <FileText className="h-3.5 w-3.5" />
+              Assinatura por boleto
+            </div>
+            <CardTitle className="text-2xl font-semibold tracking-[-0.02em] text-slate-900 sm:text-[2rem]">
+              Gere seu boleto recorrente
+            </CardTitle>
             <CardDescription className="text-[15px] leading-6 text-slate-600">
-              Finalize seus dados para liberar o acesso da clínica.
+              Preencha os dados da clínica para emitir o primeiro boleto da assinatura. Boleto também pode ser pago por Pix.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -106,7 +89,7 @@ export function CompletePaidSignupForm({ intentId, defaults }: CompletePaidSignu
               <div className="grid gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="responsibleName"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Nome do responsável</FormLabel>
@@ -130,24 +113,11 @@ export function CompletePaidSignupForm({ intentId, defaults }: CompletePaidSignu
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2">
-                      <FormLabel>Senha de acesso</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Crie sua senha" type="password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Empresa</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Dados da clínica</h3>
               <div className="grid gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
@@ -275,10 +245,20 @@ export function CompletePaidSignupForm({ intentId, defaults }: CompletePaidSignu
                 </div>
               </div>
             </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              <div className="flex items-start gap-3">
+                <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+                <p>Após o pagamento do boleto, você conclui o cadastro da clínica e cria sua senha de acesso.</p>
+              </div>
+            </div>
           </CardContent>
-          <CardFooter>
-            <Button type="submit" className="w-full" size="lg" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Criar acesso da clínica'}
+          <CardFooter className="flex flex-col gap-3 sm:flex-row">
+            <Button type="button" variant="outline" className="w-full sm:flex-1" onClick={() => router.push('/assinatura')}>
+              Voltar
+            </Button>
+            <Button type="submit" className="w-full sm:flex-1" size="lg" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Gerar boleto'}
             </Button>
           </CardFooter>
         </form>
