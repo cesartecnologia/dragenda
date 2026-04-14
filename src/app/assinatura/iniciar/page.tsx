@@ -18,19 +18,24 @@ export default async function IniciarAssinaturaPage() {
     throw new Error('NEXT_PUBLIC_APP_URL não configurado.');
   }
 
-  const intent = await createPendingSignupIntent();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
+  try {
+    const intent = await createPendingSignupIntent();
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
 
-  const checkout = await createAsaasRecurringCheckout({
-    planName: PLAN_LABEL,
-    description: 'Assinatura mensal para liberar o acesso completo da clínica.',
-    value: PLAN_VALUE,
-    successUrl: `${appUrl}/primeiro-acesso?intentId=${intent.id}&checkout=success`,
-    cancelUrl: `${appUrl}/assinatura?checkout=cancelled`,
-    expiredUrl: `${appUrl}/assinatura?checkout=expired`,
-  });
+    const checkout = await createAsaasRecurringCheckout({
+      planName: PLAN_LABEL,
+      description: 'Assinatura mensal para liberar o acesso completo da clínica.',
+      value: PLAN_VALUE,
+      successUrl: `${appUrl}/primeiro-acesso?intentId=${intent.id}&checkout=success`,
+      cancelUrl: `${appUrl}/assinatura?checkout=cancelled`,
+      expiredUrl: `${appUrl}/assinatura?checkout=expired`,
+    });
 
-  await attachCheckoutToPendingSignup(intent.id, checkout.id);
+    await attachCheckoutToPendingSignup(intent.id, checkout.id);
 
-  redirect(checkout.checkoutUrl);
+    redirect(checkout.checkoutUrl);
+  } catch (error) {
+    console.error('PUBLIC_CHECKOUT_START_FAILED', error);
+    redirect('/assinatura?checkout=error');
+  }
 }

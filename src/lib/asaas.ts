@@ -164,7 +164,7 @@ export const createAsaasRecurringCheckout = async (params: {
     method: 'POST',
     body: JSON.stringify({
       customer: params.customerId || undefined,
-      billingTypes: ['CREDIT_CARD', 'BOLETO'],
+      billingTypes: ['CREDIT_CARD'],
       chargeTypes: ['RECURRENT'],
       minutesToExpire: 60,
       callback: {

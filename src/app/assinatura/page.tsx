@@ -29,9 +29,21 @@ export default async function AssinaturaPage({
 }) {
   const session = await getServerSession();
   const params = (await searchParams) ?? {};
+  const checkoutState = Array.isArray(params.checkout) ? params.checkout[0] : params.checkout;
 
   if (!session?.user) {
-    return <PublicSubscriptionView />;
+    return (
+      <div className="min-h-screen bg-[#f5f5f5] px-4 py-4 sm:px-6 sm:py-6">
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 sm:gap-5">
+          {checkoutState === 'error' ? (
+            <Badge className="mx-auto w-fit rounded-full bg-amber-100 px-4 py-1.5 text-amber-700 hover:bg-amber-100">
+              Não foi possível abrir a contratação agora. Tente novamente em instantes.
+            </Badge>
+          ) : null}
+          <PublicSubscriptionView />
+        </div>
+      </div>
+    );
   }
 
   if (session.user.mustChangePassword) {
@@ -42,7 +54,6 @@ export default async function AssinaturaPage({
     redirect('/agendamentos');
   }
 
-  const checkoutState = Array.isArray(params.checkout) ? params.checkout[0] : params.checkout;
   const firstAccess = Array.isArray(params.firstAccess) ? params.firstAccess[0] : params.firstAccess;
   const startCheckout = Array.isArray(params.startCheckout) ? params.startCheckout[0] : params.startCheckout;
   const summary = await getSubscriptionSummaryForUser(session.user.id);
