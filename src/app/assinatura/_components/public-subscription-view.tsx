@@ -48,14 +48,6 @@ export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscr
             <Link href={loginHref}>Área do cliente</Link>
           </Button>
         </header>
-
-        <div className="px-2 text-center">
-          <h1 className="text-3xl font-bold tracking-[-0.03em] text-slate-950 sm:text-4xl">
-            Assinatura Premium
-          </h1>
-          <p className="mt-3 text-sm leading-6 text-slate-500 sm:text-base">{description}</p>
-        </div>
-
         <Card className="w-full rounded-[22px] border border-slate-200 bg-white shadow-[0_10px_35px_rgba(15,23,42,0.06)]">
           <CardHeader className="space-y-5 p-6 sm:p-8">
             <div className="space-y-2 text-center">
