@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowRight, KeyRound, Loader2, Mail, ShieldCheck } from 'lucide-react';
+import { ArrowRight, KeyRound, Loader2, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -72,17 +72,13 @@ const LoginForm = () => {
       <div className="h-1.5 w-full bg-[linear-gradient(90deg,#38bdf8_0%,#60a5fa_50%,#93c5fd_100%)]" />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <CardHeader className="space-y-3 pb-4">
-            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
-              <ShieldCheck className="h-4 w-4" />
-              Área do cliente
-            </div>
+          <CardHeader className="space-y-2 pb-4">
             <div className="space-y-1.5">
               <CardTitle className="text-2xl font-semibold tracking-[-0.02em] text-slate-950">
-                Fazer login
+                Entrar
               </CardTitle>
               <CardDescription className="text-sm leading-6 text-slate-600">
-                Entre com seus dados para continuar usando o Dr. Agenda com praticidade e segurança.
+                Use seu e-mail e senha para acessar sua conta.
               </CardDescription>
             </div>
           </CardHeader>
@@ -129,9 +125,6 @@ const LoginForm = () => {
               )}
             />
 
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3 text-sm text-slate-600">
-              Use o e-mail cadastrado pela clínica para acessar sua conta.
-            </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-3 pt-2">
             <Button type="submit" className="h-12 w-full rounded-xl" disabled={form.formState.isSubmitting}>
@@ -140,14 +133,14 @@ const LoginForm = () => {
               ) : (
                 <ArrowRight className="mr-2 h-4 w-4" />
               )}
-              Entrar no sistema
+              Entrar
             </Button>
             <div className="grid w-full gap-3 sm:grid-cols-2">
               <Button asChild type="button" variant="outline" className="h-11 rounded-xl border-sky-200 text-sky-700 hover:bg-sky-50">
                 <Link href="/autenticacao">Ver assinatura</Link>
               </Button>
               <Button asChild type="button" variant="ghost" className="h-11 rounded-xl text-slate-600 hover:bg-slate-50">
-                <Link href="/primeiro-acesso">Fazer primeiro acesso</Link>
+                <Link href="/primeiro-acesso">Primeiro acesso</Link>
               </Button>
             </div>
           </CardFooter>

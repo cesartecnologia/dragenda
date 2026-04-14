@@ -23,7 +23,7 @@ const highlights = [
 ] as const;
 
 type AuthShellProps = {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   description: string;
   children: React.ReactNode;
@@ -54,10 +54,12 @@ export function AuthShell({
 
         <div className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-start">
           <section className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_10px_35px_rgba(15,23,42,0.06)] sm:p-8">
-            <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-1.5 text-xs font-medium text-blue-700">
-              <Sparkles className="h-3.5 w-3.5" />
-              {eyebrow}
-            </div>
+            {eyebrow ? (
+              <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-1.5 text-xs font-medium text-blue-700">
+                <Sparkles className="h-3.5 w-3.5" />
+                {eyebrow}
+              </div>
+            ) : null}
 
             <div className="mt-5 space-y-3">
               <h1 className="max-w-xl text-3xl font-bold tracking-[-0.03em] text-slate-950 sm:text-4xl">{title}</h1>
