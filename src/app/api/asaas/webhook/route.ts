@@ -5,6 +5,7 @@ import {
   findUserProfileByAsaasSubscriptionId,
   updateUserAsaasSubscription,
 } from '@/server/clinic-data';
+import { markPendingSignupFromCheckoutWebhook } from '@/server/pending-signups';
 
 const PLAN_NAME = 'essential';
 
@@ -53,6 +54,23 @@ export const POST = async (request: Request) => {
   if (!event) return NextResponse.json({ received: false, ignored: true });
 
   const resource = extractResource(payload);
+  const checkoutResource = typeof payload.checkout === 'object' && payload.checkout ? (payload.checkout as Record<string, unknown>) : null;
+  const checkoutId = typeof checkoutResource?.id === 'string' ? checkoutResource.id : null;
+  const checkoutStatus = typeof checkoutResource?.status === 'string' ? checkoutResource.status : null;
+  const checkoutCustomerId = typeof checkoutResource?.customer === 'string' ? checkoutResource.customer : null;
+  const checkoutSubscriptionId = typeof checkoutResource?.subscription === 'string' ? checkoutResource.subscription : null;
+
+  if (event.startsWith('CHECKOUT_') && checkoutId) {
+    await markPendingSignupFromCheckoutWebhook({
+      checkoutId,
+      checkoutStatus,
+      customerId: checkoutCustomerId,
+      subscriptionId: checkoutSubscriptionId,
+    });
+
+    return NextResponse.json({ received: true });
+  }
+
   const customerId = typeof resource?.customer === 'string' ? resource.customer : null;
   const subscriptionId = typeof resource?.subscription === 'string'
     ? resource.subscription

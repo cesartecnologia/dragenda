@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
 export default function AutenticacaoCadastroRedirectPage() {
-  redirect('/primeiro-acesso');
+  redirect('/assinatura');
 }

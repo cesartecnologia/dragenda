@@ -57,8 +57,8 @@ const LoginForm = () => {
             case 'INVALID_CREDENTIALS':
               toast.error('Não encontramos uma conta com este e-mail.');
               return;
-            case 'auth/too-many-requests':
-              toast.error('Muitas tentativas. Aguarde um instante e tente novamente.');
+            case 'TOO_MANY_REQUESTS':
+              toast.error('Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.');
               return;
             default:
               toast.error(ctx.error.message || 'Não foi possível enviar o link de redefinição.');
@@ -84,6 +84,9 @@ const LoginForm = () => {
           switch (ctx.error.code) {
             case 'INVALID_CREDENTIALS':
               toast.error('E-mail ou senha inválidos.');
+              return;
+            case 'TOO_MANY_REQUESTS':
+              toast.error('Muitas tentativas de login. Aguarde alguns minutos antes de tentar novamente.');
               return;
             case 'SESSION_LOGIN_FAILED':
               toast.error('Seu acesso foi validado, mas a sessão do sistema falhou. Tente novamente.', {

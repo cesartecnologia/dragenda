@@ -207,6 +207,52 @@ export const authClient = {
     },
   },
 
+
+  completePaidSignup: async (
+    values: {
+      intentId: string;
+      email: string;
+      password: string;
+      name: string;
+      clinicName: string;
+      clinicCnpj: string;
+      clinicPhoneNumber: string;
+      clinicAddress: string;
+      clinicAddressNumber: string;
+      clinicAddressComplement?: string;
+      clinicPostalCode: string;
+      clinicProvince: string;
+    },
+    callbacks?: {
+      onSuccess?: () => void;
+      onError?: (ctx: CallbackContext) => void;
+    },
+  ) => {
+    try {
+      const registerResponse = await fetch('/api/auth/register-from-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+
+      if (!registerResponse.ok) {
+        const { code, details } = await parseResponseError(registerResponse);
+        throw new Error(details ? `${code}:${details}` : code);
+      }
+
+      await setPersistence(firebaseAuth, inMemoryPersistence);
+      const credentials = await signInWithRetry(values.email, values.password);
+      await exchangeIdTokenForSession(credentials.user);
+      callbacks?.onSuccess?.();
+    } catch (error) {
+      callbacks?.onError?.({
+        error: toCallbackError(error),
+      });
+    }
+  },
+
   forgotPassword: {
     email: async (
       values: { email: string },

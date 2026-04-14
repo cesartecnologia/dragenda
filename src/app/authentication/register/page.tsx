@@ -1,26 +1,5 @@
 import { redirect } from 'next/navigation';
 
-import { getServerSession } from '@/lib/auth';
-
-import { AuthShell } from '../components/auth-shell';
-import SignUpForm from '../components/sign-up-form';
-
-const RegisterPage = async () => {
-  const session = await getServerSession();
-
-  if (session?.user) {
-    redirect('/pos-login');
-  }
-
-  return (
-    <AuthShell
-      headerLinkHref="/login"
-      headerLinkLabel="Área do cliente"
-      mode="single"
-    >
-      <SignUpForm />
-    </AuthShell>
-  );
-};
-
-export default RegisterPage;
+export default function RegisterPageRedirect() {
+  redirect('/assinatura');
+}

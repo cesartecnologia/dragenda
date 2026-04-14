@@ -43,6 +43,10 @@ export type AsaasSubscriptionPayment = {
   invoiceUrl?: string;
 };
 
+export type AsaasPayment = AsaasSubscriptionPayment & {
+  checkoutSession?: string;
+};
+
 const trimSlash = (value: string) => value.replace(/\/+$/, '');
 const onlyDigits = (value?: string | null) => (value ?? '').replace(/\D/g, '');
 
@@ -145,7 +149,7 @@ export const upsertAsaasCustomer = async (params: {
 };
 
 export const createAsaasRecurringCheckout = async (params: {
-  customerId: string;
+  customerId?: string | null;
   planName: string;
   description: string;
   value: number;
@@ -159,7 +163,7 @@ export const createAsaasRecurringCheckout = async (params: {
   const checkout = await asaasRequest<AsaasCheckout>('/checkouts', {
     method: 'POST',
     body: JSON.stringify({
-      customer: params.customerId,
+      customer: params.customerId || undefined,
       billingTypes: ['CREDIT_CARD'],
       chargeTypes: ['RECURRENT'],
       minutesToExpire: 60,
@@ -188,6 +192,22 @@ export const createAsaasRecurringCheckout = async (params: {
     ...checkout,
     checkoutUrl: checkout.checkoutUrl ?? checkout.url ?? buildAsaasCheckoutUrl(checkout.id),
   };
+};
+
+
+export const getAsaasCustomer = async (customerId: string) => {
+  return await asaasRequest<AsaasCustomer>(`/customers/${customerId}`, { method: 'GET' });
+};
+
+export const listAsaasPayments = async (params: { checkoutSession?: string | null; limit?: number } = {}) => {
+  const searchParams = new URLSearchParams();
+  if (params.checkoutSession) searchParams.set('checkoutSession', params.checkoutSession);
+  searchParams.set('limit', String(params.limit ?? 10));
+  const suffix = searchParams.toString();
+  const response = await asaasRequest<{ data?: AsaasPayment[] }>(`/payments${suffix ? `?${suffix}` : ''}`, {
+    method: 'GET',
+  });
+  return response.data ?? [];
 };
 
 export const getAsaasSubscription = async (subscriptionId: string) => {

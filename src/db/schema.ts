@@ -140,6 +140,37 @@ export interface UserToClinicRecord {
   updatedAt: Date;
 }
 
+export type PendingSignupStatus =
+  | 'checkout_created'
+  | 'payment_pending'
+  | 'checkout_paid'
+  | 'checkout_cancelled'
+  | 'checkout_expired'
+  | 'registration_completed';
+
+export interface PendingSignupRecord {
+  id: string;
+  checkoutId: string | null;
+  asaasCustomerId: string | null;
+  asaasSubscriptionId: string | null;
+  paymentId: string | null;
+  paymentStatus: string | null;
+  status: PendingSignupStatus;
+  payerName: string | null;
+  payerEmail: string | null;
+  payerPhone: string | null;
+  payerCpfCnpj: string | null;
+  address: string | null;
+  addressNumber: string | null;
+  complement: string | null;
+  postalCode: string | null;
+  province: string | null;
+  userId: string | null;
+  clinicId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export const usersTable = defineTable<UserRecord>();
 export const clinicsTable = defineTable<ClinicRecord>();
 export const doctorsTable = defineTable<DoctorRecord>();
@@ -148,3 +179,4 @@ export const appointmentsTable = defineTable<AppointmentRecord>();
 export const employeesTable = defineTable<EmployeeRecord>();
 export const specialtiesTable = defineTable<SpecialtyRecord>();
 export const usersToClinicsTable = defineTable<UserToClinicRecord>();
+export const pendingSignupsTable = defineTable<PendingSignupRecord>();

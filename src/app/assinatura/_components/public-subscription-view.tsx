@@ -86,7 +86,7 @@ export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscr
 
             <div className="mx-auto w-full max-w-2xl">
               <Button asChild size="lg" className="h-12 w-full rounded-xl bg-blue-600 text-base hover:bg-blue-700">
-                <Link href="/primeiro-acesso?intent=checkout">
+                <Link href="/assinatura/iniciar">
                   <CreditCard className="mr-2 h-4 w-4" />
                   Assinar plano Premium
                 </Link>
