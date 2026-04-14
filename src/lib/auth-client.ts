@@ -3,6 +3,7 @@
 import {
   inMemoryPersistence,
   setPersistence,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   type User,
@@ -36,6 +37,8 @@ const normalizeErrorCode = (code?: string) => {
       return 'INVALID_API_KEY';
     case 'auth/network-request-failed':
       return 'NETWORK_ERROR';
+    case 'auth/too-many-requests':
+      return 'TOO_MANY_REQUESTS';
     case 'SESSION_LOGIN_FAILED':
       return 'SESSION_LOGIN_FAILED';
     case 'ACCOUNT_CREATED_BUT_SESSION_FAILED':
@@ -195,6 +198,25 @@ export const authClient = {
         await setPersistence(firebaseAuth, inMemoryPersistence);
         const credentials = await signInWithRetry(values.email, values.password);
         await exchangeIdTokenForSession(credentials.user);
+        callbacks?.onSuccess?.();
+      } catch (error) {
+        callbacks?.onError?.({
+          error: toCallbackError(error),
+        });
+      }
+    },
+  },
+
+  forgotPassword: {
+    email: async (
+      values: { email: string },
+      callbacks?: {
+        onSuccess?: () => void;
+        onError?: (ctx: CallbackContext) => void;
+      },
+    ) => {
+      try {
+        await sendPasswordResetEmail(firebaseAuth, values.email.trim().toLowerCase());
         callbacks?.onSuccess?.();
       } catch (error) {
         callbacks?.onError?.({

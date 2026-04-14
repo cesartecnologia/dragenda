@@ -7,6 +7,7 @@ import { requireSubscribedSession } from '@/lib/auth';
 import { listEmployeesByClinicId } from '@/server/clinic-data';
 
 import EmployeeForm from './_components/employee-form';
+import { EmployeeActionsMenu } from './_components/employee-actions-menu';
 
 const roleLabel: Record<'admin' | 'attendant', string> = {
   admin: 'Administrador',
@@ -33,7 +34,7 @@ export default async function FuncionariosPage() {
               <CardContent className="space-y-2 text-sm">
                 <p className="break-all text-muted-foreground">{employee.email}</p>
                 <p>Perfil: {roleLabel[employee.role]}</p>
-                <EmployeeForm employee={employee} />
+                <div className="pt-2"><EmployeeActionsMenu employee={employee} /></div>
               </CardContent>
             </Card>
           ))}

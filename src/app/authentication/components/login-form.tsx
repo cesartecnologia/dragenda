@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRight, KeyRound, Loader2, Mail } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -27,6 +28,7 @@ const loginSchema = z.object({
 
 const LoginForm = () => {
   const router = useRouter();
+  const [isSendingReset, setIsSendingReset] = useState(false);
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -34,6 +36,38 @@ const LoginForm = () => {
       password: '',
     },
   });
+
+  const handleForgotPassword = async () => {
+    const isEmailValid = await form.trigger('email');
+    if (!isEmailValid) {
+      toast.error('Informe um e-mail válido para redefinir sua senha.');
+      return;
+    }
+
+    const email = form.getValues('email').trim().toLowerCase();
+    setIsSendingReset(true);
+    await authClient.forgotPassword.email(
+      { email },
+      {
+        onSuccess: () => {
+          toast.success('Enviamos o link de redefinição para o seu e-mail.');
+        },
+        onError: (ctx) => {
+          switch (ctx.error.code) {
+            case 'INVALID_CREDENTIALS':
+              toast.error('Não encontramos uma conta com este e-mail.');
+              return;
+            case 'auth/too-many-requests':
+              toast.error('Muitas tentativas. Aguarde um instante e tente novamente.');
+              return;
+            default:
+              toast.error(ctx.error.message || 'Não foi possível enviar o link de redefinição.');
+          }
+        },
+      },
+    );
+    setIsSendingReset(false);
+  };
 
   const handleSubmit = async (values: z.infer<typeof loginSchema>) => {
     await authClient.signIn.email(
@@ -122,6 +156,16 @@ const LoginForm = () => {
                 </FormItem>
               )}
             />
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                disabled={isSendingReset}
+                className="text-sm font-medium text-sky-700 transition hover:text-sky-800 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isSendingReset ? 'Enviando...' : 'Esqueceu sua senha?'}
+              </button>
+            </div>
 
           </CardContent>
           <CardFooter className="pt-2">

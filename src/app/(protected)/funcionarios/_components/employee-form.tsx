@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CopyIcon } from 'lucide-react';
 import { useAction } from 'next-safe-action/hooks';
-import { useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -45,11 +45,23 @@ const roleOptions = [
   },
 ] as const;;
 
-export default function EmployeeForm({ employee }: { employee?: typeof employeesTable.$inferSelect }) {
+export default function EmployeeForm({
+  employee,
+  open,
+  onOpenChange,
+  hideDefaultTrigger = false,
+  trigger,
+}: {
+  employee?: typeof employeesTable.$inferSelect;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideDefaultTrigger?: boolean;
+  trigger?: ReactNode;
+}) {
   type EmployeeFormInput = z.input<typeof formSchema>;
   type EmployeeFormOutput = z.output<typeof formSchema>;
 
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [generatedAccess, setGeneratedAccess] = useState<{ email: string; password: string } | null>(null);
 
   const form = useForm<EmployeeFormInput, unknown, EmployeeFormOutput>({
@@ -70,9 +82,12 @@ export default function EmployeeForm({ employee }: { employee?: typeof employees
     return `Acesso ao sistema da clínica
 Email: ${generatedAccess.email}
 Senha temporária: ${generatedAccess.password}
-Entrada: /autenticacao
+Entrada: /login
 No primeiro login o sistema solicitará a criação da senha definitiva`;
   }, [generatedAccess]);
+
+  const dialogOpen = open ?? internalOpen;
+  const setDialogOpen = onOpenChange ?? setInternalOpen;
 
   const action = useAction(upsertEmployee, {
     onSuccess: ({ data }) => {
@@ -83,7 +98,7 @@ No primeiro login o sistema solicitará a criação da senha definitiva`;
         return;
       }
       setGeneratedAccess(null);
-      setOpen(false);
+      setDialogOpen(false);
     },
     onError: ({ error }) => toast.error(error.serverError ?? 'Erro ao salvar usuário.'),
   });
@@ -95,11 +110,13 @@ No primeiro login o sistema solicitará a criação da senha definitiva`;
   };
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => {
-      setOpen(nextOpen);
+    <Dialog open={dialogOpen} onOpenChange={(nextOpen) => {
+      setDialogOpen(nextOpen);
       if (!nextOpen) setGeneratedAccess(null);
     }}>
-      <DialogTrigger asChild><Button>{employee ? 'Editar usuário' : 'Novo usuário'}</Button></DialogTrigger>
+      {!hideDefaultTrigger ? (
+        <DialogTrigger asChild>{trigger ?? <Button>{employee ? 'Editar usuário' : 'Novo usuário'}</Button>}</DialogTrigger>
+      ) : null}
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{employee ? 'Editar usuário' : 'Novo usuário'}</DialogTitle>
@@ -118,7 +135,7 @@ No primeiro login o sistema solicitará a criação da senha definitiva`;
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button type="button" onClick={handleCopy}><CopyIcon className="mr-2 h-4 w-4" />Copiar credenciais</Button>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Concluir</Button>
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Concluir</Button>
             </div>
           </div>
         ) : (

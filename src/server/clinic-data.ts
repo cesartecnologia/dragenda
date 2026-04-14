@@ -708,11 +708,42 @@ export const getAppointmentByIdWithRelations = async (appointmentId: string): Pr
   return { ...appointment, patient, doctor };
 };
 
+
+export const getEmployeeById = async (employeeId: string): Promise<Employee | null> => {
+  return withServerCache(`employee:${employeeId}`, 60_000, async () => {
+    const snapshot = await getFirestoreDb().collection(COLLECTIONS.employees).doc(employeeId).get();
+    return fromDoc<Employee>(snapshot);
+  });
+};
+
 export const listEmployeesByClinicId = async (clinicId: string): Promise<Employee[]> => {
   return withServerCache(`clinic:${clinicId}:employees`, 120_000, async () => {
     const snapshot = await getFirestoreDb().collection(COLLECTIONS.employees).where('clinicId', '==', clinicId).get();
     return sortByName(fromQuery<Employee>(snapshot));
   });
+};
+
+
+export const deleteEmployeeRecord = async (employeeId: string) => {
+  const employee = await getEmployeeById(employeeId);
+  if (!employee) return null;
+
+  await getFirestoreDb().collection(COLLECTIONS.employees).doc(employeeId).delete();
+
+  const usersSnapshot = await getFirestoreDb()
+    .collection(COLLECTIONS.users)
+    .where('email', '==', employee.email)
+    .get();
+
+  if (!usersSnapshot.empty) {
+    await deleteDocsInChunks(usersSnapshot.docs);
+  }
+
+  invalidateClinicScopedCache(employee.clinicId);
+  invalidateUserScopedCache(employeeId);
+  invalidateServerCache(`employee:${employeeId}`);
+  invalidateServerCache();
+  return employee;
 };
 
 export const upsertEmployeeRecord = async (params: {
