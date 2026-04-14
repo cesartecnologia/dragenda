@@ -77,7 +77,14 @@ export function AppSidebar({ session }: { session: AppSession }) {
   }, [menuItems, router, role]);
 
   const handleSignOut = async () => {
-    await authClient.signOut({ fetchOptions: { onSuccess: () => router.push('/login') } });
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.replace('/login');
+          router.refresh();
+        },
+      },
+    });
   };
 
   return (
