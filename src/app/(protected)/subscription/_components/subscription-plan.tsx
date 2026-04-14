@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2, CreditCard, Loader2, ShieldCheck, Sparkles } from 'lucide-react';
+import { CheckCircle2, CreditCard, Loader2, ShieldCheck } from 'lucide-react';
 import { useAction } from 'next-safe-action/hooks';
 import { toast } from 'sonner';
 
@@ -67,11 +67,6 @@ export function SubscriptionPlan({
     <Card className={className}>
       <CardHeader className="space-y-6">
         <div className="flex flex-col items-center gap-4 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
-            <Sparkles className="size-3.5" />
-            Plano principal da clínica
-          </div>
-
           <div className="space-y-2">
             <h3 className="text-2xl font-bold text-gray-900 sm:text-3xl">{statusLabel}</h3>
             <p className="mx-auto max-w-2xl text-sm leading-6 text-gray-600 sm:text-base">
