@@ -67,9 +67,9 @@ const LoginForm = () => {
   };
 
   return (
-    <Card className="overflow-hidden border-sky-100 bg-white shadow-[0_24px_80px_rgba(14,165,233,0.10)]">
+    <Card className="flex h-full min-h-[540px] overflow-hidden border-sky-100 bg-white shadow-[0_24px_80px_rgba(14,165,233,0.10)]">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex h-full w-full flex-col">
           <CardHeader className="space-y-2 pb-4">
             <div className="space-y-1.5">
               <CardTitle className="text-2xl font-semibold tracking-[-0.02em] text-slate-950">
@@ -80,7 +80,7 @@ const LoginForm = () => {
               </CardDescription>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="flex-1 space-y-4">
             <FormField
               control={form.control}
               name="email"

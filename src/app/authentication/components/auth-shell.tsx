@@ -18,7 +18,7 @@ const highlights = [
   {
     icon: ShieldCheck,
     title: 'Acesso seguro',
-    description: 'Cada usuário entra com o perfil certo para sua função.',
+    description: 'Permissões definidas para cada função da clínica.',
   },
 ] as const;
 
@@ -52,30 +52,30 @@ export function AuthShell({
           </Button>
         </header>
 
-        <div className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-start">
-          <section className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_10px_35px_rgba(15,23,42,0.06)] sm:p-8">
+        <div className="grid gap-5 lg:grid-cols-[1fr_1fr] lg:items-stretch">
+          <section className="flex h-full min-h-[540px] flex-col rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.06)] sm:p-6">
             {eyebrow ? (
-              <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-1.5 text-xs font-medium text-blue-700">
+              <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[11px] font-medium text-blue-700">
                 <Sparkles className="h-3.5 w-3.5" />
                 {eyebrow}
               </div>
             ) : null}
 
-            <div className="mt-5 space-y-3">
-              <h1 className="max-w-xl text-3xl font-bold tracking-[-0.03em] text-slate-950 sm:text-4xl">{title}</h1>
-              <p className="max-w-2xl text-base leading-7 text-slate-600">{description}</p>
+            <div className="mt-4 space-y-2 text-center">
+              <h1 className="mx-auto max-w-xl text-[2rem] font-bold tracking-[-0.03em] text-slate-950 sm:text-[2.15rem]">{title}</h1>
+              <p className="mx-auto max-w-xl text-sm leading-6 text-slate-600 sm:text-[15px]">{description}</p>
             </div>
 
-            <div className="mt-8 grid gap-4">
+            <div className="mt-6 grid flex-1 content-center gap-3">
               {highlights.map(({ icon: Icon, title: itemTitle, description: itemDescription }) => (
-                <div key={itemTitle} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex items-start gap-4">
-                    <div className="rounded-xl bg-white p-2.5 text-blue-600 shadow-sm">
-                      <Icon className="h-5 w-5" />
+                <div key={itemTitle} className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-xl bg-white p-2 text-blue-600 shadow-sm">
+                      <Icon className="h-[18px] w-[18px]" />
                     </div>
                     <div className="space-y-1">
-                      <h2 className="text-base font-semibold text-slate-900">{itemTitle}</h2>
-                      <p className="text-sm leading-6 text-slate-600">{itemDescription}</p>
+                      <h2 className="text-[15px] font-semibold text-slate-900">{itemTitle}</h2>
+                      <p className="text-sm leading-5 text-slate-600">{itemDescription}</p>
                     </div>
                   </div>
                 </div>
@@ -83,8 +83,8 @@ export function AuthShell({
             </div>
           </section>
 
-          <section className="flex items-start justify-center">
-            <div className="w-full max-w-2xl">{children}</div>
+          <section className="flex h-full items-stretch justify-center">
+            <div className="flex h-full w-full max-w-2xl">{children}</div>
           </section>
         </div>
       </div>
