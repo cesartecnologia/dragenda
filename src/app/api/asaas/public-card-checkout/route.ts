@@ -1,77 +1,39 @@
 import { NextResponse } from 'next/server';
 
-import { createAsaasRecurringCheckout } from '@/lib/asaas';
-import { createCheckoutSession, updateCheckoutSession } from '@/server/checkout-sessions';
-import {
-  normalizePublicCheckoutInput,
-  PLAN_DESCRIPTION,
-  PLAN_ID,
-  PLAN_LABEL,
-  PLAN_VALUE,
-  validatePublicCheckoutInput,
-} from '@/server/public-checkout';
+import { createAsaasCheckoutSession } from '@/lib/asaas';
+import { attachAsaasCheckoutToSession, createCheckoutSession } from '@/server/checkout-sessions';
 
-export const POST = async (request: Request) => {
+const PLAN_LABEL = 'Plano Premium';
+const PLAN_VALUE = Number(process.env.ASAAS_PLAN_VALUE ?? '99.90');
+
+export const POST = async () => {
   try {
     if (!process.env.NEXT_PUBLIC_APP_URL) {
       throw new Error('NEXT_PUBLIC_APP_URL não configurado.');
     }
 
-    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-    const input = normalizePublicCheckoutInput(body);
-    const validationError = validatePublicCheckoutInput(input);
-
-    if (validationError) {
-      return NextResponse.json({ error: validationError }, { status: 400 });
-    }
-
-    const session = await createCheckoutSession({
-      planId: PLAN_ID,
-      planName: PLAN_LABEL,
-      value: PLAN_VALUE,
-      paymentMethod: 'credit_card',
-      status: 'waiting_payment',
-      customerName: input.responsibleName,
-      companyName: input.clinicName,
-      customerEmail: input.email,
-      customerPhone: input.clinicPhoneNumber,
-      customerCpfCnpj: input.clinicCnpj,
-      customerAddress: input.clinicAddress,
-      customerAddressNumber: input.clinicAddressNumber,
-      customerAddressComplement: input.clinicAddressComplement,
-      customerPostalCode: input.clinicPostalCode,
-      customerProvince: input.clinicProvince,
-    });
-
+    const session = await createCheckoutSession({ paymentMethod: 'credit_card' });
     const appUrl = process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
-    const checkout = await createAsaasRecurringCheckout({
-      customerData: {
-        name: input.clinicName,
-        email: input.email,
-        cpfCnpj: input.clinicCnpj,
-        phone: input.clinicPhoneNumber,
-        address: input.clinicAddress,
-        addressNumber: input.clinicAddressNumber,
-        complement: input.clinicAddressComplement,
-        province: input.clinicProvince,
-        postalCode: input.clinicPostalCode,
-      },
+    const callbackBase = `${appUrl}/primeiro-acesso?sessionId=${encodeURIComponent(session.id)}`;
+
+    const checkout = await createAsaasCheckoutSession({
+      billingTypes: ['CREDIT_CARD'],
       planName: PLAN_LABEL,
-      description: PLAN_DESCRIPTION,
+      description: 'Assinatura mensal para liberar o acesso completo da clínica.',
       value: PLAN_VALUE,
-      successUrl: `${appUrl}/primeiro-acesso?sessionId=${session.id}`,
-      cancelUrl: `${appUrl}/primeiro-acesso?sessionId=${session.id}`,
-      expiredUrl: `${appUrl}/primeiro-acesso?sessionId=${session.id}`,
+      successUrl: callbackBase,
+      cancelUrl: `${callbackBase}&checkout=cancelled`,
+      expiredUrl: `${callbackBase}&checkout=expired`,
     });
 
-    const updated = await updateCheckoutSession(session.id, {
-      checkoutId: checkout.id,
-      status: 'waiting_payment',
+    await attachAsaasCheckoutToSession(session.id, {
+      asaasCheckoutId: checkout.id,
+      checkoutUrl: checkout.checkoutUrl,
     });
 
-    return NextResponse.json({ ok: true, checkoutUrl: checkout.checkoutUrl, sessionId: updated.id });
+    return NextResponse.json({ ok: true, checkoutUrl: checkout.checkoutUrl, sessionId: session.id });
   } catch (error) {
     console.error('PUBLIC_CARD_CHECKOUT_FAILED', error);
-    return NextResponse.json({ error: 'Não foi possível abrir a contratação agora.' }, { status: 500 });
+    return NextResponse.json({ error: 'Não foi possível abrir o checkout agora.' }, { status: 500 });
   }
 };

@@ -12,21 +12,19 @@ import ClinicBrandHeader from './_components/clinic-brand-header';
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
   const session = await requireSession();
-  const requestHeaders = await headers();
-  const pathname = requestHeaders.get('x-pathname') ?? '';
+  await headers();
   if (session.user.mustChangePassword) {
     redirect('/primeiro-login');
   }
 
   const clinic = session.user.clinic ? await getClinicById(session.user.clinic.id) : null;
   const privileged = hasPrivilegedAccess(session);
-  const isClinicSetupRoute = pathname.startsWith('/configuracoes');
 
   if (!session.user.hasSubscriptionAccess && !privileged) {
     redirect('/assinatura');
   }
 
-  if (!session.user.clinic && !privileged && !isClinicSetupRoute) {
+  if (!session.user.clinic && !privileged) {
     redirect('/configuracoes/clinica?onboarding=1');
   }
 

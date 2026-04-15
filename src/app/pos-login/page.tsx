@@ -11,9 +11,7 @@ export default async function PosLoginPage() {
     redirect('/primeiro-login');
   }
 
-  const privileged = hasPrivilegedAccess(session);
-
-  if (privileged) {
+  if (hasPrivilegedAccess(session)) {
     redirect('/painel');
   }
 
@@ -40,7 +38,6 @@ export default async function PosLoginPage() {
   if (!onboardingComplete) {
     redirect('/configuracoes/clinica?onboarding=1');
   }
-
 
   redirect(getDefaultPostLoginRoute(session.user.role));
 }

@@ -83,7 +83,7 @@ export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscr
                   <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-slate-900">Cartão de crédito</p>
-                    <p className="text-xs leading-5 text-slate-500">Você segue direto para o checkout seguro e conclui o cadastro depois do pagamento.</p>
+                    <p className="text-xs leading-5 text-slate-500">Você segue direto para o checkout padrão do Asaas e só cadastra a clínica depois da confirmação do pagamento.</p>
                   </div>
                 </div>
                 <Button asChild size="lg" className="mt-4 h-11 w-full rounded-xl bg-blue-600 text-sm hover:bg-blue-700">
@@ -99,10 +99,10 @@ export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscr
                   <FileText className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-slate-900">Boleto bancário</p>
-                    <p className="text-xs leading-5 text-slate-500">Você informa os dados de cobrança para gerar o boleto da assinatura mensal.</p>
+                    <p className="text-xs leading-5 text-slate-500">Você abre o checkout padrão do Asaas, gera o boleto e só cadastra a clínica depois da confirmação do pagamento.</p>
                   </div>
                 </div>
-                <p className="mt-3 text-xs text-slate-500">Boleto também pode ser pago por Pix.</p>
+                <p className="mt-3 text-xs text-slate-500">No checkout, o boleto é gerado sem exigir cadastro prévio da clínica.</p>
                 <Button asChild size="lg" variant="outline" className="mt-4 h-11 w-full rounded-xl border-slate-300 text-sm">
                   <Link href="/assinatura/boleto">
                     <FileText className="mr-2 h-4 w-4" />

@@ -1,11 +1,11 @@
 import { AuthShell } from '@/app/authentication/components/auth-shell';
 
-import { CardSubscriptionForm } from '../_components/card-subscription-form';
+import { PublicCardCheckoutStart } from '../_components/public-card-checkout-start';
 
 export default function AssinaturaCartaoPage() {
   return (
     <AuthShell headerLinkHref="/login" headerLinkLabel="Área do cliente" mode="single">
-      <CardSubscriptionForm />
+      <PublicCardCheckoutStart paymentMethod="credit_card" />
     </AuthShell>
   );
 }

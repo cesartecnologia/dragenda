@@ -54,9 +54,9 @@ export function CardSubscriptionForm() {
         body: JSON.stringify(values),
       });
 
-      const payload = (await response.json().catch(() => null)) as { error?: string; checkoutUrl?: string; sessionId?: string } | null;
+      const payload = (await response.json().catch(() => null)) as { error?: string; checkoutUrl?: string } | null;
 
-      if (!response.ok || !payload?.checkoutUrl || !payload?.sessionId) {
+      if (!response.ok || !payload?.checkoutUrl) {
         throw new Error(payload?.error || 'Não foi possível abrir a contratação agora.');
       }
 

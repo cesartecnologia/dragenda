@@ -158,7 +158,8 @@ const formatAsaasDate = (date: Date) => {
   return `${safeDate.getFullYear()}-${String(safeDate.getMonth() + 1).padStart(2, '0')}-${String(safeDate.getDate()).padStart(2, '0')}`;
 };
 
-export const createAsaasRecurringCheckout = async (params: {
+export const createAsaasCheckoutSession = async (params: {
+  billingTypes: Array<'CREDIT_CARD' | 'BOLETO'>;
   customerId?: string | null;
   customerData?: {
     name: string;
@@ -177,6 +178,7 @@ export const createAsaasRecurringCheckout = async (params: {
   successUrl: string;
   cancelUrl: string;
   expiredUrl: string;
+  minutesToExpire?: number;
 }) => {
   const now = new Date(Date.now() + 5 * 60 * 1000);
   const nextDueDate = formatAsaasDateTime(now);
@@ -194,9 +196,9 @@ export const createAsaasRecurringCheckout = async (params: {
             complement: params.customerData.complement?.trim() || undefined,
           }
         : undefined,
-      billingTypes: ['CREDIT_CARD'],
+      billingTypes: params.billingTypes,
       chargeTypes: ['RECURRENT'],
-      minutesToExpire: 60,
+      minutesToExpire: params.minutesToExpire ?? 60,
       callback: {
         successUrl: params.successUrl,
         cancelUrl: params.cancelUrl,
@@ -222,6 +224,39 @@ export const createAsaasRecurringCheckout = async (params: {
     ...checkout,
     checkoutUrl: checkout.checkoutUrl ?? checkout.url ?? buildAsaasCheckoutUrl(checkout.id),
   };
+};
+
+export const createAsaasRecurringCheckout = async (params: {
+  customerId?: string | null;
+  customerData?: {
+    name: string;
+    email: string;
+    cpfCnpj: string;
+    phone: string;
+    address: string;
+    addressNumber: string;
+    complement?: string | null;
+    province: string;
+    postalCode: string;
+  } | null;
+  planName: string;
+  description: string;
+  value: number;
+  successUrl: string;
+  cancelUrl: string;
+  expiredUrl: string;
+}) => {
+  return createAsaasCheckoutSession({
+    billingTypes: ['CREDIT_CARD'],
+    customerId: params.customerId,
+    customerData: params.customerData,
+    planName: params.planName,
+    description: params.description,
+    value: params.value,
+    successUrl: params.successUrl,
+    cancelUrl: params.cancelUrl,
+    expiredUrl: params.expiredUrl,
+  });
 };
 
 export const createAsaasSubscription = async (params: {

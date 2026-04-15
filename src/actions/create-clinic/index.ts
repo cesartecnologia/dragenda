@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 
-import { auth, hasPrivilegedAccess, hasSubscriptionAccess } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 import { createClinicForUser, updateClinicSettings } from '@/server/clinic-data';
 
 export const createClinic = async (params: {
@@ -19,9 +19,8 @@ export const createClinic = async (params: {
 }) => {
   const session = await auth.api.getSession();
   if (!session?.user) throw new Error('Unauthorized');
-
-  if (!hasPrivilegedAccess(session) && !hasSubscriptionAccess(session)) {
-    throw new Error('Pagamento não confirmado. A clínica só pode ser criada após a confirmação da assinatura.');
+  if (!session.user.hasSubscriptionAccess && !session.user.bypassSubscription) {
+    throw new Error('Pagamento não confirmado.');
   }
 
   const clinic = await createClinicForUser({ userId: session.user.id, name: params.name });

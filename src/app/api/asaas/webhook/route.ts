@@ -5,7 +5,11 @@ import {
   findUserProfileByAsaasSubscriptionId,
   updateUserAsaasSubscription,
 } from '@/server/clinic-data';
-import { markCheckoutSessionFromCheckoutWebhook, markCheckoutSessionFromPaymentWebhook } from '@/server/checkout-sessions';
+import {
+  markCheckoutSessionFromCheckoutWebhook,
+  markCheckoutSessionFromPaymentWebhook,
+} from '@/server/checkout-sessions';
+import { markPendingSignupFromCheckoutWebhook, markPendingSignupFromPaymentWebhook } from '@/server/pending-signups';
 
 const PLAN_NAME = 'essential';
 
@@ -61,12 +65,20 @@ export const POST = async (request: Request) => {
   const checkoutSubscriptionId = typeof checkoutResource?.subscription === 'string' ? checkoutResource.subscription : null;
 
   if (event.startsWith('CHECKOUT_') && checkoutId) {
-    await markCheckoutSessionFromCheckoutWebhook({
-      checkoutId,
-      checkoutStatus,
-      customerId: checkoutCustomerId,
-      subscriptionId: checkoutSubscriptionId,
-    });
+    await Promise.allSettled([
+      markCheckoutSessionFromCheckoutWebhook({
+        checkoutId,
+        checkoutStatus,
+        customerId: checkoutCustomerId,
+        subscriptionId: checkoutSubscriptionId,
+      }),
+      markPendingSignupFromCheckoutWebhook({
+        checkoutId,
+        checkoutStatus,
+        customerId: checkoutCustomerId,
+        subscriptionId: checkoutSubscriptionId,
+      }),
+    ]);
 
     return NextResponse.json({ received: true });
   }
@@ -74,34 +86,52 @@ export const POST = async (request: Request) => {
   const paymentId = typeof resource?.id === 'string' && event.startsWith('PAYMENT_') ? resource.id : null;
   const paymentStatus = typeof resource?.status === 'string' ? resource.status : null;
   const invoiceUrl = typeof resource?.invoiceUrl === 'string' ? resource.invoiceUrl : null;
-  const value = typeof resource?.value === 'number' ? resource.value : null;
+  const billingType = typeof resource?.billingType === 'string' ? resource.billingType : null;
+  const paymentValue = typeof resource?.value === 'number' ? resource.value : null;
+  const paymentCheckoutId = typeof resource?.checkoutSession === 'string' ? resource.checkoutSession : checkoutId;
 
   const customerId = typeof resource?.customer === 'string' ? resource.customer : null;
-  const subscriptionId =
-    typeof resource?.subscription === 'string'
-      ? resource.subscription
-      : typeof resource?.id === 'string' && event.startsWith('SUBSCRIPTION_')
-        ? resource.id
-        : null;
+  const subscriptionId = typeof resource?.subscription === 'string'
+    ? resource.subscription
+    : typeof resource?.id === 'string' && event.startsWith('SUBSCRIPTION_')
+      ? resource.id
+      : null;
 
-  const checkoutSession =
+  const [checkoutSessionResult, pendingSignupResult] = await Promise.allSettled([
     event.startsWith('PAYMENT_') || event.startsWith('SUBSCRIPTION_')
-      ? await markCheckoutSessionFromPaymentWebhook({
+      ? markCheckoutSessionFromPaymentWebhook({
+          paymentId,
+          paymentStatus,
+          customerId,
+          subscriptionId,
+          checkoutSessionId: paymentCheckoutId,
+          invoiceUrl,
+          billingType,
+          value: paymentValue,
+        })
+      : Promise.resolve(null),
+    event.startsWith('PAYMENT_') || event.startsWith('SUBSCRIPTION_')
+      ? markPendingSignupFromPaymentWebhook({
           paymentId,
           paymentStatus,
           customerId,
           subscriptionId,
           invoiceUrl,
-          value,
         })
-      : null;
+      : Promise.resolve(null),
+  ]);
+
+  const pendingSignup = pendingSignupResult.status === 'fulfilled' ? pendingSignupResult.value : null;
 
   const user =
     (subscriptionId ? await findUserProfileByAsaasSubscriptionId(subscriptionId) : null) ??
     (customerId ? await findUserProfileByAsaasCustomerId(customerId) : null);
 
   if (!user) {
-    return NextResponse.json({ received: true, ignored: !checkoutSession });
+    return NextResponse.json({
+      received: true,
+      ignored: !pendingSignup && checkoutSessionResult.status !== 'fulfilled',
+    });
   }
 
   if (TRACKING_EVENTS.has(event)) {

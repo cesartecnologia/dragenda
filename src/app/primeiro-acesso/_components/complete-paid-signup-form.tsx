@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -36,13 +35,6 @@ type CompletePaidSignupFormProps = {
     name?: string | null;
     email?: string | null;
     phone?: string | null;
-    clinicName?: string | null;
-    clinicCnpj?: string | null;
-    address?: string | null;
-    addressNumber?: string | null;
-    complement?: string | null;
-    postalCode?: string | null;
-    province?: string | null;
   };
 };
 
@@ -55,14 +47,14 @@ export function CompletePaidSignupForm({ sessionId, defaults }: CompletePaidSign
       name: defaults.name ?? '',
       email: defaults.email ?? '',
       password: '',
-      clinicName: defaults.clinicName ?? '',
-      clinicCnpj: defaults.clinicCnpj ?? '',
+      clinicName: '',
+      clinicCnpj: '',
       clinicPhoneNumber: defaults.phone ?? '',
-      clinicAddress: defaults.address ?? '',
-      clinicAddressNumber: defaults.addressNumber ?? '',
-      clinicAddressComplement: defaults.complement ?? '',
-      clinicPostalCode: defaults.postalCode ?? '',
-      clinicProvince: defaults.province ?? '',
+      clinicAddress: '',
+      clinicAddressNumber: '',
+      clinicAddressComplement: '',
+      clinicPostalCode: '',
+      clinicProvince: '',
     },
   });
 
@@ -78,13 +70,14 @@ export function CompletePaidSignupForm({ sessionId, defaults }: CompletePaidSign
             toast.error('Já existe uma conta com este e-mail.');
             return;
           case 'CHECKOUT_SESSION_NOT_READY':
-            toast.error('O pagamento ainda não foi confirmado. Aguarde a liberação do cadastro.');
+          case 'ONBOARDING_NOT_RELEASED':
+            toast.error('O pagamento ainda não foi confirmado pelo Asaas. Aguarde mais alguns instantes.');
             return;
           case 'CHECKOUT_SESSION_NOT_FOUND':
-            toast.error('Não encontramos essa contratação. Gere um novo pagamento.');
+            toast.error('Não encontramos esse checkout. Gere um novo para continuar.');
             return;
-          case 'ONBOARDING_IN_PROGRESS':
-            toast.error('Seu cadastro já está sendo finalizado em outra tentativa. Aguarde alguns instantes.');
+          case 'ONBOARDING_ALREADY_COMPLETED':
+            toast.error('Esse cadastro já foi concluído. Faça login para acessar.');
             return;
           default:
             toast.error(error.message || 'Não foi possível concluir o cadastro agora.');
@@ -97,16 +90,15 @@ export function CompletePaidSignupForm({ sessionId, defaults }: CompletePaidSign
     <Card className="w-full border-sky-100 bg-white shadow-[0_20px_70px_rgba(14,165,233,0.10)]">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <input type="hidden" {...form.register('sessionId')} />
           <CardHeader className="space-y-2 pb-4">
             <CardTitle className="text-2xl font-semibold tracking-[-0.02em] text-slate-900 sm:text-[2rem]">Cadastro da clínica</CardTitle>
             <CardDescription className="text-[15px] leading-6 text-slate-600">
-              Finalize seus dados para liberar o acesso da clínica.
+              Pagamento confirmado. Agora sim você pode cadastrar a clínica e criar o acesso administrador.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Responsável</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Responsável administrador</h3>
               <div className="grid gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
@@ -151,7 +143,7 @@ export function CompletePaidSignupForm({ sessionId, defaults }: CompletePaidSign
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Empresa</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Dados da clínica</h3>
               <div className="grid gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}

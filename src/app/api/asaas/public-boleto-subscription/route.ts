@@ -1,105 +1,39 @@
 import { NextResponse } from 'next/server';
 
-import { createAsaasSubscription, listAsaasSubscriptionPayments, upsertAsaasCustomer } from '@/lib/asaas';
-import { createCheckoutSession, updateCheckoutSession, upsertPaymentRecord } from '@/server/checkout-sessions';
-import {
-  normalizePublicCheckoutInput,
-  PLAN_DESCRIPTION,
-  PLAN_ID,
-  PLAN_LABEL,
-  PLAN_VALUE,
-  validatePublicCheckoutInput,
-} from '@/server/public-checkout';
+import { createAsaasCheckoutSession } from '@/lib/asaas';
+import { attachAsaasCheckoutToSession, createCheckoutSession } from '@/server/checkout-sessions';
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const PLAN_LABEL = 'Plano Premium';
+const PLAN_VALUE = Number(process.env.ASAAS_PLAN_VALUE ?? '99.90');
 
-export const POST = async (request: Request) => {
+export const POST = async () => {
   try {
-    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-    const input = normalizePublicCheckoutInput(body);
-    const validationError = validatePublicCheckoutInput(input);
-
-    if (validationError) {
-      return NextResponse.json({ error: validationError }, { status: 400 });
+    if (!process.env.NEXT_PUBLIC_APP_URL) {
+      throw new Error('NEXT_PUBLIC_APP_URL não configurado.');
     }
 
-    const session = await createCheckoutSession({
-      planId: PLAN_ID,
+    const session = await createCheckoutSession({ paymentMethod: 'boleto' });
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
+    const callbackBase = `${appUrl}/primeiro-acesso?sessionId=${encodeURIComponent(session.id)}`;
+
+    const checkout = await createAsaasCheckoutSession({
+      billingTypes: ['BOLETO'],
       planName: PLAN_LABEL,
+      description: 'Assinatura mensal para liberar o acesso completo da clínica.',
       value: PLAN_VALUE,
-      paymentMethod: 'boleto',
-      status: 'waiting_payment',
-      customerName: input.responsibleName,
-      companyName: input.clinicName,
-      customerEmail: input.email,
-      customerPhone: input.clinicPhoneNumber,
-      customerCpfCnpj: input.clinicCnpj,
-      customerAddress: input.clinicAddress,
-      customerAddressNumber: input.clinicAddressNumber,
-      customerAddressComplement: input.clinicAddressComplement,
-      customerPostalCode: input.clinicPostalCode,
-      customerProvince: input.clinicProvince,
+      successUrl: callbackBase,
+      cancelUrl: `${callbackBase}&checkout=cancelled`,
+      expiredUrl: `${callbackBase}&checkout=expired`,
     });
 
-    const customer = await upsertAsaasCustomer({
-      name: input.clinicName,
-      email: input.email,
-      cpfCnpj: input.clinicCnpj,
-      phone: input.clinicPhoneNumber,
-      mobilePhone: input.clinicPhoneNumber,
-      address: input.clinicAddress,
-      addressNumber: input.clinicAddressNumber,
-      complement: input.clinicAddressComplement,
-      province: input.clinicProvince,
-      postalCode: input.clinicPostalCode,
-      externalReference: session.id,
+    await attachAsaasCheckoutToSession(session.id, {
+      asaasCheckoutId: checkout.id,
+      checkoutUrl: checkout.checkoutUrl,
     });
 
-    const subscription = await createAsaasSubscription({
-      customerId: customer.id,
-      billingType: 'BOLETO',
-      value: PLAN_VALUE,
-      description: PLAN_DESCRIPTION,
-      nextDueDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      cycle: 'MONTHLY',
-    });
-
-    let firstPayment = null;
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-      const payments = await listAsaasSubscriptionPayments(subscription.id);
-      firstPayment = payments[0] ?? null;
-      if (firstPayment) break;
-      await wait(800);
-    }
-
-    const updated = await updateCheckoutSession(session.id, {
-      asaasCustomerId: customer.id,
-      asaasSubscriptionId: subscription.id,
-      paymentId: firstPayment?.id ?? null,
-      paymentStatus: firstPayment?.status ?? 'PENDING',
-      invoiceUrl: firstPayment?.invoiceUrl ?? null,
-      status: 'waiting_payment',
-    });
-
-    if (firstPayment) {
-      await upsertPaymentRecord({
-        id: firstPayment.id,
-        sessionId: updated.id,
-        asaasPaymentId: firstPayment.id,
-        status: firstPayment.status ?? 'PENDING',
-        method: 'boleto',
-        value: firstPayment.value ?? PLAN_VALUE,
-        invoiceUrl: firstPayment.invoiceUrl ?? null,
-      });
-    }
-
-    return NextResponse.json({
-      ok: true,
-      sessionId: updated.id,
-      invoiceUrl: firstPayment?.invoiceUrl ?? null,
-    });
+    return NextResponse.json({ ok: true, checkoutUrl: checkout.checkoutUrl, sessionId: session.id });
   } catch (error) {
-    console.error('PUBLIC_BOLETO_SUBSCRIPTION_FAILED', error);
-    return NextResponse.json({ error: 'Não foi possível gerar o boleto agora.' }, { status: 500 });
+    console.error('PUBLIC_BOLETO_CHECKOUT_FAILED', error);
+    return NextResponse.json({ error: 'Não foi possível abrir o checkout agora.' }, { status: 500 });
   }
 };
