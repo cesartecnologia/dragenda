@@ -37,7 +37,7 @@ export default async function AssinaturaPage({
         <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 sm:gap-5">
           {checkoutState === 'error' ? (
             <Badge className="mx-auto w-fit rounded-full bg-amber-100 px-4 py-1.5 text-amber-700 hover:bg-amber-100">
-              Não foi possível abrir a contratação agora. Tente novamente em instantes.
+              Não foi possível iniciar o pagamento agora. Tente novamente em instantes.
             </Badge>
           ) : null}
           <PublicSubscriptionView />

@@ -71,10 +71,10 @@ export function CompletePaidSignupForm({ sessionId, defaults }: CompletePaidSign
             return;
           case 'CHECKOUT_SESSION_NOT_READY':
           case 'ONBOARDING_NOT_RELEASED':
-            toast.error('O pagamento ainda não foi confirmado pelo Asaas. Aguarde mais alguns instantes.');
+            toast.error('O pagamento ainda não foi confirmado. Aguarde mais alguns instantes.');
             return;
           case 'CHECKOUT_SESSION_NOT_FOUND':
-            toast.error('Não encontramos esse checkout. Gere um novo para continuar.');
+            toast.error('Não encontramos esse pagamento. Gere um novo para continuar.');
             return;
           case 'ONBOARDING_ALREADY_COMPLETED':
             toast.error('Esse cadastro já foi concluído. Faça login para acessar.');
@@ -93,7 +93,7 @@ export function CompletePaidSignupForm({ sessionId, defaults }: CompletePaidSign
           <CardHeader className="space-y-2 pb-4">
             <CardTitle className="text-2xl font-semibold tracking-[-0.02em] text-slate-900 sm:text-[2rem]">Cadastro da clínica</CardTitle>
             <CardDescription className="text-[15px] leading-6 text-slate-600">
-              Pagamento confirmado. Agora sim você pode cadastrar a clínica e criar o acesso administrador.
+              Pagamento confirmado. Agora você já pode cadastrar a clínica e criar seu acesso.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">

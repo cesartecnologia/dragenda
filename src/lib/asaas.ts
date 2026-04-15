@@ -186,6 +186,7 @@ export const createAsaasCheckoutSession = async (params: {
   cancelUrl: string;
   expiredUrl: string;
   minutesToExpire?: number;
+  externalReference?: string | null;
 }) => {
   const now = new Date(Date.now() + 5 * 60 * 1000);
   const nextDueDate = formatAsaasDateTime(now);
@@ -204,6 +205,7 @@ export const createAsaasCheckoutSession = async (params: {
           }
         : undefined,
       billingTypes: params.billingTypes,
+      externalReference: params.externalReference?.trim() || undefined,
       chargeTypes: ['RECURRENT'],
       minutesToExpire: params.minutesToExpire ?? 60,
       callback: {

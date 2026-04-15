@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 const features = [
   'Agenda, pacientes e equipe em um só lugar',
   'Atendimentos e cadastros ilimitados',
-  'Organização da rotina da clínica com visão completa',
-  'Suporte prioritário para operação do dia a dia',
+  'Mais organização para a rotina da clínica',
+  'Suporte prioritário para o dia a dia',
 ];
 
 type PublicSubscriptionViewProps = {
@@ -19,17 +19,17 @@ type PublicSubscriptionViewProps = {
 const methods = [
   {
     title: 'Cartão de crédito',
-    description: 'Pagamento imediato no checkout do Asaas. Assim que confirmado, o cadastro da clínica é liberado.',
+    description: 'Pagamento na hora. Depois disso, você conclui o cadastro da clínica.',
     href: '/assinatura/cartao',
     buttonLabel: 'Pagar com cartão',
     icon: CreditCard,
     buttonVariant: 'default' as const,
-    accent: 'from-blue-600 to-cyan-500',
-    iconBg: 'bg-blue-100 text-blue-700',
+    accent: 'from-slate-900 to-slate-700',
+    iconBg: 'bg-slate-100 text-slate-700',
   },
   {
     title: 'Boleto bancário',
-    description: 'Gere o boleto no Asaas e conclua o pagamento. O cadastro da clínica só libera após a confirmação.',
+    description: 'Emita o boleto e continue o cadastro assim que o pagamento for confirmado.',
     href: '/assinatura/boleto',
     buttonLabel: 'Gerar boleto',
     icon: FileText,
@@ -44,10 +44,10 @@ export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscr
   const description =
     source === 'login'
       ? 'Centralize agenda, pacientes, equipe e operação da clínica em uma única plataforma.'
-      : 'Escolha como deseja pagar. O acesso só é liberado depois que o pagamento for confirmado.';
+      : 'Escolha a forma de pagamento e siga para a contratação.';
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#eff6ff,transparent_38%),#f8fafc] px-4 py-4 sm:px-6 sm:py-6">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#f8fafc,transparent_38%),#f8fafc] px-4 py-4 sm:px-6 sm:py-6">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 sm:gap-6">
         <header className="flex items-center justify-between rounded-3xl border border-white/70 bg-white/90 px-4 py-3 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur sm:px-6">
           <Image
@@ -69,35 +69,35 @@ export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscr
             <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-slate-100">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                Pagamento seguro com Asaas
+                Assinatura mensal
               </div>
               <div className="space-y-3">
                 <h2 className="text-3xl font-bold tracking-[-0.04em] sm:text-5xl">Plano Premium</h2>
                 <p className="text-sm leading-7 text-slate-200 sm:text-base">{description}</p>
               </div>
-              <div className="rounded-3xl border border-white/10 bg-white/10 px-6 py-5">
-                <div className="flex items-end justify-center gap-2">
+              <div className="px-1 py-2">
+                <div className="flex flex-wrap items-end justify-center gap-2">
                   <span className="text-4xl font-bold tracking-[-0.05em] sm:text-6xl">R$ 99,90</span>
                   <span className="pb-1 text-sm text-slate-300 sm:text-base">/mês</span>
                 </div>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200 sm:text-base">
-                  Ideal para clínicas que querem profissionalizar operação, agenda, pacientes e equipe sem complicação.
+                  Tudo o que você precisa para organizar agenda, pacientes e equipe em uma única plataforma.
                 </p>
               </div>
             </div>
           </CardHeader>
 
           <CardContent className="space-y-8 px-6 py-8 sm:px-8">
-            <div className="grid gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-5 sm:grid-cols-2 sm:p-6">
+            <div className="grid gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-5 md:grid-cols-2 sm:p-6">
               {features.map((feature) => (
-                <div key={feature} className="flex items-start gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm">
+                <div key={feature} className="flex min-h-[76px] items-start gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm">
                   <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
                   <p className="text-sm leading-6 text-slate-700 sm:text-base">{feature}</p>
                 </div>
               ))}
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2">
               {methods.map((method) => {
                 const Icon = method.icon;
 
@@ -108,7 +108,7 @@ export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscr
                   >
                     <div className={`h-1 w-full rounded-full bg-gradient-to-r ${method.accent}`} />
                     <div className="mt-5 flex flex-1 flex-col">
-                      <div className="flex items-start gap-4">
+                      <div className="flex min-h-[120px] items-start gap-4">
                         <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${method.iconBg}`}>
                           <Icon className="h-5 w-5" />
                         </div>
@@ -119,7 +119,7 @@ export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscr
                       </div>
 
                       <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                        Pagamento primeiro, cadastro da clínica depois. Sem liberação antecipada de acesso.
+                        Seu acesso é liberado após a confirmação do pagamento.
                       </div>
 
                       <div className="mt-6 flex flex-1 items-end">
@@ -131,7 +131,7 @@ export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscr
                         >
                           <Link href={method.href}>
                             <Icon className="mr-2 h-4 w-4" />
-                            {method.buttonLabel}
+                            <span className="whitespace-nowrap">{method.buttonLabel}</span>
                             <ArrowRight className="ml-2 h-4 w-4" />
                           </Link>
                         </Button>

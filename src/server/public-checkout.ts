@@ -1,42 +1,39 @@
-export const PLAN_ID = 'essential';
-export const PLAN_LABEL = 'Plano Premium';
-export const PLAN_VALUE = Number(process.env.ASAAS_PLAN_VALUE ?? '99.90');
-export const PLAN_DESCRIPTION = 'Assinatura mensal para liberar o acesso completo da clínica.';
+import { createAsaasCheckoutSession } from '@/lib/asaas';
+import { attachAsaasCheckoutToSession, createCheckoutSession } from '@/server/checkout-sessions';
 
-export type PublicCheckoutLeadInput = {
-  responsibleName: string;
-  email: string;
-  cpfCnpj: string;
-  phoneNumber: string;
-};
+const PLAN_LABEL = 'Plano Premium';
+const PLAN_VALUE = Number(process.env.ASAAS_PLAN_VALUE ?? '99.90');
 
-export const onlyDigits = (value?: string | null) => (value ?? '').replace(/\D/g, '');
+export type PublicCheckoutMethod = 'credit_card' | 'boleto';
 
-export const normalizePublicCheckoutLeadInput = (body: Record<string, unknown>): PublicCheckoutLeadInput => ({
-  responsibleName: String(body.responsibleName ?? '').trim(),
-  email: String(body.email ?? '').trim().toLowerCase(),
-  cpfCnpj: onlyDigits(String(body.cpfCnpj ?? body.clinicCnpj ?? '')),
-  phoneNumber: onlyDigits(String(body.phoneNumber ?? body.clinicPhoneNumber ?? '')),
-});
-
-const isEmail = (value: string) => /.+@.+\..+/.test(value);
-
-export const validatePublicCheckoutLeadInput = (input: PublicCheckoutLeadInput) => {
-  if (!input.responsibleName) {
-    return 'Informe o nome do responsável para continuar.';
+export async function startPublicCheckout(paymentMethod: PublicCheckoutMethod) {
+  if (!process.env.NEXT_PUBLIC_APP_URL) {
+    throw new Error('NEXT_PUBLIC_APP_URL não configurado.');
   }
 
-  if (!input.email || !isEmail(input.email)) {
-    return 'Informe um e-mail válido para continuar.';
-  }
+  const session = await createCheckoutSession({ paymentMethod });
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
+  const callbackBase = `${appUrl}/primeiro-acesso?sessionId=${encodeURIComponent(session.id)}`;
 
-  if (input.cpfCnpj.length !== 11 && input.cpfCnpj.length !== 14) {
-    return 'Informe um CPF ou CNPJ válido para continuar.';
-  }
+  const checkout = await createAsaasCheckoutSession({
+    billingTypes: [paymentMethod === 'boleto' ? 'BOLETO' : 'CREDIT_CARD'],
+    planName: PLAN_LABEL,
+    description: 'Assinatura mensal do plano premium.',
+    value: PLAN_VALUE,
+    successUrl: callbackBase,
+    cancelUrl: `${callbackBase}&checkout=cancelled`,
+    expiredUrl: `${callbackBase}&checkout=expired`,
+    externalReference: session.id,
+  });
 
-  if (input.phoneNumber.length < 10) {
-    return 'Informe um telefone válido para continuar.';
-  }
+  await attachAsaasCheckoutToSession(session.id, {
+    asaasCheckoutId: checkout.id,
+    checkoutUrl: checkout.checkoutUrl,
+  });
 
-  return null;
-};
+  return {
+    sessionId: session.id,
+    checkoutId: checkout.id,
+    checkoutUrl: checkout.checkoutUrl,
+  };
+}

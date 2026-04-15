@@ -38,8 +38,8 @@ export default async function PrimeiroAcessoPage({
       <AuthShell headerLinkHref="/login" headerLinkLabel="Área do cliente" mode="single">
         <Card className="w-full border-slate-200 bg-white shadow-[0_20px_70px_rgba(14,165,233,0.10)]">
           <CardHeader>
-            <CardTitle>Checkout não encontrado</CardTitle>
-            <CardDescription>Esse link não está mais disponível. Gere um novo checkout para continuar.</CardDescription>
+            <CardTitle>Pagamento não encontrado</CardTitle>
+            <CardDescription>Esse link não está mais disponível. Gere um novo pagamento para continuar.</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full">
@@ -68,8 +68,8 @@ export default async function PrimeiroAcessoPage({
       <AuthShell headerLinkHref="/login" headerLinkLabel="Área do cliente" mode="single">
         <Card className="w-full border-slate-200 bg-white shadow-[0_20px_70px_rgba(14,165,233,0.10)]">
           <CardHeader>
-            <CardTitle>Acesso já criado</CardTitle>
-            <CardDescription>Seu cadastro foi concluído. Entre com seu e-mail e senha para acessar a clínica.</CardDescription>
+            <CardTitle>Cadastro concluído</CardTitle>
+            <CardDescription>Seu cadastro foi concluído. Entre com seu e-mail e senha para acessar o sistema.</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full">
