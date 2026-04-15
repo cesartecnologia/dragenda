@@ -27,11 +27,10 @@ export async function startPublicCheckout(paymentMethod: PublicCheckoutMethod) {
   if (paymentMethod === 'boleto') {
     const paymentLink = await createAsaasPaymentLink({
       billingType: 'BOLETO',
-      chargeType: 'RECURRENT',
-      subscriptionCycle: 'MONTHLY',
+      chargeType: 'DETACHED',
       dueDateLimitDays: 3,
-      name: PLAN_LABEL,
-      description: 'Assinatura mensal do plano premium.',
+      name: `${PLAN_LABEL} - primeira mensalidade`,
+      description: 'Pague a primeira mensalidade e conclua o cadastro da clínica na sequência.',
       value: PLAN_VALUE,
       successUrl: callbackBase,
       externalReference: session.id,

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { getAdminAuth } from '@/lib/firebase-admin';
-import { upsertAsaasCustomer } from '@/lib/asaas';
+import { createAsaasSubscription, upsertAsaasCustomer } from '@/lib/asaas';
 import { createClinicForUser, updateClinicSettings, updateUserAsaasSubscription, upsertUserProfile } from '@/server/clinic-data';
 import {
   beginOnboardingProcessing,
@@ -9,6 +9,7 @@ import {
   getCheckoutSessionById,
   getOnboardingBySessionId,
   resetOnboardingProcessing,
+  updateCheckoutSession,
 } from '@/server/checkout-sessions';
 
 const validateEmail = (email: string) => /.+@.+\..+/.test(email);
@@ -148,26 +149,54 @@ export const POST = async (request: Request) => {
       province: clinicProvince,
     });
 
-    const syncedCustomer = checkoutSession.asaasCustomerId
-      ? await upsertAsaasCustomer({
-          asaasCustomerId: checkoutSession.asaasCustomerId,
-          name: clinicName,
-          email,
-          cpfCnpj: clinicCnpj,
-          phone: clinicPhoneNumber,
-          mobilePhone: clinicPhoneNumber,
-          address: clinicAddress,
-          addressNumber: clinicAddressNumber,
-          complement: clinicAddressComplement,
-          province: clinicProvince,
-          postalCode: clinicPostalCode,
-          externalReference: clinic.id,
-        }).catch(() => null)
-      : null;
+    const syncedCustomer = await upsertAsaasCustomer({
+      asaasCustomerId: checkoutSession.asaasCustomerId,
+      name: clinicName,
+      email,
+      cpfCnpj: clinicCnpj,
+      phone: clinicPhoneNumber,
+      mobilePhone: clinicPhoneNumber,
+      address: clinicAddress,
+      addressNumber: clinicAddressNumber,
+      complement: clinicAddressComplement,
+      province: clinicProvince,
+      postalCode: clinicPostalCode,
+      externalReference: clinic.id,
+    }).catch(() => null);
+
+    if (syncedCustomer?.id && syncedCustomer.id !== checkoutSession.asaasCustomerId) {
+      await updateCheckoutSession(checkoutSession.id, {
+        asaasCustomerId: syncedCustomer.id,
+      }).catch(() => null);
+    }
+
+    let nextAsaasSubscriptionId = checkoutSession.asaasSubscriptionId;
+
+    if (checkoutSession.paymentMethod === 'boleto' && !nextAsaasSubscriptionId && syncedCustomer?.id) {
+      const nextDueDate = new Date(checkoutSession.paidAt ?? new Date());
+      nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+
+      const boletoSubscription = await createAsaasSubscription({
+        customerId: syncedCustomer.id,
+        billingType: 'BOLETO',
+        value: checkoutSession.value,
+        description: `${checkoutSession.planName} - cobrança mensal`,
+        nextDueDate,
+        cycle: 'MONTHLY',
+      }).catch(() => null);
+
+      if (boletoSubscription?.id) {
+        nextAsaasSubscriptionId = boletoSubscription.id;
+        await updateCheckoutSession(checkoutSession.id, {
+          asaasSubscriptionId: boletoSubscription.id,
+          asaasCustomerId: syncedCustomer.id,
+        }).catch(() => null);
+      }
+    }
 
     await updateUserAsaasSubscription(user.uid, {
       asaasCustomerId: syncedCustomer?.id ?? checkoutSession.asaasCustomerId,
-      asaasSubscriptionId: checkoutSession.asaasSubscriptionId,
+      asaasSubscriptionId: nextAsaasSubscriptionId,
       asaasCheckoutId: checkoutSession.asaasCheckoutId,
       subscriptionStatus: 'active',
       plan: checkoutSession.planId,
