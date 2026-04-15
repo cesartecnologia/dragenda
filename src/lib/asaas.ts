@@ -18,6 +18,11 @@ export type AsaasCheckout = {
   checkoutUrl?: string;
 };
 
+export type AsaasPaymentLink = {
+  id: string;
+  url: string;
+};
+
 export type AsaasSubscription = {
   id: string;
   customer?: string;
@@ -45,6 +50,8 @@ export type AsaasSubscriptionPayment = {
 
 export type AsaasPayment = AsaasSubscriptionPayment & {
   checkoutSession?: string;
+  paymentLink?: string;
+  externalReference?: string;
 };
 
 const trimSlash = (value: string) => value.replace(/\/+$/, '');
@@ -226,6 +233,41 @@ export const createAsaasCheckoutSession = async (params: {
   };
 };
 
+export const createAsaasPaymentLink = async (params: {
+  billingType: 'BOLETO' | 'CREDIT_CARD' | 'PIX' | 'UNDEFINED';
+  name: string;
+  description: string;
+  value: number;
+  successUrl: string;
+  externalReference?: string | null;
+  chargeType?: 'DETACHED' | 'RECURRENT' | 'INSTALLMENT';
+  subscriptionCycle?: 'MONTHLY' | 'WEEKLY' | 'BIWEEKLY' | 'BIMONTHLY' | 'QUARTERLY' | 'SEMIANNUALLY' | 'YEARLY';
+  dueDateLimitDays?: number;
+  autoRedirect?: boolean;
+  notificationEnabled?: boolean;
+}) => {
+  return await asaasRequest<AsaasPaymentLink>('/paymentLinks', {
+    method: 'POST',
+    body: JSON.stringify({
+      name: params.name,
+      description: params.description,
+      value: params.value,
+      billingType: params.billingType,
+      chargeType: params.chargeType ?? 'DETACHED',
+      subscriptionCycle: params.chargeType === 'RECURRENT' ? params.subscriptionCycle ?? 'MONTHLY' : undefined,
+      dueDateLimitDays: params.billingType === 'BOLETO' ? params.dueDateLimitDays ?? 3 : undefined,
+      externalReference: params.externalReference?.trim() || undefined,
+      notificationEnabled: params.notificationEnabled ?? false,
+      callback: {
+        successUrl: params.successUrl,
+        autoRedirect: params.autoRedirect ?? false,
+      },
+      isAddressRequired: false,
+    }),
+    headers: getHeaders(true),
+  });
+};
+
 export const createAsaasRecurringCheckout = async (params: {
   customerId?: string | null;
   customerData?: {
@@ -287,9 +329,10 @@ export const getAsaasCustomer = async (customerId: string) => {
   return await asaasRequest<AsaasCustomer>(`/customers/${customerId}`, { method: 'GET' });
 };
 
-export const listAsaasPayments = async (params: { checkoutSession?: string | null; limit?: number } = {}) => {
+export const listAsaasPayments = async (params: { checkoutSession?: string | null; externalReference?: string | null; limit?: number } = {}) => {
   const searchParams = new URLSearchParams();
   if (params.checkoutSession) searchParams.set('checkoutSession', params.checkoutSession);
+  if (params.externalReference) searchParams.set('externalReference', params.externalReference);
   searchParams.set('limit', String(params.limit ?? 10));
   const suffix = searchParams.toString();
   const response = await asaasRequest<{ data?: AsaasPayment[] }>(`/payments${suffix ? `?${suffix}` : ''}`, {

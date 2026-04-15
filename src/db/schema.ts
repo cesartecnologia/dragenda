@@ -151,6 +151,7 @@ export interface CheckoutSessionRecord {
   paymentMethod: CheckoutPaymentMethod;
   status: CheckoutSessionStatus;
   asaasCheckoutId: string | null;
+  asaasPaymentLinkId: string | null;
   asaasCustomerId: string | null;
   asaasSubscriptionId: string | null;
   paymentId: string | null;

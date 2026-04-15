@@ -119,6 +119,7 @@ const toCheckoutSession = (params: {
     paymentMethod: params.paymentMethod,
     status: params.status ?? 'initiated',
     asaasCheckoutId: null,
+    asaasPaymentLinkId: null,
     asaasCustomerId: null,
     asaasSubscriptionId: null,
     paymentId: null,
@@ -181,6 +182,16 @@ export const getCheckoutSessionByAsaasCheckoutId = async (asaasCheckoutId: strin
   return record ?? null;
 };
 
+export const getCheckoutSessionByPaymentLinkId = async (asaasPaymentLinkId: string) => {
+  const snapshot = await getFirestoreDb()
+    .collection(CHECKOUT_COLLECTION)
+    .where('asaasPaymentLinkId', '==', asaasPaymentLinkId)
+    .limit(1)
+    .get();
+  const [record] = fromQuery<CheckoutSession>(snapshot);
+  return record ?? null;
+};
+
 export const getCheckoutSessionByPaymentId = async (paymentId: string) => {
   const snapshot = await getFirestoreDb()
     .collection(CHECKOUT_COLLECTION)
@@ -231,6 +242,17 @@ export const attachAsaasCheckoutToSession = async (
 ) => {
   return updateCheckoutSession(id, {
     asaasCheckoutId: params.asaasCheckoutId,
+    checkoutUrl: params.checkoutUrl,
+    status: 'waiting_payment',
+  });
+};
+
+export const attachAsaasPaymentLinkToSession = async (
+  id: string,
+  params: { asaasPaymentLinkId: string; checkoutUrl: string },
+) => {
+  return updateCheckoutSession(id, {
+    asaasPaymentLinkId: params.asaasPaymentLinkId,
     checkoutUrl: params.checkoutUrl,
     status: 'waiting_payment',
   });
@@ -439,6 +461,7 @@ export const markCheckoutSessionFromPaymentWebhook = async (params: {
   customerId?: string | null;
   subscriptionId?: string | null;
   checkoutSessionId?: string | null;
+  paymentLinkId?: string | null;
   invoiceUrl?: string | null;
   billingType?: string | null;
   value?: number | null;
@@ -447,11 +470,14 @@ export const markCheckoutSessionFromPaymentWebhook = async (params: {
   const sessionByCheckoutId = !sessionByPaymentId && params.checkoutSessionId
     ? await getCheckoutSessionByAsaasCheckoutId(params.checkoutSessionId)
     : null;
-  const sessionBySubscriptionId = !sessionByPaymentId && !sessionByCheckoutId && params.subscriptionId
+  const sessionByPaymentLinkId = !sessionByPaymentId && !sessionByCheckoutId && params.paymentLinkId
+    ? await getCheckoutSessionByPaymentLinkId(params.paymentLinkId)
+    : null;
+  const sessionBySubscriptionId = !sessionByPaymentId && !sessionByCheckoutId && !sessionByPaymentLinkId && params.subscriptionId
     ? await getCheckoutSessionBySubscriptionId(params.subscriptionId)
     : null;
 
-  const session = sessionByPaymentId ?? sessionByCheckoutId ?? sessionBySubscriptionId;
+  const session = sessionByPaymentId ?? sessionByCheckoutId ?? sessionByPaymentLinkId ?? sessionBySubscriptionId;
   if (!session) return null;
 
   return updateSessionAndOnboardingFromPayment(session, {
@@ -467,10 +493,12 @@ export const markCheckoutSessionFromPaymentWebhook = async (params: {
 
 export const syncCheckoutSessionWithAsaas = async (sessionId: string) => {
   const session = await getCheckoutSessionById(sessionId);
-  if (!session || !session.asaasCheckoutId) return session;
+  if (!session || (!session.asaasCheckoutId && !session.asaasPaymentLinkId)) return session;
   if (session.status === 'paid') return session;
 
-  const payments = await listAsaasPayments({ checkoutSession: session.asaasCheckoutId, limit: 20 });
+  const payments = session.asaasCheckoutId
+    ? await listAsaasPayments({ checkoutSession: session.asaasCheckoutId, limit: 20 })
+    : await listAsaasPayments({ externalReference: session.id, limit: 20 });
   const latestPayment = sortPayments(payments)[0] as AsaasPayment | undefined;
   if (!latestPayment) return session;
 
