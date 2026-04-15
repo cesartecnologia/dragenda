@@ -52,6 +52,9 @@ export type AsaasPayment = AsaasSubscriptionPayment & {
   checkoutSession?: string;
   paymentLink?: string;
   externalReference?: string;
+  customer?: string;
+  invoiceUrl?: string;
+  bankSlipUrl?: string;
 };
 
 const trimSlash = (value: string) => value.replace(/\/+$/, '');
@@ -151,6 +154,31 @@ export const upsertAsaasCustomer = async (params: {
   return await asaasRequest<AsaasCustomer>('/customers', {
     method: 'POST',
     body: JSON.stringify(payload),
+    headers: getHeaders(true),
+  });
+};
+
+
+export const createAsaasCustomerMinimal = async (params: {
+  name: string;
+  cpfCnpj: string;
+  email?: string | null;
+  phone?: string | null;
+  mobilePhone?: string | null;
+  externalReference?: string | null;
+  notificationDisabled?: boolean;
+}) => {
+  return await asaasRequest<AsaasCustomer>('/customers', {
+    method: 'POST',
+    body: JSON.stringify({
+      name: params.name.trim(),
+      cpfCnpj: onlyDigits(params.cpfCnpj),
+      email: params.email?.trim() || undefined,
+      phone: params.phone ? onlyDigits(params.phone) : undefined,
+      mobilePhone: params.mobilePhone ? onlyDigits(params.mobilePhone) : params.phone ? onlyDigits(params.phone) : undefined,
+      externalReference: params.externalReference?.trim() || undefined,
+      notificationDisabled: params.notificationDisabled ?? false,
+    }),
     headers: getHeaders(true),
   });
 };
@@ -265,6 +293,41 @@ export const createAsaasPaymentLink = async (params: {
         autoRedirect: params.autoRedirect ?? false,
       },
       isAddressRequired: false,
+    }),
+    headers: getHeaders(true),
+  });
+};
+
+export const createAsaasPayment = async (params: {
+  customerId: string;
+  billingType: 'BOLETO' | 'CREDIT_CARD' | 'PIX';
+  value: number;
+  description: string;
+  dueDate?: Date;
+  successUrl?: string | null;
+  autoRedirect?: boolean;
+  externalReference?: string | null;
+  daysAfterDueDateToRegistrationCancellation?: number;
+}) => {
+  return await asaasRequest<AsaasPayment>('/payments', {
+    method: 'POST',
+    body: JSON.stringify({
+      customer: params.customerId,
+      billingType: params.billingType,
+      value: params.value,
+      dueDate: formatAsaasDate(params.dueDate ?? new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)),
+      description: params.description,
+      externalReference: params.externalReference?.trim() || undefined,
+      daysAfterDueDateToRegistrationCancellation:
+        params.billingType === 'BOLETO'
+          ? params.daysAfterDueDateToRegistrationCancellation ?? 1
+          : undefined,
+      callback: params.successUrl
+        ? {
+            successUrl: params.successUrl,
+            autoRedirect: params.autoRedirect ?? false,
+          }
+        : undefined,
     }),
     headers: getHeaders(true),
   });

@@ -23,8 +23,8 @@ const copyByMethod = {
   },
   boleto: {
     badge: 'Boleto bancário',
-    title: 'Abrindo sua página de pagamento',
-    description: 'Você será direcionado para a página de pagamento em instantes.',
+    title: 'Continue com boleto',
+    description: 'Para gerar o boleto, informe primeiro os dados do responsável.',
     retryLabel: 'Tentar novamente',
     endpoint: '/api/asaas/public-boleto-subscription',
     Icon: FileText,

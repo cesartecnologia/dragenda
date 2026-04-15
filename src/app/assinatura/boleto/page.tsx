@@ -1,13 +1,13 @@
 import { AuthShell } from '@/app/authentication/components/auth-shell';
 
-import { PublicCardCheckoutStart } from '../_components/public-card-checkout-start';
+import { PublicBoletoCheckoutForm } from '../_components/public-boleto-checkout-form';
 
 export const dynamic = 'force-dynamic';
 
 export default function AssinaturaBoletoPage() {
   return (
     <AuthShell headerLinkHref="/login" headerLinkLabel="Área do cliente" mode="single">
-      <PublicCardCheckoutStart paymentMethod="boleto" />
+      <PublicBoletoCheckoutForm variant="page" />
     </AuthShell>
   );
 }

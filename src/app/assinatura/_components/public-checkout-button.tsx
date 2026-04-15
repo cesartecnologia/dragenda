@@ -33,10 +33,6 @@ export function PublicCheckoutButton({
     try {
       const response = await fetch(endpointByMethod[paymentMethod], {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({}),
       });
 
       const payload = (await response.json().catch(() => null)) as { error?: string; checkoutUrl?: string } | null;

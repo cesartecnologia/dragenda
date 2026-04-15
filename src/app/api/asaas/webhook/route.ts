@@ -90,6 +90,7 @@ export const POST = async (request: Request) => {
   const paymentValue = typeof resource?.value === 'number' ? resource.value : null;
   const paymentCheckoutId = typeof resource?.checkoutSession === 'string' ? resource.checkoutSession : checkoutId;
   const paymentLinkId = typeof resource?.paymentLink === 'string' ? resource.paymentLink : null;
+  const externalReference = typeof resource?.externalReference === 'string' ? resource.externalReference : null;
 
   const customerId = typeof resource?.customer === 'string' ? resource.customer : null;
   const subscriptionId = typeof resource?.subscription === 'string'
@@ -107,6 +108,7 @@ export const POST = async (request: Request) => {
           subscriptionId,
           checkoutSessionId: paymentCheckoutId,
           paymentLinkId,
+          externalReference,
           invoiceUrl,
           billingType,
           value: paymentValue,

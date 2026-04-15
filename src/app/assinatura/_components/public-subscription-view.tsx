@@ -5,6 +5,7 @@ import { CheckCircle2, CreditCard, FileText, ShieldCheck, Stethoscope } from 'lu
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
+import { PublicBoletoCheckoutForm } from './public-boleto-checkout-form';
 import { PublicCheckoutButton } from './public-checkout-button';
 
 type PublicSubscriptionViewProps = {
@@ -14,8 +15,8 @@ type PublicSubscriptionViewProps = {
 const features = [
   'Agenda, pacientes e equipe em um só lugar.',
   'Cadastros e agendamentos sem limite.',
-  'Suporte prioritário quando você precisar.',
-  'Acesso liberado após a confirmação do pagamento.',
+  'Suporte para acompanhar sua operação.',
+  'Cadastro liberado após a confirmação do pagamento.',
 ] as const;
 
 const methods = [
@@ -31,7 +32,7 @@ const methods = [
   },
   {
     title: 'Boleto bancário',
-    description: 'Gere o boleto e acompanhe a confirmação.',
+    description: 'Pague por boleto e continue o cadastro depois.',
     buttonLabel: 'Gerar boleto',
     icon: FileText,
     buttonVariant: 'outline' as const,
@@ -111,20 +112,22 @@ export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscr
                       </div>
 
                       <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                        Você faz o pagamento primeiro e conclui o cadastro da clínica depois.
+                        Primeiro você paga. Depois, com o pagamento confirmado, finaliza o cadastro.
                       </div>
 
                       <div className="mt-6 flex flex-1 items-end">
-                        <PublicCheckoutButton
-                          paymentMethod={method.paymentMethod}
-                          label={method.buttonLabel}
-                          variant={method.buttonVariant}
-                          className={
-                            method.buttonVariant === 'default'
-                              ? 'h-12 w-full rounded-2xl bg-slate-950 text-sm font-semibold hover:bg-slate-800'
-                              : 'h-12 w-full rounded-2xl border-slate-300 bg-white text-sm font-semibold text-slate-900 hover:bg-slate-50'
-                          }
-                        />
+                        {method.paymentMethod === 'boleto' ? (
+                          <PublicBoletoCheckoutForm
+                            triggerClassName="h-12 w-full rounded-2xl border-slate-300 bg-white text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                          />
+                        ) : (
+                          <PublicCheckoutButton
+                            paymentMethod={method.paymentMethod}
+                            label={method.buttonLabel}
+                            variant={method.buttonVariant}
+                            className="h-12 w-full rounded-2xl bg-slate-950 text-sm font-semibold hover:bg-slate-800"
+                          />
+                        )}
                       </div>
                     </div>
                   </div>

@@ -462,6 +462,7 @@ export const markCheckoutSessionFromPaymentWebhook = async (params: {
   subscriptionId?: string | null;
   checkoutSessionId?: string | null;
   paymentLinkId?: string | null;
+  externalReference?: string | null;
   invoiceUrl?: string | null;
   billingType?: string | null;
   value?: number | null;
@@ -476,8 +477,11 @@ export const markCheckoutSessionFromPaymentWebhook = async (params: {
   const sessionBySubscriptionId = !sessionByPaymentId && !sessionByCheckoutId && !sessionByPaymentLinkId && params.subscriptionId
     ? await getCheckoutSessionBySubscriptionId(params.subscriptionId)
     : null;
+  const sessionByExternalReference = !sessionByPaymentId && !sessionByCheckoutId && !sessionByPaymentLinkId && !sessionBySubscriptionId && params.externalReference
+    ? await getCheckoutSessionById(params.externalReference)
+    : null;
 
-  const session = sessionByPaymentId ?? sessionByCheckoutId ?? sessionByPaymentLinkId ?? sessionBySubscriptionId;
+  const session = sessionByPaymentId ?? sessionByCheckoutId ?? sessionByPaymentLinkId ?? sessionBySubscriptionId ?? sessionByExternalReference;
   if (!session) return null;
 
   return updateSessionAndOnboardingFromPayment(session, {
@@ -493,7 +497,7 @@ export const markCheckoutSessionFromPaymentWebhook = async (params: {
 
 export const syncCheckoutSessionWithAsaas = async (sessionId: string) => {
   const session = await getCheckoutSessionById(sessionId);
-  if (!session || (!session.asaasCheckoutId && !session.asaasPaymentLinkId)) return session;
+  if (!session) return session;
   if (session.status === 'paid') return session;
 
   const payments = session.asaasCheckoutId
