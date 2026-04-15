@@ -14,6 +14,7 @@ type PaymentWaitingCardProps = {
   status?: 'initiated' | 'waiting_payment' | 'paid' | 'expired' | 'cancelled' | null;
   paymentStatus?: string | null;
   invoiceUrl?: string | null;
+  checkoutUrl?: string | null;
 };
 
 const statusContent = {
@@ -45,12 +46,14 @@ export function PaymentWaitingCard({
   status = 'waiting_payment',
   paymentStatus = null,
   invoiceUrl = null,
+  checkoutUrl = null,
 }: PaymentWaitingCardProps) {
   const router = useRouter();
   const resolvedStatus = status ?? 'waiting_payment';
   const isBoleto = paymentMethod === 'boleto';
   const isFinalError = resolvedStatus === 'expired' || resolvedStatus === 'cancelled';
   const content = statusContent[resolvedStatus];
+  const boletoLink = invoiceUrl ?? checkoutUrl;
   const simpleStatus = paymentStatus === 'CONFIRMED' || resolvedStatus === 'paid'
     ? 'Confirmado'
     : resolvedStatus === 'expired'
@@ -67,7 +70,7 @@ export function PaymentWaitingCard({
     }, 4000);
 
     return () => window.clearInterval(interval);
-  }, [isFinalError, router]);
+  }, [isFinalError, router, sessionId]);
 
   return (
     <Card className="w-full border-slate-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
@@ -79,7 +82,7 @@ export function PaymentWaitingCard({
         {!isFinalError ? <Loader2 className="h-5 w-5 animate-spin text-slate-700" /> : null}
         <p>Situação: {simpleStatus}</p>
 
-        {isBoleto && invoiceUrl ? (
+        {isBoleto && boletoLink ? (
           <div className="w-full max-w-sm space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left">
             <div className="flex items-start gap-3">
               <FileText className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
@@ -88,7 +91,7 @@ export function PaymentWaitingCard({
               </p>
             </div>
             <Button asChild className="w-full" variant="outline">
-              <Link href={invoiceUrl} target="_blank" rel="noreferrer">
+              <Link href={boletoLink} target="_blank" rel="noreferrer">
                 Abrir boleto
               </Link>
             </Button>

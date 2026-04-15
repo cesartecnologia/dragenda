@@ -90,6 +90,7 @@ export default async function PrimeiroAcessoPage({
           status={checkoutSession.status}
           paymentStatus={checkoutSession.paymentStatus}
           invoiceUrl={checkoutSession.invoiceUrl}
+          checkoutUrl={checkoutSession.checkoutUrl}
         />
       </AuthShell>
     );

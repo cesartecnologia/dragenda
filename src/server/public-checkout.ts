@@ -1,22 +1,58 @@
-import { createAsaasCheckoutSession } from '@/lib/asaas';
-import { attachAsaasCheckoutToSession, createCheckoutSession } from '@/server/checkout-sessions';
+import { createAsaasCheckoutSession, createAsaasPaymentLink } from '@/lib/asaas';
+import {
+  attachAsaasCheckoutToSession,
+  attachAsaasPaymentLinkToSession,
+  createCheckoutSession,
+} from '@/server/checkout-sessions';
 
 const PLAN_LABEL = 'Plano Premium';
 const PLAN_VALUE = Number(process.env.ASAAS_PLAN_VALUE ?? '99.90');
 
 export type PublicCheckoutMethod = 'credit_card' | 'boleto';
 
-export async function startPublicCheckout(paymentMethod: PublicCheckoutMethod) {
-  if (!process.env.NEXT_PUBLIC_APP_URL) {
+const getAppUrl = () => {
+  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (!configured) {
     throw new Error('NEXT_PUBLIC_APP_URL não configurado.');
   }
 
+  return configured.replace(/\/$/, '');
+};
+
+export async function startPublicCheckout(paymentMethod: PublicCheckoutMethod) {
   const session = await createCheckoutSession({ paymentMethod });
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
+  const appUrl = getAppUrl();
   const callbackBase = `${appUrl}/primeiro-acesso?sessionId=${encodeURIComponent(session.id)}`;
 
+  if (paymentMethod === 'boleto') {
+    const paymentLink = await createAsaasPaymentLink({
+      billingType: 'BOLETO',
+      chargeType: 'RECURRENT',
+      subscriptionCycle: 'MONTHLY',
+      dueDateLimitDays: 3,
+      name: PLAN_LABEL,
+      description: 'Assinatura mensal do plano premium.',
+      value: PLAN_VALUE,
+      successUrl: callbackBase,
+      externalReference: session.id,
+      autoRedirect: false,
+      notificationEnabled: true,
+    });
+
+    await attachAsaasPaymentLinkToSession(session.id, {
+      asaasPaymentLinkId: paymentLink.id,
+      checkoutUrl: paymentLink.url,
+    });
+
+    return {
+      sessionId: session.id,
+      checkoutId: paymentLink.id,
+      checkoutUrl: paymentLink.url,
+    };
+  }
+
   const checkout = await createAsaasCheckoutSession({
-    billingTypes: [paymentMethod === 'boleto' ? 'BOLETO' : 'CREDIT_CARD'],
+    billingTypes: ['CREDIT_CARD'],
     planName: PLAN_LABEL,
     description: 'Assinatura mensal do plano premium.',
     value: PLAN_VALUE,
