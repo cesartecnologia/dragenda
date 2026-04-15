@@ -11,8 +11,14 @@ export default async function PosLoginPage() {
     redirect('/primeiro-login');
   }
 
-  if (hasPrivilegedAccess(session)) {
+  const privileged = hasPrivilegedAccess(session);
+
+  if (privileged) {
     redirect('/painel');
+  }
+
+  if (!session.user.hasSubscriptionAccess) {
+    redirect('/assinatura');
   }
 
   if (!session.user.clinic?.id) {
@@ -35,9 +41,6 @@ export default async function PosLoginPage() {
     redirect('/configuracoes/clinica?onboarding=1');
   }
 
-  if (!session.user.hasSubscriptionAccess) {
-    redirect('/assinatura?firstAccess=1');
-  }
 
   redirect(getDefaultPostLoginRoute(session.user.role));
 }

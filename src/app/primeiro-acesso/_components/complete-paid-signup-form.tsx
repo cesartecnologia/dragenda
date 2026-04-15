@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { authClient } from '@/lib/auth-client';
 
 const formSchema = z.object({
-  intentId: z.string().trim().min(1),
+  sessionId: z.string().trim().min(1),
   name: z.string().trim().min(1, { message: 'Nome do responsável é obrigatório' }),
   email: z.string().trim().min(1, { message: 'E-mail é obrigatório' }).email({ message: 'E-mail inválido' }),
   password: z.string().trim().min(8, { message: 'A senha deve ter pelo menos 8 caracteres' }),
@@ -31,7 +31,7 @@ const formSchema = z.object({
 });
 
 type CompletePaidSignupFormProps = {
-  intentId: string;
+  sessionId: string;
   defaults: {
     name?: string | null;
     email?: string | null;
@@ -46,12 +46,12 @@ type CompletePaidSignupFormProps = {
   };
 };
 
-export function CompletePaidSignupForm({ intentId, defaults }: CompletePaidSignupFormProps) {
+export function CompletePaidSignupForm({ sessionId, defaults }: CompletePaidSignupFormProps) {
   const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      intentId,
+      sessionId,
       name: defaults.name ?? '',
       email: defaults.email ?? '',
       password: '',
@@ -77,11 +77,14 @@ export function CompletePaidSignupForm({ intentId, defaults }: CompletePaidSignu
           case 'USER_ALREADY_EXISTS':
             toast.error('Já existe uma conta com este e-mail.');
             return;
-          case 'PENDING_SIGNUP_NOT_READY':
-            toast.error('A assinatura ainda está sendo confirmada. Tente novamente em alguns instantes.');
+          case 'CHECKOUT_SESSION_NOT_READY':
+            toast.error('O pagamento ainda não foi confirmado. Aguarde a liberação do cadastro.');
             return;
-          case 'PENDING_SIGNUP_NOT_FOUND':
-            toast.error('Não encontramos essa contratação. Gere um novo checkout.');
+          case 'CHECKOUT_SESSION_NOT_FOUND':
+            toast.error('Não encontramos essa contratação. Gere um novo pagamento.');
+            return;
+          case 'ONBOARDING_IN_PROGRESS':
+            toast.error('Seu cadastro já está sendo finalizado em outra tentativa. Aguarde alguns instantes.');
             return;
           default:
             toast.error(error.message || 'Não foi possível concluir o cadastro agora.');
@@ -94,6 +97,7 @@ export function CompletePaidSignupForm({ intentId, defaults }: CompletePaidSignu
     <Card className="w-full border-sky-100 bg-white shadow-[0_20px_70px_rgba(14,165,233,0.10)]">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <input type="hidden" {...form.register('sessionId')} />
           <CardHeader className="space-y-2 pb-4">
             <CardTitle className="text-2xl font-semibold tracking-[-0.02em] text-slate-900 sm:text-[2rem]">Cadastro da clínica</CardTitle>
             <CardDescription className="text-[15px] leading-6 text-slate-600">

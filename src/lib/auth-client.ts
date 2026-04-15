@@ -210,7 +210,7 @@ export const authClient = {
 
   completePaidSignup: async (
     values: {
-      intentId: string;
+      sessionId: string;
       email: string;
       password: string;
       name: string;

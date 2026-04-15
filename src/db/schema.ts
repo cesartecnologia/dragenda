@@ -140,6 +140,66 @@ export interface UserToClinicRecord {
   updatedAt: Date;
 }
 
+
+
+export type CheckoutSessionStatus = 'initiated' | 'waiting_payment' | 'paid' | 'expired' | 'cancelled';
+export type CheckoutPaymentMethod = 'credit_card' | 'boleto';
+
+export interface CheckoutSessionRecord {
+  id: string;
+  planId: string;
+  planName: string;
+  value: number;
+  status: CheckoutSessionStatus;
+  paymentMethod: CheckoutPaymentMethod;
+  paymentId: string | null;
+  paymentStatus: string | null;
+  checkoutId: string | null;
+  asaasCustomerId: string | null;
+  asaasSubscriptionId: string | null;
+  customerName: string | null;
+  companyName: string | null;
+  customerEmail: string | null;
+  customerPhone: string | null;
+  customerCpfCnpj: string | null;
+  customerAddress: string | null;
+  customerAddressNumber: string | null;
+  customerAddressComplement: string | null;
+  customerPostalCode: string | null;
+  customerProvince: string | null;
+  invoiceUrl: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  paidAt: Date | null;
+}
+
+export interface PaymentRecord {
+  id: string;
+  sessionId: string;
+  asaasPaymentId: string | null;
+  status: string;
+  method: CheckoutPaymentMethod;
+  value: number;
+  invoiceUrl: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  confirmedAt: Date | null;
+}
+
+export type OnboardingStatus = 'locked' | 'released' | 'processing' | 'completed';
+
+export interface OnboardingRecord {
+  id: string;
+  sessionId: string;
+  status: OnboardingStatus;
+  releasedAt: Date | null;
+  completedAt: Date | null;
+  userId: string | null;
+  clinicId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export type PendingSignupStatus =
   | 'checkout_created'
   | 'payment_pending'
@@ -186,3 +246,7 @@ export const employeesTable = defineTable<EmployeeRecord>();
 export const specialtiesTable = defineTable<SpecialtyRecord>();
 export const usersToClinicsTable = defineTable<UserToClinicRecord>();
 export const pendingSignupsTable = defineTable<PendingSignupRecord>();
+
+export const checkoutSessionsTable = defineTable<CheckoutSessionRecord>();
+export const paymentsTable = defineTable<PaymentRecord>();
+export const onboardingTable = defineTable<OnboardingRecord>();

@@ -3,7 +3,7 @@
 import { requireSession } from '@/lib/auth';
 import { createAsaasRecurringCheckout, upsertAsaasCustomer } from '@/lib/asaas';
 import { actionClient } from '@/lib/next-safe-action';
-import { createClinicForUser, getClinicById, getUserProfileById, updateUserAsaasSubscription } from '@/server/clinic-data';
+import { getClinicById, getUserProfileById, updateUserAsaasSubscription } from '@/server/clinic-data';
 
 const PLAN_NAME = 'essential';
 const PLAN_LABEL = 'Plano Profissional';
@@ -25,18 +25,12 @@ export const createAsaasCheckout = actionClient.action(async () => {
   const userProfile = await getUserProfileById(session.user.id);
   if (!userProfile) throw new Error('Usuário não encontrado.');
 
-  let clinicId = userProfile.clinicId;
-  let clinic = clinicId ? await getClinicById(clinicId) : null;
+  const clinicId = userProfile.clinicId;
+  const clinic = clinicId ? await getClinicById(clinicId) : null;
 
-  if (!clinic) {
-    clinic = await createClinicForUser({
-      userId: session.user.id,
-      name: `Clínica de ${session.user.name.split(' ')[0] || 'Novo cliente'}`,
-    });
-    clinicId = clinic.id;
+  if (!clinicId || !clinic) {
+    throw new Error('Finalize o pagamento e o onboarding antes de gerar a assinatura da clínica.');
   }
-
-  if (!clinicId || !clinic) throw new Error('Clínica não encontrada.');
 
   if (!clinic.cnpj || !clinic.phoneNumber || !clinic.address || !clinic.addressNumber || !clinic.postalCode || !clinic.province) {
     throw new Error('Complete CNPJ, telefone, logradouro, número, CEP e bairro da clínica antes de assinar.');

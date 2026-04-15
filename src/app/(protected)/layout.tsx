@@ -22,7 +22,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
   const privileged = hasPrivilegedAccess(session);
   const isClinicSetupRoute = pathname.startsWith('/configuracoes');
 
-  if (!session.user.hasSubscriptionAccess && !privileged && !isClinicSetupRoute) {
+  if (!session.user.hasSubscriptionAccess && !privileged) {
     redirect('/assinatura');
   }
 

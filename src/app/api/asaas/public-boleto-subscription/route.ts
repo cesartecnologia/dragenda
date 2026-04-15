@@ -1,71 +1,58 @@
 import { NextResponse } from 'next/server';
 
 import { createAsaasSubscription, listAsaasSubscriptionPayments, upsertAsaasCustomer } from '@/lib/asaas';
-import { createPendingSignupIntent, updatePendingSignup } from '@/server/pending-signups';
+import { createCheckoutSession, updateCheckoutSession, upsertPaymentRecord } from '@/server/checkout-sessions';
+import {
+  normalizePublicCheckoutInput,
+  PLAN_DESCRIPTION,
+  PLAN_ID,
+  PLAN_LABEL,
+  PLAN_VALUE,
+  validatePublicCheckoutInput,
+} from '@/server/public-checkout';
 
-const PLAN_VALUE = Number(process.env.ASAAS_PLAN_VALUE ?? '99.90');
-const PLAN_DESCRIPTION = 'Assinatura mensal para liberar o acesso completo da clínica.';
-const onlyDigits = (value?: string) => (value ?? '').replace(/\D/g, '');
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const POST = async (request: Request) => {
   try {
-    const body = (await request.json()) as {
-      responsibleName?: string;
-      email?: string;
-      clinicName?: string;
-      clinicCnpj?: string;
-      clinicPhoneNumber?: string;
-      clinicAddress?: string;
-      clinicAddressNumber?: string;
-      clinicAddressComplement?: string;
-      clinicPostalCode?: string;
-      clinicProvince?: string;
-    };
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    const input = normalizePublicCheckoutInput(body);
+    const validationError = validatePublicCheckoutInput(input);
 
-    const responsibleName = body.responsibleName?.trim();
-    const email = body.email?.trim().toLowerCase();
-    const clinicName = body.clinicName?.trim();
-    const clinicCnpj = onlyDigits(body.clinicCnpj);
-    const clinicPhoneNumber = onlyDigits(body.clinicPhoneNumber);
-    const clinicAddress = body.clinicAddress?.trim();
-    const clinicAddressNumber = body.clinicAddressNumber?.trim();
-    const clinicAddressComplement = body.clinicAddressComplement?.trim() || null;
-    const clinicPostalCode = onlyDigits(body.clinicPostalCode);
-    const clinicProvince = body.clinicProvince?.trim();
-
-    if (!responsibleName || !email || !clinicName || clinicCnpj.length !== 14 || clinicPhoneNumber.length < 10 || !clinicAddress || !clinicAddressNumber || clinicPostalCode.length !== 8 || !clinicProvince) {
-      return NextResponse.json({ error: 'Preencha todos os dados obrigatórios para gerar o boleto.' }, { status: 400 });
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 });
     }
 
-    const intent = await createPendingSignupIntent({
+    const session = await createCheckoutSession({
+      planId: PLAN_ID,
+      planName: PLAN_LABEL,
+      value: PLAN_VALUE,
       paymentMethod: 'boleto',
-      status: 'payment_pending',
-      payerName: responsibleName,
-      payerEmail: email,
-      payerPhone: clinicPhoneNumber,
-      payerCpfCnpj: clinicCnpj,
-      clinicName,
-      clinicCnpj,
-      address: clinicAddress,
-      addressNumber: clinicAddressNumber,
-      complement: clinicAddressComplement,
-      postalCode: clinicPostalCode,
-      province: clinicProvince,
+      status: 'waiting_payment',
+      customerName: input.responsibleName,
+      companyName: input.clinicName,
+      customerEmail: input.email,
+      customerPhone: input.clinicPhoneNumber,
+      customerCpfCnpj: input.clinicCnpj,
+      customerAddress: input.clinicAddress,
+      customerAddressNumber: input.clinicAddressNumber,
+      customerAddressComplement: input.clinicAddressComplement,
+      customerPostalCode: input.clinicPostalCode,
+      customerProvince: input.clinicProvince,
     });
 
     const customer = await upsertAsaasCustomer({
-      name: clinicName,
-      email,
-      cpfCnpj: clinicCnpj,
-      phone: clinicPhoneNumber,
-      mobilePhone: clinicPhoneNumber,
-      address: clinicAddress,
-      addressNumber: clinicAddressNumber,
-      complement: clinicAddressComplement,
-      province: clinicProvince,
-      postalCode: clinicPostalCode,
-      externalReference: intent.id,
+      name: input.clinicName,
+      email: input.email,
+      cpfCnpj: input.clinicCnpj,
+      phone: input.clinicPhoneNumber,
+      mobilePhone: input.clinicPhoneNumber,
+      address: input.clinicAddress,
+      addressNumber: input.clinicAddressNumber,
+      complement: input.clinicAddressComplement,
+      province: input.clinicProvince,
+      postalCode: input.clinicPostalCode,
+      externalReference: session.id,
     });
 
     const subscription = await createAsaasSubscription({
@@ -85,18 +72,30 @@ export const POST = async (request: Request) => {
       await wait(800);
     }
 
-    await updatePendingSignup(intent.id, {
+    const updated = await updateCheckoutSession(session.id, {
       asaasCustomerId: customer.id,
       asaasSubscriptionId: subscription.id,
       paymentId: firstPayment?.id ?? null,
       paymentStatus: firstPayment?.status ?? 'PENDING',
       invoiceUrl: firstPayment?.invoiceUrl ?? null,
-      status: 'payment_pending',
+      status: 'waiting_payment',
     });
+
+    if (firstPayment) {
+      await upsertPaymentRecord({
+        id: firstPayment.id,
+        sessionId: updated.id,
+        asaasPaymentId: firstPayment.id,
+        status: firstPayment.status ?? 'PENDING',
+        method: 'boleto',
+        value: firstPayment.value ?? PLAN_VALUE,
+        invoiceUrl: firstPayment.invoiceUrl ?? null,
+      });
+    }
 
     return NextResponse.json({
       ok: true,
-      intentId: intent.id,
+      sessionId: updated.id,
       invoiceUrl: firstPayment?.invoiceUrl ?? null,
     });
   } catch (error) {

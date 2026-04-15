@@ -54,13 +54,13 @@ export function BoletoSubscriptionForm() {
         body: JSON.stringify(values),
       });
 
-      const payload = (await response.json().catch(() => null)) as { error?: string; intentId?: string } | null;
+      const payload = (await response.json().catch(() => null)) as { error?: string; sessionId?: string } | null;
 
-      if (!response.ok || !payload?.intentId) {
+      if (!response.ok || !payload?.sessionId) {
         throw new Error(payload?.error || 'Não foi possível gerar o boleto agora.');
       }
 
-      router.push(`/primeiro-acesso?intentId=${payload.intentId}&checkout=boleto`);
+      router.push(`/primeiro-acesso?sessionId=${payload.sessionId}`);
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível gerar o boleto agora.');

@@ -5,7 +5,7 @@ import {
   findUserProfileByAsaasSubscriptionId,
   updateUserAsaasSubscription,
 } from '@/server/clinic-data';
-import { markPendingSignupFromCheckoutWebhook, markPendingSignupFromPaymentWebhook } from '@/server/pending-signups';
+import { markCheckoutSessionFromCheckoutWebhook, markCheckoutSessionFromPaymentWebhook } from '@/server/checkout-sessions';
 
 const PLAN_NAME = 'essential';
 
@@ -61,7 +61,7 @@ export const POST = async (request: Request) => {
   const checkoutSubscriptionId = typeof checkoutResource?.subscription === 'string' ? checkoutResource.subscription : null;
 
   if (event.startsWith('CHECKOUT_') && checkoutId) {
-    await markPendingSignupFromCheckoutWebhook({
+    await markCheckoutSessionFromCheckoutWebhook({
       checkoutId,
       checkoutStatus,
       customerId: checkoutCustomerId,
@@ -71,33 +71,38 @@ export const POST = async (request: Request) => {
     return NextResponse.json({ received: true });
   }
 
-
   const paymentId = typeof resource?.id === 'string' && event.startsWith('PAYMENT_') ? resource.id : null;
   const paymentStatus = typeof resource?.status === 'string' ? resource.status : null;
   const invoiceUrl = typeof resource?.invoiceUrl === 'string' ? resource.invoiceUrl : null;
+  const value = typeof resource?.value === 'number' ? resource.value : null;
 
   const customerId = typeof resource?.customer === 'string' ? resource.customer : null;
-  const subscriptionId = typeof resource?.subscription === 'string'
-    ? resource.subscription
-    : typeof resource?.id === 'string' && event.startsWith('SUBSCRIPTION_')
-      ? resource.id
-      : null;
+  const subscriptionId =
+    typeof resource?.subscription === 'string'
+      ? resource.subscription
+      : typeof resource?.id === 'string' && event.startsWith('SUBSCRIPTION_')
+        ? resource.id
+        : null;
 
-  const pendingSignup = event.startsWith('PAYMENT_') || event.startsWith('SUBSCRIPTION_')
-    ? await markPendingSignupFromPaymentWebhook({
-        paymentId,
-        paymentStatus,
-        customerId,
-        subscriptionId,
-        invoiceUrl,
-      })
-    : null;
+  const checkoutSession =
+    event.startsWith('PAYMENT_') || event.startsWith('SUBSCRIPTION_')
+      ? await markCheckoutSessionFromPaymentWebhook({
+          paymentId,
+          paymentStatus,
+          customerId,
+          subscriptionId,
+          invoiceUrl,
+          value,
+        })
+      : null;
 
   const user =
     (subscriptionId ? await findUserProfileByAsaasSubscriptionId(subscriptionId) : null) ??
     (customerId ? await findUserProfileByAsaasCustomerId(customerId) : null);
 
-  if (!user) return NextResponse.json({ received: true, ignored: !pendingSignup });
+  if (!user) {
+    return NextResponse.json({ received: true, ignored: !checkoutSession });
+  }
 
   if (TRACKING_EVENTS.has(event)) {
     await updateUserAsaasSubscription(user.id, {
