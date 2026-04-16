@@ -3,9 +3,10 @@
 import 'dayjs/locale/pt-br';
 
 import dayjs from 'dayjs';
-import { Line, LineChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 dayjs.locale('pt-br');
+import { DollarSign } from 'lucide-react';
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -26,58 +27,68 @@ interface AppointmentsChartProps {
   dailyAppointmentsData: DailyAppointment[];
 }
 
-const AppointmentsChart = ({ dailyAppointmentsData }: AppointmentsChartProps) => {
-  const chartData = dailyAppointmentsData.map((item) => ({
-    date: dayjs(item.date).format('DD/MM'),
-    fullDate: item.date,
-    appointments: item.appointments || 0,
-    revenue: Number(item.revenue || 0),
-  }));
+const AppointmentsChart = ({
+  dailyAppointmentsData,
+}: AppointmentsChartProps) => {
+  // Gerar 21 dias: 10 antes + hoje + 10 depois
+  const chartDays = Array.from({ length: 21 }).map((_, i) =>
+    dayjs()
+      .subtract(10 - i, 'days')
+      .format('YYYY-MM-DD')
+  );
+
+  const chartData = chartDays.map((date) => {
+    const dataForDay = dailyAppointmentsData.find((item) => item.date === date);
+    return {
+      date: dayjs(date).format('DD/MM'),
+      fullDate: date,
+      appointments: dataForDay?.appointments || 0,
+      revenue: Number(dataForDay?.revenue || 0),
+    };
+  });
 
   const chartConfig = {
     appointments: {
       label: 'Agendamentos',
-      color: '#1d4ed8',
+      color: '#0B68F7',
     },
     revenue: {
       label: 'Faturamento',
-      color: '#0f766e',
+      color: '#10B981',
     },
   } satisfies ChartConfig;
 
   return (
-    <Card className="rounded-[1.85rem] border border-slate-200/80 bg-white shadow-[0_20px_38px_-30px_rgba(15,23,42,0.24)]">
-      <CardHeader className="flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Painel analítico</p>
-          <CardTitle className="mt-2 text-xl font-semibold tracking-tight text-slate-950">Movimento do período</CardTitle>
-          <p className="mt-1 text-sm text-slate-500">Acompanhe o ritmo dos agendamentos e do faturamento dia a dia.</p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3 text-sm">
-          <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-600">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#1d4ed8]" />
-            Agendamentos
-          </span>
-          <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-600">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#0f766e]" />
-            Faturamento
-          </span>
-        </div>
+    <Card>
+      <CardHeader className="flex flex-row items-center gap-2">
+        <DollarSign />
+        <CardTitle>Agendamentos e Faturamento</CardTitle>
       </CardHeader>
-
-      <CardContent className="pt-5">
-        <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-          <LineChart data={chartData} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-            <XAxis dataKey="date" tickLine={false} tickMargin={12} axisLine={false} minTickGap={18} />
-            <YAxis yAxisId="left" tickLine={false} axisLine={false} tickMargin={10} allowDecimals={false} />
+      <CardContent>
+        <ChartContainer config={chartConfig} className="min-h-[200px]">
+          <AreaChart
+            data={chartData}
+            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="date"
+              tickLine={false}
+              tickMargin={10}
+              axisLine={false}
+            />
+            <YAxis
+              yAxisId="left"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+            />
             <YAxis
               yAxisId="right"
               orientation="right"
               tickLine={false}
               axisLine={false}
-              tickMargin={10}
+              tickMargin={8}
               tickFormatter={(value) => formatCurrencyInCents(value)}
             />
             <ChartTooltip
@@ -87,48 +98,56 @@ const AppointmentsChart = ({ dailyAppointmentsData }: AppointmentsChartProps) =>
                     if (name === 'revenue') {
                       return (
                         <>
-                          <div className="h-3 w-3 rounded bg-[var(--color-revenue)]" />
-                          <span className="text-muted-foreground">Faturamento:</span>
-                          <span className="font-semibold">{formatCurrencyInCents(Number(value))}</span>
+                          <div className="h-3 w-3 rounded bg-[#10B981]" />
+                          <span className="text-muted-foreground">
+                            Faturamento:
+                          </span>
+                          <span className="font-semibold">
+                            {formatCurrencyInCents(Number(value))}
+                          </span>
                         </>
                       );
                     }
                     return (
                       <>
-                        <div className="h-3 w-3 rounded bg-[var(--color-appointments)]" />
-                        <span className="text-muted-foreground">Agendamentos:</span>
+                        <div className="h-3 w-3 rounded bg-[#0B68F7]" />
+                        <span className="text-muted-foreground">
+                          Agendamentos:
+                        </span>
                         <span className="font-semibold">{value}</span>
                       </>
                     );
                   }}
                   labelFormatter={(label, payload) => {
                     if (payload && payload[0]) {
-                      return dayjs(payload[0].payload?.fullDate).format('DD/MM/YYYY');
+                      return dayjs(payload[0].payload?.fullDate).format(
+                        'DD/MM/YYYY (dddd)'
+                      );
                     }
                     return label;
                   }}
                 />
               }
             />
-            <Line
+            <Area
               yAxisId="left"
               type="monotone"
               dataKey="appointments"
               stroke="var(--color-appointments)"
-              strokeWidth={2.5}
-              dot={false}
-              activeDot={{ r: 5, strokeWidth: 0 }}
+              fill="var(--color-appointments)"
+              fillOpacity={0.2}
+              strokeWidth={2}
             />
-            <Line
+            <Area
               yAxisId="right"
               type="monotone"
               dataKey="revenue"
               stroke="var(--color-revenue)"
-              strokeWidth={2.5}
-              dot={false}
-              activeDot={{ r: 5, strokeWidth: 0 }}
+              fill="var(--color-revenue)"
+              fillOpacity={0.2}
+              strokeWidth={2}
             />
-          </LineChart>
+          </AreaChart>
         </ChartContainer>
       </CardContent>
     </Card>

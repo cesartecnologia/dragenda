@@ -32,46 +32,32 @@ export default async function Layout({ children }: { children: React.ReactNode }
   }
 
   if (!session.user.clinic) {
-    return <main className="min-h-screen bg-[#d7ece8]">{children}</main>;
+    return <main className="min-h-screen bg-slate-50/60">{children}</main>;
   }
 
   return (
     <SidebarProvider>
-      <div className="relative min-h-screen overflow-hidden bg-[#d7ece8]">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute left-[-8%] top-[-10%] h-[360px] w-[360px] rounded-full bg-[#b8dfda]/75 blur-3xl" />
-          <div className="absolute bottom-[-12%] right-[-6%] h-[420px] w-[420px] rounded-full bg-[#b8dfda]/65 blur-3xl" />
-          <div className="absolute inset-x-[18%] top-[2%] h-[240px] rounded-full bg-white/25 blur-3xl" />
+      <AppSidebar session={session} />
+      <main className="min-h-screen w-full overflow-x-hidden bg-slate-50/60">
+        <div className="flex items-center justify-between px-3 pt-3 sm:px-4 md:px-6 md:pt-4">
+          <SidebarTrigger className="rounded-xl border border-slate-200 bg-white shadow-sm hover:bg-primary/5 hover:text-primary" />
         </div>
-
-        <div className="relative min-h-screen w-full">
-          <AppSidebar session={session} />
-          <main className="min-h-screen w-full overflow-x-hidden md:pl-2">
-            <div className="px-3 py-3 sm:px-4 md:px-5 md:py-4">
-              <div className="min-h-[calc(100vh-1.5rem)] overflow-hidden rounded-[2rem] border border-white/70 bg-white/92 shadow-[0_24px_60px_-24px_rgba(15,23,42,0.28)] backdrop-blur-sm">
-                <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-3 pt-3 sm:px-4 md:px-6 md:pt-4">
-                  <SidebarTrigger className="rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 hover:text-slate-900" />
-                </div>
-                <ClinicBrandHeader
-                  clinic={{
-                    name: clinic.name,
-                    cnpj: clinic.cnpj,
-                    phoneNumber: clinic.phoneNumber,
-                    address: clinic.address,
-                    addressNumber: clinic.addressNumber,
-                    addressComplement: clinic.addressComplement,
-                    province: clinic.province,
-                    postalCode: clinic.postalCode,
-                    logoUrl: clinic.logoUrl,
-                  }}
-                />
-                <div className="mx-auto max-w-7xl">{children}</div>
-              </div>
-            </div>
-            <SupportFloatButton clinicName={clinic.name ?? formatClinicAddress(clinic)} />
-          </main>
-        </div>
-      </div>
+        <ClinicBrandHeader
+          clinic={{
+            name: clinic.name,
+            cnpj: clinic.cnpj,
+            phoneNumber: clinic.phoneNumber,
+            address: clinic.address,
+            addressNumber: clinic.addressNumber,
+            addressComplement: clinic.addressComplement,
+            province: clinic.province,
+            postalCode: clinic.postalCode,
+            logoUrl: clinic.logoUrl,
+          }}
+        />
+        {children}
+        <SupportFloatButton clinicName={clinic.name ?? formatClinicAddress(clinic)} />
+      </main>
     </SidebarProvider>
   );
 }

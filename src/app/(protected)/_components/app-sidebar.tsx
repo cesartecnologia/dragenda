@@ -30,7 +30,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -49,10 +48,7 @@ const roleLabel: Record<AppSession['user']['role'], string> = {
 };
 
 const navButtonClass =
-  'relative min-h-[46px] gap-3 rounded-2xl px-3.5 py-2.5 text-[14px] font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 hover:text-slate-900 data-[active=true]:bg-[#eef4ff] data-[active=true]:text-slate-950 data-[active=true]:before:absolute data-[active=true]:before:left-2.5 data-[active=true]:before:top-1/2 data-[active=true]:before:h-5 data-[active=true]:before:w-[3px] data-[active=true]:before:-translate-y-1/2 data-[active=true]:before:rounded-full data-[active=true]:before:bg-[#2563eb] [&>svg]:size-[18px]';
-
-const utilityButtonClass =
-  'min-h-[42px] gap-3 rounded-2xl px-3 text-[14px] font-medium text-slate-500 transition-all duration-200 hover:bg-slate-50 hover:text-slate-900 [&>svg]:size-[17px]';
+  'min-h-[52px] gap-3 rounded-xl px-3.5 py-3.5 text-[15px] font-medium leading-tight transition-all duration-200 hover:bg-primary/5 hover:text-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:shadow-[0_10px_24px_rgba(37,99,235,0.18)] [&>svg]:size-[18px] [&>span:last-child]:whitespace-normal [&>span:last-child]:leading-tight';
 
 export function AppSidebar({ session }: { session: AppSession }) {
   const router = useRouter();
@@ -68,23 +64,17 @@ export function AppSidebar({ session }: { session: AppSession }) {
         { title: 'Pacientes', url: '/pacientes', icon: UsersRound },
         canAccessReports(role) ? { title: 'Relatórios', url: '/relatorios', icon: FileText } : null,
         canAccessUserManagement(role) ? { title: 'Usuários', url: '/funcionarios', icon: Users } : null,
+        canAccessClinicSettings(role) ? { title: 'Configurações', url: '/configuracoes/clinica', icon: Settings2 } : null,
       ]
-    : []).filter(Boolean) as { title: string; url: string; icon: ComponentType<{ className?: string }> }[];
-
-  const managementItems = [
-    canAccessClinicSettings(role) ? { title: 'Configurações', url: '/configuracoes/clinica', icon: Settings2 } : null,
-    canAccessFinancial(role) || !hasFullAccess ? { title: 'Assinatura', url: '/assinatura', icon: Gem } : null,
-  ].filter(Boolean) as { title: string; url: string; icon: ComponentType<{ className?: string }> }[];
-
-  const utilityItems = [
-    canAccessClinicSettings(role) ? { title: 'Preferências', url: '/configuracoes/clinica', icon: Settings2 } : null,
-    canAccessReports(role) ? { title: 'Resumo e relatórios', url: '/relatorios', icon: FileText } : null,
-  ].filter(Boolean) as { title: string; url: string; icon: ComponentType<{ className?: string }> }[];
+    : [
+        canAccessClinicSettings(role) ? { title: 'Configurações', url: '/configuracoes/clinica', icon: Settings2 } : null,
+      ]).filter(Boolean) as { title: string; url: string; icon: ComponentType<{ className?: string }> }[];
 
   useEffect(() => {
-    const urls = [...new Set([...menuItems.map((item) => item.url), ...managementItems.map((item) => item.url), ...utilityItems.map((item) => item.url), '/agendamentos', '/pacientes', '/medicos'])];
+    const urls = [...new Set([...menuItems.map((item) => item.url), '/agendamentos', '/pacientes', '/medicos'])];
     urls.forEach((url) => router.prefetch(url));
-  }, [managementItems, menuItems, router, utilityItems]);
+    if (canAccessFinancial(role)) router.prefetch('/assinatura');
+  }, [menuItems, router, role]);
 
   const handleSignOut = async () => {
     await authClient.signOut({
@@ -98,128 +88,71 @@ export function AppSidebar({ session }: { session: AppSession }) {
   };
 
   return (
-    <Sidebar variant="floating" className="p-3 md:left-4 md:top-4 md:bottom-4 md:h-[calc(100svh-2rem)] md:py-0">
-      <SidebarHeader className="rounded-[1.9rem] border border-slate-200/80 bg-white/95 px-4 py-4 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.28)] backdrop-blur">
-        <div className="flex items-start gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-teal-100 bg-teal-50">
-            <Image src="/logo.svg" alt="Dr. Agenda" width={28} height={28} priority className="h-7 w-auto" />
-          </div>
-
-          <div className="min-w-0 flex-1 pt-0.5">
-            <div className="flex items-center gap-2">
-              <p className="truncate text-lg font-semibold tracking-tight text-slate-900">Dr. Agenda</p>
-              {session.user.bypassSubscription ? (
-                <Badge className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 hover:bg-emerald-50">
-                  Livre
-                </Badge>
-              ) : null}
-            </div>
-            <p className="mt-1 text-sm text-slate-500">Gestão diária da sua clínica</p>
-          </div>
-        </div>
-
-        <div className="mt-4 rounded-[1.35rem] border border-slate-100 bg-slate-50/80 px-3.5 py-3.5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Clínica ativa</p>
-          <p className="mt-1 truncate text-sm font-semibold text-slate-900">
-            {session.user.clinic?.name ?? 'Configuração inicial'}
-          </p>
-          <p className="mt-1 truncate text-xs text-slate-500">{session.user.email}</p>
-        </div>
+    <Sidebar>
+      <SidebarHeader className="border-b bg-white/90 p-4">
+        <Image src="/logo.svg" alt="Dr. Agenda" width={136} height={28} priority />
       </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup className="pt-2">
+          <SidebarGroupContent>
+            <SidebarMenu className="gap-2.5 px-3">
+              {menuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={pathname === item.url} className={navButtonClass}>
+                    <Link href={item.url} prefetch>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-      <SidebarContent className="mt-3 rounded-[1.9rem] border border-slate-200/80 bg-white/95 px-2 py-3 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.22)] backdrop-blur">
-        {menuItems.length ? (
-          <SidebarGroup className="px-1 pt-1">
-            <SidebarGroupLabel className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-              Principal
-            </SidebarGroupLabel>
+        {canAccessFinancial(role) || !hasFullAccess ? (
+          <SidebarGroup className="pt-3">
             <SidebarGroupContent>
-              <SidebarMenu className="gap-1.5 px-2 pt-1.5">
-                {menuItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={pathname === item.url} className={navButtonClass}>
-                      <Link href={item.url} prefetch>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ) : null}
-
-        {managementItems.length ? (
-          <SidebarGroup className="mt-3 border-t border-slate-100 px-1 pt-4">
-            <SidebarGroupLabel className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-              Gestão
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu className="gap-1.5 px-2 pt-1.5">
-                {managementItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={pathname === item.url} className={navButtonClass}>
-                      <Link href={item.url} prefetch>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ) : null}
-
-        {utilityItems.length ? (
-          <SidebarGroup className="mt-auto border-t border-slate-100 px-1 pt-4">
-            <SidebarGroupLabel className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-              Atalhos
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu className="gap-1.5 px-2 pt-1.5">
-                {utilityItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild className={utilityButtonClass}>
-                      <Link href={item.url} prefetch>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+              <SidebarMenu className="gap-2.5 px-3">
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname === '/assinatura'} className={navButtonClass}>
+                    <Link href="/assinatura" prefetch>
+                      <Gem />
+                      <span>Assinatura</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         ) : null}
       </SidebarContent>
-
-      <SidebarFooter className="mt-3 rounded-[1.9rem] border border-slate-200/80 bg-white/95 p-2 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.22)] backdrop-blur">
+      <SidebarFooter className="border-t bg-white/90">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton size="lg" className="h-auto rounded-[1.35rem] border border-slate-100 bg-slate-50/80 px-3 py-3 hover:bg-slate-50">
-                  <Avatar className="size-11 border border-slate-200 bg-white">
-                    <AvatarFallback className="bg-white text-sm font-semibold text-slate-700">
-                      {session.user.name?.charAt(0)?.toUpperCase() ?? 'U'}
-                    </AvatarFallback>
+                <SidebarMenuButton size="lg" className="h-auto px-4 py-4">
+                  <Avatar className="size-10">
+                    <AvatarFallback>{session.user.name?.charAt(0)?.toUpperCase() ?? 'U'}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1 text-left leading-tight">
                     <div className="flex items-center gap-2">
-                      <p className="truncate text-sm font-semibold text-slate-900" title={session.user.name}>
-                        {session.user.name}
-                      </p>
-                      {session.user.role === 'master' ? <ShieldCheck className="size-4 shrink-0 text-slate-400" /> : null}
-                      {session.user.role === 'support' ? <LifeBuoy className="size-4 shrink-0 text-slate-400" /> : null}
-                      {session.user.role === 'admin' ? <BriefcaseMedical className="size-4 shrink-0 text-slate-400" /> : null}
+                      <p className="truncate text-base font-semibold" title={session.user.name}>{session.user.name}</p>
+                      {session.user.role === 'master' ? <ShieldCheck className="size-4 shrink-0 text-primary" /> : null}
+                      {session.user.role === 'support' ? <LifeBuoy className="size-4 shrink-0 text-primary" /> : null}
+                      {session.user.role === 'admin' ? <BriefcaseMedical className="size-4 shrink-0 text-primary" /> : null}
                     </div>
-                    <p className="mt-1 text-xs text-slate-500">{roleLabel[session.user.role]}</p>
+                    {session.user.clinic?.name ? <p className="text-muted-foreground truncate text-[14px]" title={session.user.clinic.name}>{session.user.clinic.name}</p> : null}
+                    <p className="text-muted-foreground truncate text-[14px]" title={session.user.email}>{session.user.email}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary">{roleLabel[session.user.role]}</Badge>
+                      {session.user.bypassSubscription ? <Badge className="bg-primary/10 text-primary hover:bg-primary/10">Sem bloqueio</Badge> : null}
+                    </div>
                   </div>
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent>
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut />
                   Sair

@@ -1,11 +1,14 @@
 import {
   CalendarIcon,
   DollarSignIcon,
+  PercentIcon,
+  ReceiptIcon,
   Stethoscope,
   UserIcon,
+  UsersIcon,
 } from 'lucide-react';
 
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrencyInCents } from '@/helpers/currency';
 
 interface StatsCardsProps {
@@ -13,6 +16,9 @@ interface StatsCardsProps {
   totalAppointments: number;
   totalPatients: number;
   totalDoctors: number;
+  completedAppointments?: number;
+  pendingRevenue?: number | null;
+  collectionRate?: number | null;
 }
 
 const StatsCards = ({
@@ -20,62 +26,64 @@ const StatsCards = ({
   totalAppointments,
   totalPatients,
   totalDoctors,
+  completedAppointments = 0,
+  pendingRevenue,
+  collectionRate,
 }: StatsCardsProps) => {
   const stats = [
     {
       title: 'Faturamento',
       value: totalRevenue ? formatCurrencyInCents(totalRevenue) : 'R$ 0,00',
-      detail: 'Recebido no período selecionado',
       icon: DollarSignIcon,
-      className: 'from-[#edf2ff] to-[#f8f9ff]',
-      iconClassName: 'border-blue-100 bg-white text-blue-600',
     },
     {
       title: 'Agendamentos',
       value: totalAppointments.toString(),
-      detail: 'Consultas registradas no período',
       icon: CalendarIcon,
-      className: 'from-[#ebfaf6] to-[#f6fdfb]',
-      iconClassName: 'border-emerald-100 bg-white text-emerald-600',
     },
     {
       title: 'Pacientes',
       value: totalPatients.toString(),
-      detail: 'Base ativa da clínica',
       icon: UserIcon,
-      className: 'from-[#eef6ff] to-[#f8fbff]',
-      iconClassName: 'border-sky-100 bg-white text-sky-600',
     },
     {
       title: 'Médicos',
       value: totalDoctors.toString(),
-      detail: 'Profissionais cadastrados',
+      icon: UsersIcon,
+    },
+    {
+      title: 'Em aberto',
+      value: pendingRevenue ? formatCurrencyInCents(pendingRevenue) : 'R$ 0,00',
+      icon: ReceiptIcon,
+    },
+    {
+      title: 'Consultas concluídas',
+      value: completedAppointments.toString(),
       icon: Stethoscope,
-      className: 'from-[#f5f3ff] to-[#fbfaff]',
-      iconClassName: 'border-violet-100 bg-white text-violet-600',
+    },
+    {
+      title: 'Taxa de recebimento',
+      value: `${Math.round(collectionRate ?? 0)}%`,
+      icon: PercentIcon,
     },
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (
-          <Card
-            key={stat.title}
-            className={`overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-gradient-to-br ${stat.className} shadow-[0_18px_34px_-28px_rgba(15,23,42,0.18)]`}
-          >
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">{stat.title}</p>
-                  <div className="mt-4 text-[2rem] font-semibold tracking-tight text-slate-950">{stat.value}</div>
-                  <p className="mt-2 text-sm text-slate-500">{stat.detail}</p>
-                </div>
-                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${stat.iconClassName}`}>
-                  <Icon className="h-5 w-5" />
-                </div>
+          <Card key={stat.title} className="gap-2">
+            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-2">
+              <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full">
+                <Icon className="text-primary h-4 w-4" />
               </div>
+              <CardTitle className="text-muted-foreground text-sm font-medium">
+                {stat.title}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stat.value}</div>
             </CardContent>
           </Card>
         );
