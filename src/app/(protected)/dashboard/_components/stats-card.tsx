@@ -17,6 +17,7 @@ interface StatsCardsProps {
   totalAppointments: number;
   totalPatients: number;
   totalDoctors: number;
+  todayAppointmentsCount?: number;
   completedAppointments?: number;
   pendingRevenue?: number | null;
   collectionRate?: number | null;
@@ -26,6 +27,7 @@ const primaryCardTone = [
   'from-[#eef4ff] via-[#f7faff] to-white text-[#4a6fa8]',
   'from-[#edf5ff] via-[#f8fbff] to-white text-[#5678b5]',
   'from-[#f2f6ff] via-[#fbfcff] to-white text-[#6478b8]',
+  'from-[#eef7ff] via-[#f8fbff] to-white text-[#5d83be]',
 ] as const;
 
 const compactTone = [
@@ -40,6 +42,7 @@ const StatsCards = ({
   totalAppointments,
   totalPatients,
   totalDoctors,
+  todayAppointmentsCount = 0,
   completedAppointments = 0,
   pendingRevenue,
   collectionRate,
@@ -62,6 +65,12 @@ const StatsCards = ({
       value: totalPatients.toString(),
       note: 'com cadastro ativo',
       icon: UserIcon,
+    },
+    {
+      title: 'Hoje',
+      value: todayAppointmentsCount.toString(),
+      note: 'atendimentos do dia',
+      icon: CalendarIcon,
     },
   ];
 
@@ -90,7 +99,7 @@ const StatsCards = ({
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {primaryStats.map((stat, index) => {
           const Icon = stat.icon;
           return (

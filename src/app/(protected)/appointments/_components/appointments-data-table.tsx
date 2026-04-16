@@ -197,7 +197,7 @@ export default function AppointmentsDataTable({
         : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4';
 
     return (
-      <div className={`grid gap-4 ${gridClassName}`}>
+      <div className={`grid justify-items-start gap-4 ${gridClassName}`}>
         {orderedAppointments.map((appointment) => {
           const statusBadge = appointment.status === 'cancelled'
             ? <span className="inline-flex min-h-9 items-center rounded-full bg-red-50 px-4 py-2 text-sm font-medium text-red-700">Cancelado</span>
@@ -206,11 +206,11 @@ export default function AppointmentsDataTable({
               : <span className="inline-flex min-h-9 items-center rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">Agendado</span>;
 
           return (
-            <Card key={appointment.id} className="h-full overflow-hidden border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+            <Card key={appointment.id} className="h-full w-full max-w-[420px] overflow-hidden border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
               <CardHeader className="border-b border-slate-100 bg-slate-50/60 px-4 py-3">
                 <div className="flex items-start justify-between gap-2.5">
                   <div className="flex min-w-0 flex-1 items-start gap-2.5">
-                    <div className="flex h-14 w-11 shrink-0 items-center justify-center overflow-hidden">
+                    <div className="flex h-12 w-10 shrink-0 items-center justify-center overflow-hidden">
                       <Image
                         src={getSexAvatarIcon(appointment.patient.sex)}
                         alt={appointment.patient.sex === 'female' ? 'Ícone paciente feminina' : 'Ícone paciente masculino'}
@@ -221,7 +221,7 @@ export default function AppointmentsDataTable({
                     </div>
                     <div className="min-w-0 flex-1 pt-0.5">
                       <div className="space-y-1">
-                        <h3 className="truncate text-[1.52rem] font-semibold leading-tight tracking-[-0.02em] text-slate-800">{appointment.patient.name}</h3>
+                        <h3 className="truncate text-[1.7rem] font-semibold leading-tight tracking-[-0.03em] text-slate-800">{appointment.patient.name}</h3>
                         <p className="truncate text-sm font-medium text-slate-500">{formatPhoneNumber(appointment.patient.phoneNumber)}</p>
                       </div>
                     </div>
@@ -231,7 +231,7 @@ export default function AppointmentsDataTable({
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3 px-5 py-5 text-sm text-slate-600">
+              <CardContent className="space-y-3 px-4 py-4 text-sm text-slate-600">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="inline-flex min-h-9 items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
                     <UserRound className="size-4" />
@@ -239,14 +239,16 @@ export default function AppointmentsDataTable({
                   </span>
                   {statusBadge}
                 </div>
-                <div className="flex items-center gap-2"><Stethoscope className="size-4 text-slate-400" /><span>{appointment.doctor.specialty}</span></div>
-                <div className="flex items-center gap-2"><CalendarRange className="size-4 text-slate-400" /><span>{formatDateTimeBr(appointment.date)}</span></div>
-                <div className="flex items-center gap-2"><Wallet className="size-4 text-slate-400" /><span>{formatCurrencyInCents(appointment.appointmentPriceInCents)}</span></div>
+                <div className="grid gap-2 text-sm md:grid-cols-2">
+                  <div className="flex items-center gap-2"><Stethoscope className="size-4 text-slate-400" /><span className="truncate">{appointment.doctor.specialty}</span></div>
+                  <div className="flex items-center gap-2"><CalendarRange className="size-4 text-slate-400" /><span>{formatDateTimeBr(appointment.date)}</span></div>
+                  <div className="flex items-center gap-2 md:col-span-2"><Wallet className="size-4 text-slate-400" /><span>{formatCurrencyInCents(appointment.appointmentPriceInCents)}</span></div>
+                </div>
                 <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-500">
                   {appointment.paymentConfirmed ? 'Pagamento confirmado' : 'Pagamento pendente'}
                 </div>
               </CardContent>
-              <CardFooter className="border-t border-slate-100 px-5 py-4 text-sm text-slate-500">
+              <CardFooter className="border-t border-slate-100 px-4 py-3.5 text-sm text-slate-500">
                 {appointment.notes ? (
                   <p className="line-clamp-2">{appointment.notes}</p>
                 ) : (

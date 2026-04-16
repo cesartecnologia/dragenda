@@ -78,6 +78,7 @@ async function PainelDataSection({ clinicId, from, to }: { clinicId: string; fro
         totalAppointments={dashboard.totalAppointments.total}
         totalPatients={dashboard.totalPatients.total}
         totalDoctors={dashboard.totalDoctors.total}
+        todayAppointmentsCount={dashboard.todayAppointments.length}
         pendingRevenue={dashboard.pendingRevenue?.total ? Number(dashboard.pendingRevenue.total) : 0}
         completedAppointments={dashboard.completedAppointments?.total ?? 0}
         collectionRate={dashboard.collectionRate ?? 0}
@@ -145,8 +146,8 @@ async function PainelDataSection({ clinicId, from, to }: { clinicId: string; fro
 function PainelSkeleton() {
   return (
     <>
-      <div className="grid gap-4 xl:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, index) => (
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
           <Card key={index}>
             <CardContent className="space-y-3 px-6 py-6">
               <Skeleton className="h-4 w-32" />
