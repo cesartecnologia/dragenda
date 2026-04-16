@@ -5,9 +5,16 @@ import DebouncedSearchForm from '@/components/common/debounced-search-form';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PageContainer, PageContent, PageHeader, PageHeaderContent, PageTitle } from '@/components/ui/page-container';
+import type { AppointmentStatus } from '@/db/schema';
 import { normalizeSearchText } from '@/helpers/format';
 import { requireSubscribedSession } from '@/lib/auth';
-import { getClinicById, listAppointmentsByClinicIdWithRelations, listDoctorsByClinicId, listPatientsByClinicId } from '@/server/clinic-data';
+import {
+  listAppointmentsByClinicIdWithRelations,
+  listAppointmentsByClinicIdWithRelationsFiltered,
+  listDoctorsByClinicId,
+  listPatientsByClinicId,
+  listRecentAppointmentsByClinicIdWithRelations,
+} from '@/server/clinic-data';
 
 import AppointmentsFiltersSheet from './_components/appointments-filters-sheet';
 import AddAppointmentButton from '../appointments/_components/add-appointment-button';
@@ -23,30 +30,51 @@ export default async function AgendamentosPage({ searchParams }: Props) {
   const role = session.user.role;
   const rawSearchParams = await searchParams;
   const { q = '', doctor = 'all', payment = 'all', status = 'all', from = '', to = '' } = rawSearchParams;
-  const [clinic, patients, doctors, allAppointments] = await Promise.all([
-    getClinicById(clinicId),
+  const normalizedQuery = normalizeSearchText(q);
+  const hasDateFilter = Boolean(from) || Boolean(to);
+  const hasStructuredFilters = doctor !== 'all' || payment !== 'all' || status !== 'all' || hasDateFilter;
+  const showResultsSummary = Boolean(normalizedQuery) || hasStructuredFilters;
+
+  const fromDate = from ? dayjs(from).startOf('day').toDate() : null;
+  const toDate = to ? dayjs(to).endOf('day').toDate() : null;
+  const paymentConfirmed = payment === 'all' ? null : payment === 'confirmed';
+  const statusFilter: AppointmentStatus | null = status === 'all' ? null : (status as AppointmentStatus);
+  const doctorFilter = doctor === 'all' ? null : doctor;
+
+  const appointmentsPromise = normalizedQuery
+    ? hasStructuredFilters
+      ? listAppointmentsByClinicIdWithRelationsFiltered(clinicId, {
+          doctorId: doctorFilter,
+          paymentConfirmed,
+          status: statusFilter,
+          from: fromDate,
+          to: toDate,
+        })
+      : listAppointmentsByClinicIdWithRelations(clinicId)
+    : hasStructuredFilters
+      ? listAppointmentsByClinicIdWithRelationsFiltered(clinicId, {
+          doctorId: doctorFilter,
+          paymentConfirmed,
+          status: statusFilter,
+          from: fromDate,
+          to: toDate,
+          limit: hasDateFilter ? undefined : 160,
+        })
+      : listRecentAppointmentsByClinicIdWithRelations(clinicId, 120);
+
+  const [patients, doctors, baseAppointments] = await Promise.all([
     listPatientsByClinicId(clinicId),
     listDoctorsByClinicId(clinicId),
-    listAppointmentsByClinicIdWithRelations(clinicId),
+    appointmentsPromise,
   ]);
 
-  const normalizedQuery = normalizeSearchText(q);
-  const hasAdvancedFilters = doctor !== 'all' || payment !== 'all' || status !== 'all' || Boolean(from) || Boolean(to);
-  const showResultsSummary = Boolean(normalizedQuery) || hasAdvancedFilters;
-
-  const filteredAppointments = allAppointments.filter((appointment) => {
-    const matchesQuery = !normalizedQuery
-      || normalizeSearchText(appointment.patient.name).includes(normalizedQuery)
-      || normalizeSearchText(appointment.doctor.name).includes(normalizedQuery)
-      || normalizeSearchText(appointment.doctor.specialty).includes(normalizedQuery);
-    const matchesDoctor = doctor === 'all' || appointment.doctorId === doctor;
-    const matchesPayment = payment === 'all' ? true : payment === 'confirmed' ? appointment.paymentConfirmed : !appointment.paymentConfirmed;
-    const matchesStatus = status === 'all' || appointment.status === status;
-    const matchesFrom = from ? dayjs(appointment.date).isAfter(dayjs(from).subtract(1, 'day')) : true;
-    const matchesTo = to ? dayjs(appointment.date).isBefore(dayjs(to).add(1, 'day')) : true;
-
-    return matchesQuery && matchesDoctor && matchesPayment && matchesStatus && matchesFrom && matchesTo;
-  });
+  const filteredAppointments = normalizedQuery
+    ? baseAppointments.filter((appointment) =>
+        normalizeSearchText(appointment.patient.name).includes(normalizedQuery)
+        || normalizeSearchText(appointment.doctor.name).includes(normalizedQuery)
+        || normalizeSearchText(appointment.doctor.specialty).includes(normalizedQuery),
+      )
+    : baseAppointments;
 
   const selectedDoctor = doctors.find((item) => item.id === doctor);
 
@@ -72,7 +100,7 @@ export default async function AgendamentosPage({ searchParams }: Props) {
             <div className="flex flex-wrap items-center justify-end gap-2">
               <AddAppointmentButton patients={patients} doctors={doctors} />
               <AppointmentsFiltersSheet doctors={doctors} q={q} doctor={doctor} payment={payment} status={status} from={from} to={to} />
-              {hasAdvancedFilters ? (
+              {hasStructuredFilters ? (
                 <Button type="button" variant="ghost" className="rounded-xl" asChild>
                   <Link href={q ? `/agendamentos?q=${encodeURIComponent(q)}` : '/agendamentos'}>Limpar filtros</Link>
                 </Button>
@@ -105,7 +133,7 @@ export default async function AgendamentosPage({ searchParams }: Props) {
           ) : null}
         </div>
 
-        <AppointmentsDataTable data={filteredAppointments} patients={patients} doctors={doctors} role={role} clinic={clinic} variant="cards" />
+        <AppointmentsDataTable data={filteredAppointments} patients={patients} doctors={doctors} role={role} clinic={null} variant="cards" />
       </PageContent>
     </PageContainer>
   );

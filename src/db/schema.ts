@@ -67,6 +67,7 @@ export interface DoctorRecord {
   id: string;
   clinicId: string;
   name: string;
+  searchName?: string | null;
   avatarImageUrl: string | null;
   sex: DoctorSex | null;
   crm: string;
@@ -87,6 +88,7 @@ export interface PatientRecord {
   id: string;
   clinicId: string;
   name: string;
+  searchName?: string | null;
   email: string;
   phoneNumber: string;
   address: string | null;
@@ -134,6 +136,7 @@ export interface SpecialtyRecord {
   id: string;
   clinicId: string;
   name: string;
+  searchName?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

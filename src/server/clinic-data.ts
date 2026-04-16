@@ -410,10 +410,28 @@ export const listSpecialtiesByClinicId = async (clinicId: string): Promise<Speci
 };
 
 export const searchSpecialtiesByClinicId = async (clinicId: string, query: string): Promise<Specialty[]> => {
-  const allSpecialties = await listSpecialtiesByClinicId(clinicId);
   const normalized = normalizeSearchText(query);
-  if (!normalized) return allSpecialties;
-  return allSpecialties.filter((specialty) => normalizeSearchText(specialty.name).includes(normalized));
+  if (!normalized) return listSpecialtiesByClinicId(clinicId);
+
+  return withServerCache(`clinic:${clinicId}:specialties:search:${normalized}`, 90_000, async () => {
+    try {
+      const snapshot = await getFirestoreDb()
+        .collection(COLLECTIONS.specialties)
+        .where('clinicId', '==', clinicId)
+        .where('searchName', '>=', normalized)
+        .where('searchName', '<=', `${normalized}\uf8ff`)
+        .limit(50)
+        .get();
+
+      const results = sortByName(fromQuery<Specialty>(snapshot));
+      if (results.length) return results;
+    } catch (error) {
+      console.warn('SPECIALTY_SEARCH_QUERY_FALLBACK', error);
+    }
+
+    const allSpecialties = await listSpecialtiesByClinicId(clinicId);
+    return allSpecialties.filter((specialty) => normalizeSearchText(specialty.name).includes(normalized));
+  });
 };
 
 export const upsertSpecialtyRecord = async (params: { id?: string; clinicId: string; name: string }) => {
@@ -425,6 +443,7 @@ export const upsertSpecialtyRecord = async (params: { id?: string; clinicId: str
     id: specialtyId,
     clinicId: params.clinicId,
     name: params.name.trim(),
+    searchName: normalizeSearchText(params.name),
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
@@ -464,6 +483,7 @@ export const upsertDoctorRecord = async (params: {
     id: doctorId,
     clinicId: params.clinicId,
     name: params.name,
+    searchName: normalizeSearchText(`${params.name} ${params.specialty} ${params.crm}`),
     avatarImageUrl: params.avatarImageUrl ?? existing?.avatarImageUrl ?? null,
     sex: params.sex ?? existing?.sex ?? 'male',
     crm: params.crm,
@@ -549,15 +569,47 @@ export const countPatientsByClinicId = async (clinicId: string): Promise<number>
 };
 
 export const listRecentPatientsByClinicId = async (clinicId: string, limit = 20): Promise<Patient[]> => {
-  const patients = await listPatientsByClinicId(clinicId);
-  return sortByCreatedAtDesc(patients).slice(0, limit);
+  return withServerCache(`clinic:${clinicId}:patients:recent:${limit}`, 90_000, async () => {
+    try {
+      const snapshot = await getFirestoreDb()
+        .collection(COLLECTIONS.patients)
+        .where('clinicId', '==', clinicId)
+        .orderBy('createdAt', 'desc')
+        .limit(limit)
+        .get();
+
+      return fromQuery<Patient>(snapshot);
+    } catch (error) {
+      console.warn('RECENT_PATIENTS_QUERY_FALLBACK', error);
+      const patients = await listPatientsByClinicId(clinicId);
+      return sortByCreatedAtDesc(patients).slice(0, limit);
+    }
+  });
 };
 
 export const searchPatientsByClinicId = async (clinicId: string, query: string): Promise<Patient[]> => {
-  const allPatients = await listPatientsByClinicId(clinicId);
   const normalized = normalizeSearchText(query);
-  if (!normalized) return allPatients;
-  return allPatients.filter((patient) => normalizeSearchText(patient.name).includes(normalized));
+  if (!normalized) return listRecentPatientsByClinicId(clinicId, 20);
+
+  return withServerCache(`clinic:${clinicId}:patients:search:${normalized}`, 90_000, async () => {
+    try {
+      const snapshot = await getFirestoreDb()
+        .collection(COLLECTIONS.patients)
+        .where('clinicId', '==', clinicId)
+        .where('searchName', '>=', normalized)
+        .where('searchName', '<=', `${normalized}\uf8ff`)
+        .limit(50)
+        .get();
+
+      const results = sortByName(fromQuery<Patient>(snapshot));
+      if (results.length) return results;
+    } catch (error) {
+      console.warn('PATIENT_SEARCH_QUERY_FALLBACK', error);
+    }
+
+    const allPatients = await listPatientsByClinicId(clinicId);
+    return allPatients.filter((patient) => normalizeSearchText(patient.name).includes(normalized));
+  });
 };
 
 export const getPatientById = async (patientId: string): Promise<Patient | null> => {
@@ -583,6 +635,7 @@ export const upsertPatientRecord = async (params: {
     id: patientId,
     clinicId: params.clinicId,
     name: params.name,
+    searchName: normalizeSearchText(`${params.name} ${params.email} ${params.phoneNumber}`),
     email: params.email,
     phoneNumber: params.phoneNumber,
     address: params.address ?? existing?.address ?? null,
@@ -626,6 +679,25 @@ export const listAppointmentsByDoctorId = async (doctorId: string): Promise<Appo
   return withServerCache(`doctor:${doctorId}:appointments`, 90_000, async () => {
     const snapshot = await getFirestoreDb().collection(COLLECTIONS.appointments).where('doctorId', '==', doctorId).get();
     return sortByDateDesc(fromQuery<Appointment>(snapshot));
+  });
+};
+
+export const listRecentAppointmentsByClinicId = async (clinicId: string, limit = 120): Promise<Appointment[]> => {
+  return withServerCache(`clinic:${clinicId}:appointments:recent:${limit}`, 90_000, async () => {
+    try {
+      const snapshot = await getFirestoreDb()
+        .collection(COLLECTIONS.appointments)
+        .where('clinicId', '==', clinicId)
+        .orderBy('date', 'desc')
+        .limit(limit)
+        .get();
+
+      return fromQuery<Appointment>(snapshot);
+    } catch (error) {
+      console.warn('RECENT_APPOINTMENTS_QUERY_FALLBACK', error);
+      const appointments = await listAppointmentsByClinicId(clinicId);
+      return appointments.slice(0, limit);
+    }
   });
 };
 
@@ -842,9 +914,72 @@ export const listAppointmentsByClinicIdInRange = async (clinicId: string, from: 
   });
 };
 
+export const listAppointmentsByClinicIdFiltered = async (
+  clinicId: string,
+  filters: {
+    doctorId?: string | null;
+    paymentConfirmed?: boolean | null;
+    status?: Appointment['status'] | null;
+    from?: Date | null;
+    to?: Date | null;
+    limit?: number;
+  } = {},
+): Promise<Appointment[]> => {
+  const from = filters.from ?? null;
+  const to = filters.to ?? null;
+  const limitValue = filters.limit ?? null;
+  const cacheKey = [
+    `clinic:${clinicId}:appointments:filtered`,
+    filters.doctorId ?? 'all',
+    filters.paymentConfirmed === null || filters.paymentConfirmed === undefined ? 'all' : String(filters.paymentConfirmed),
+    filters.status ?? 'all',
+    from?.toISOString() ?? 'none',
+    to?.toISOString() ?? 'none',
+    limitValue ?? 'none',
+  ].join(':');
+
+  return withServerCache(cacheKey, 90_000, async () => {
+    try {
+      let query: any = getFirestoreDb().collection(COLLECTIONS.appointments)
+        .where('clinicId', '==', clinicId);
+
+      if (filters.doctorId) query = query.where('doctorId', '==', filters.doctorId);
+      if (typeof filters.paymentConfirmed === 'boolean') query = query.where('paymentConfirmed', '==', filters.paymentConfirmed);
+      if (filters.status) query = query.where('status', '==', filters.status);
+      if (from) query = query.where('date', '>=', from);
+      if (to) query = query.where('date', '<=', to);
+
+      query = query.orderBy('date', 'desc');
+      if (limitValue) query = query.limit(limitValue);
+
+      const snapshot = await query.get();
+      return fromQuery<Appointment>(snapshot);
+    } catch (error) {
+      console.warn('APPOINTMENTS_FILTERED_QUERY_FALLBACK', error);
+      let appointments = await listAppointmentsByClinicId(clinicId);
+
+      if (filters.doctorId) appointments = appointments.filter((appointment) => appointment.doctorId === filters.doctorId);
+      if (typeof filters.paymentConfirmed === 'boolean') appointments = appointments.filter((appointment) => appointment.paymentConfirmed === filters.paymentConfirmed);
+      if (filters.status) appointments = appointments.filter((appointment) => appointment.status === filters.status);
+      if (from) appointments = appointments.filter((appointment) => appointment.date.getTime() >= from.getTime());
+      if (to) appointments = appointments.filter((appointment) => appointment.date.getTime() <= to.getTime());
+      if (limitValue) appointments = appointments.slice(0, limitValue);
+
+      return appointments;
+    }
+  });
+};
+
 export const listAppointmentsByClinicIdWithRelations = async (clinicId: string): Promise<AppointmentWithRelations[]> => {
   return withServerCache(`clinic:${clinicId}:appointments:relations`, 90_000, async () => {
     const appointments = await listAppointmentsByClinicId(clinicId);
+    return attachAppointmentRelations(appointments);
+  });
+};
+
+export const listRecentAppointmentsByClinicIdWithRelations = async (clinicId: string, limit = 120): Promise<AppointmentWithRelations[]> => {
+  return withServerCache(`clinic:${clinicId}:appointments:relations:recent:${limit}`, 90_000, async () => {
+    const appointments = await listRecentAppointmentsByClinicId(clinicId, limit);
     return attachAppointmentRelations(appointments);
   });
 };
@@ -854,6 +989,21 @@ export const listAppointmentsByClinicIdWithRelationsInRange = async (clinicId: s
     const appointments = await listAppointmentsByClinicIdInRange(clinicId, from, to);
     return attachAppointmentRelations(appointments);
   });
+};
+
+export const listAppointmentsByClinicIdWithRelationsFiltered = async (
+  clinicId: string,
+  filters: {
+    doctorId?: string | null;
+    paymentConfirmed?: boolean | null;
+    status?: Appointment['status'] | null;
+    from?: Date | null;
+    to?: Date | null;
+    limit?: number;
+  } = {},
+): Promise<AppointmentWithRelations[]> => {
+  const appointments = await listAppointmentsByClinicIdFiltered(clinicId, filters);
+  return attachAppointmentRelations(appointments);
 };
 
 export const listTodayAppointmentsByClinicIdWithRelations = async (clinicId: string): Promise<AppointmentWithRelations[]> => {

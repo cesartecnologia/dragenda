@@ -1,4 +1,5 @@
 import { getAsaasSubscription, listAsaasSubscriptionPayments, listAsaasSubscriptions, type AsaasSubscription, type AsaasSubscriptionPayment } from '@/lib/asaas';
+import { withServerCache } from '@/lib/server-cache';
 import { getClinicById, getUserProfileById } from '@/server/clinic-data';
 
 export type SubscriptionResolvedStatus =
@@ -73,61 +74,63 @@ const inferResolvedStatus = (params: {
 };
 
 export const getSubscriptionSummaryForUser = async (userId: string): Promise<SubscriptionSummary> => {
-  const user = await getUserProfileById(userId);
-  if (!user) throw new Error('Usuário não encontrado.');
+  return withServerCache(`subscription-summary:${userId}`, 45_000, async () => {
+    const user = await getUserProfileById(userId);
+    if (!user) throw new Error('Usuário não encontrado.');
 
-  const clinic = user.clinicId ? await getClinicById(user.clinicId) : null;
-  const clinicName = clinic?.name ?? null;
-  const asaasCustomerId = clinic?.asaasCustomerId ?? user.asaasCustomerId ?? null;
-  const storedSubscriptionId = clinic?.asaasSubscriptionId ?? user.asaasSubscriptionId ?? null;
-  const storedStatus = clinic?.subscriptionStatus ?? user.subscriptionStatus ?? null;
+    const clinic = user.clinicId ? await getClinicById(user.clinicId) : null;
+    const clinicName = clinic?.name ?? null;
+    const asaasCustomerId = clinic?.asaasCustomerId ?? user.asaasCustomerId ?? null;
+    const storedSubscriptionId = clinic?.asaasSubscriptionId ?? user.asaasSubscriptionId ?? null;
+    const storedStatus = clinic?.subscriptionStatus ?? user.subscriptionStatus ?? null;
 
-  let subscription: AsaasSubscription | null = null;
-  let asaasSubscriptionId: string | null = storedSubscriptionId;
+    let subscription: AsaasSubscription | null = null;
+    let asaasSubscriptionId: string | null = storedSubscriptionId;
 
-  try {
-    if (storedSubscriptionId) {
-      subscription = await getAsaasSubscription(storedSubscriptionId);
-    } else if (asaasCustomerId) {
-      const subscriptions = await listAsaasSubscriptions({ customer: asaasCustomerId, limit: 10 });
-      const sortedSubscriptions = [...subscriptions].sort((a, b) => {
-        const aTime = a.dateCreated ? new Date(a.dateCreated).getTime() : 0;
-        const bTime = b.dateCreated ? new Date(b.dateCreated).getTime() : 0;
-        return bTime - aTime;
-      });
-      subscription = sortedSubscriptions[0] ?? null;
-      asaasSubscriptionId = subscription?.id ?? null;
-    }
-  } catch {
-    subscription = null;
-  }
-
-  let payments: AsaasSubscriptionPayment[] = [];
-  if (subscription?.id) {
     try {
-      payments = await listAsaasSubscriptionPayments(subscription.id);
+      if (storedSubscriptionId) {
+        subscription = await getAsaasSubscription(storedSubscriptionId);
+      } else if (asaasCustomerId) {
+        const subscriptions = await listAsaasSubscriptions({ customer: asaasCustomerId, limit: 10 });
+        const sortedSubscriptions = [...subscriptions].sort((a, b) => {
+          const aTime = a.dateCreated ? new Date(a.dateCreated).getTime() : 0;
+          const bTime = b.dateCreated ? new Date(b.dateCreated).getTime() : 0;
+          return bTime - aTime;
+        });
+        subscription = sortedSubscriptions[0] ?? null;
+        asaasSubscriptionId = subscription?.id ?? null;
+      }
     } catch {
-      payments = [];
+      subscription = null;
     }
-  }
 
-  const sortedPayments = sortPayments(payments);
-  const latestPayment = sortedPayments[0] ?? null;
-  const resolvedStatus = inferResolvedStatus({
-    storedStatus,
-    subscription,
-    latestPayment,
+    let payments: AsaasSubscriptionPayment[] = [];
+    if (subscription?.id) {
+      try {
+        payments = await listAsaasSubscriptionPayments(subscription.id);
+      } catch {
+        payments = [];
+      }
+    }
+
+    const sortedPayments = sortPayments(payments);
+    const latestPayment = sortedPayments[0] ?? null;
+    const resolvedStatus = inferResolvedStatus({
+      storedStatus,
+      subscription,
+      latestPayment,
+    });
+
+    return {
+      clinicName,
+      asaasCustomerId,
+      asaasSubscriptionId,
+      storedStatus,
+      resolvedStatus,
+      accessReleased: resolvedStatus === 'active',
+      subscription,
+      payments: sortedPayments,
+      latestPayment,
+    };
   });
-
-  return {
-    clinicName,
-    asaasCustomerId,
-    asaasSubscriptionId,
-    storedStatus,
-    resolvedStatus,
-    accessReleased: resolvedStatus === 'active',
-    subscription,
-    payments: sortedPayments,
-    latestPayment,
-  };
 };
