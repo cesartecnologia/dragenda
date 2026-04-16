@@ -48,17 +48,17 @@ export function SubscriptionPlan({
   ];
 
   const statusLabel = active
-    ? 'Assinatura Premium ativa'
+    ? 'Plano Premium ativo'
     : subscriptionStatus === 'overdue'
       ? 'Pagamento pendente'
       : subscriptionStatus === 'checkout_pending'
         ? 'Contratação em andamento'
-        : 'Assinatura Premium';
+        : 'Plano Premium';
 
   const ctaLabel = bypassSubscription
     ? 'Plano não exigido para seu perfil'
     : active
-      ? 'Assinatura Premium ativa'
+      ? 'Plano Premium ativo'
       : subscriptionStatus === 'checkout_pending'
         ? 'Continuar contratação'
         : 'Assinar plano Premium';
@@ -70,7 +70,7 @@ export function SubscriptionPlan({
           <div className="space-y-2">
             <h3 className="text-2xl font-bold text-gray-900 sm:text-3xl">{statusLabel}</h3>
             <p className="mx-auto max-w-2xl text-sm leading-6 text-gray-600 sm:text-base">
-              Tudo o que sua clínica precisa para organizar agenda, pacientes, equipe e atendimentos em um só lugar.
+              Gerencie sua clínica com mais organização, controle e praticidade no dia a dia.
             </p>
           </div>
 
@@ -97,7 +97,7 @@ export function SubscriptionPlan({
             </p>
             {nextRenewal ? (
               <div className="mt-5 w-full max-w-xl rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm text-emerald-800">
-                <span className="font-medium">Próxima renovação:</span> {nextRenewal}
+                <span className="font-medium">Renovação em:</span> {nextRenewal}
               </div>
             ) : null}
           </div>
@@ -117,16 +117,6 @@ export function SubscriptionPlan({
         </div>
 
         <div className="mx-auto w-full max-w-xl space-y-4">
-          {!bypassSubscription ? (
-            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <CreditCard className="h-5 w-5 text-blue-600" />
-              <div>
-                <p className="text-sm font-medium text-slate-900">Cartão de crédito</p>
-                <p className="text-xs text-slate-500">Pagamento recorrente com renovação automática mensal.</p>
-              </div>
-            </div>
-          ) : null}
-
           <Button
             className="h-11 w-full"
             variant={active || bypassSubscription ? 'outline' : 'default'}

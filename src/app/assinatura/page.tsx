@@ -3,18 +3,23 @@ import { redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { SubscriptionPlan } from '@/app/(protected)/subscription/_components/subscription-plan';
 import { canAccessFinancial } from '@/lib/access';
-import { getServerSession, requireSession } from '@/lib/auth';
+import { getServerSession } from '@/lib/auth';
 import { getSubscriptionSummaryForUser } from '@/server/subscription-data';
 
 import { AutoStartCheckout } from './_components/auto-start-checkout';
 import { CheckoutSuccessSync } from './_components/checkout-success-sync';
 import { PublicSubscriptionView } from './_components/public-subscription-view';
-import { SubscriptionManager } from './_components/subscription-manager';
 
 const formatRenewalDate = (value?: string | null) => {
   if (!value) return null;
-  const date = new Date(value);
+
+  const dateOnlyMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const date = dateOnlyMatch
+    ? new Date(Number(dateOnlyMatch[1]), Number(dateOnlyMatch[2]) - 1, Number(dateOnlyMatch[3]))
+    : new Date(value);
+
   if (Number.isNaN(date.getTime())) return null;
+
   return new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit',
     month: 'long',
@@ -62,11 +67,6 @@ export default async function AssinaturaPage({
   return (
     <div className="min-h-screen bg-muted/30 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Assinatura Premium</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Acompanhe o status do plano da sua clínica.</p>
-        </div>
-
         {startCheckout === '1' && !summary.accessReleased && !session.user.bypassSubscription ? <AutoStartCheckout /> : null}
 
         {firstAccess === '1' ? (
@@ -102,9 +102,6 @@ export default async function AssinaturaPage({
           className="mx-auto w-full max-w-2xl"
         />
 
-        <div className="mx-auto w-full max-w-2xl">
-          <SubscriptionManager canCancel={Boolean(summary.asaasSubscriptionId)} bypassSubscription={session.user.bypassSubscription} />
-        </div>
       </div>
     </div>
   );
