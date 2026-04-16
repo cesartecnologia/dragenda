@@ -44,6 +44,11 @@ export interface ClinicRecord {
   asaasCheckoutId: string | null;
   subscriptionStatus: string | null;
   plan: string | null;
+  stats?: {
+    doctorsCount: number;
+    patientsCount: number;
+    appointmentsCount: number;
+  } | null;
   createdAt: Date;
   updatedAt: Date;
 }

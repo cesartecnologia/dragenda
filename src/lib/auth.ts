@@ -8,6 +8,7 @@ import type { DecodedIdToken } from 'firebase-admin/auth';
 import type { UserRole } from '@/db/schema';
 import { getDefaultPostLoginRoute, resolvePrivilegedAccess } from '@/lib/access';
 import { adminAuth } from '@/lib/firebase-admin';
+import { withServerCache } from '@/lib/server-cache';
 import { getClinicById, getUserProfileById, upsertUserProfile } from '@/server/clinic-data';
 
 export const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME ?? '__clinic_smart_session';
@@ -91,7 +92,9 @@ export const getServerSession = cache(async (): Promise<AppSession | null> => {
   if (!sessionCookie) return null;
 
   try {
-    const decodedToken = await adminAuth().verifySessionCookie(sessionCookie);
+    const decodedToken = await withServerCache(`session:${sessionCookie}`, 30_000, async () => {
+      return adminAuth().verifySessionCookie(sessionCookie);
+    });
     let userProfile = await getUserProfileById(decodedToken.uid);
 
     if (!userProfile && decodedToken.email) {

@@ -1,7 +1,6 @@
 'use client';
 
 import type { ComponentType } from 'react';
-import { useEffect } from 'react';
 
 import {
   BriefcaseMedical,
@@ -70,12 +69,6 @@ export function AppSidebar({ session }: { session: AppSession }) {
         canAccessClinicSettings(role) ? { title: 'Configurações', url: '/configuracoes/clinica', icon: Settings2 } : null,
       ]).filter(Boolean) as { title: string; url: string; icon: ComponentType<{ className?: string }> }[];
 
-  useEffect(() => {
-    const urls = [...new Set([...menuItems.map((item) => item.url), '/agendamentos', '/pacientes', '/medicos'])];
-    urls.forEach((url) => router.prefetch(url));
-    if (canAccessFinancial(role)) router.prefetch('/assinatura');
-  }, [menuItems, router, role]);
-
   const handleSignOut = async () => {
     await authClient.signOut({
       fetchOptions: {
@@ -99,7 +92,7 @@ export function AppSidebar({ session }: { session: AppSession }) {
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url} className={navButtonClass}>
-                    <Link href={item.url} prefetch>
+                    <Link href={item.url} prefetch={false}>
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>
@@ -116,7 +109,7 @@ export function AppSidebar({ session }: { session: AppSession }) {
               <SidebarMenu className="gap-2.5 px-3">
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={pathname === '/assinatura'} className={navButtonClass}>
-                    <Link href="/assinatura" prefetch>
+                    <Link href="/assinatura" prefetch={false}>
                       <Gem />
                       <span>Assinatura</span>
                     </Link>

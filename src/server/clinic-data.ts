@@ -36,6 +36,23 @@ export type AppointmentWithRelations = Appointment & {
   doctor: Doctor;
 };
 
+type ClinicStats = {
+  doctorsCount: number;
+  patientsCount: number;
+  appointmentsCount: number;
+};
+
+const defaultClinicStats = (): ClinicStats => ({
+  doctorsCount: 0,
+  patientsCount: 0,
+  appointmentsCount: 0,
+});
+
+const normalizeClinicStats = (clinic?: Clinic | null): ClinicStats => ({
+  ...defaultClinicStats(),
+  ...(clinic?.stats ?? {}),
+});
+
 const COLLECTIONS = {
   users: 'users',
   clinics: 'clinics',
@@ -133,6 +150,41 @@ const invalidateDoctorScopedCache = (doctorId?: string | null) => {
 const invalidateUserScopedCache = (userId?: string | null) => {
   if (!userId) return;
   invalidateServerCache(`user:${userId}`);
+};
+
+const updateClinicStats = async (
+  clinicId: string,
+  updater: (stats: ClinicStats) => ClinicStats,
+) => {
+  const db = getFirestoreDb();
+  const clinicRef = db.collection(COLLECTIONS.clinics).doc(clinicId);
+
+  await db.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(clinicRef);
+    const clinic = fromDoc<Clinic>(snapshot);
+    if (!clinic) return;
+
+    const nextClinic: Clinic = {
+      ...clinic,
+      stats: updater(normalizeClinicStats(clinic)),
+      updatedAt: new Date(),
+    };
+
+    transaction.set(clinicRef, sanitizeFirestoreValue(nextClinic) as DocumentData);
+  });
+
+  invalidateClinicScopedCache(clinicId);
+};
+
+const bumpClinicStats = async (
+  clinicId: string,
+  deltas: Partial<Record<keyof ClinicStats, number>>,
+) => {
+  await updateClinicStats(clinicId, (stats) => ({
+    doctorsCount: Math.max(0, stats.doctorsCount + (deltas.doctorsCount ?? 0)),
+    patientsCount: Math.max(0, stats.patientsCount + (deltas.patientsCount ?? 0)),
+    appointmentsCount: Math.max(0, stats.appointmentsCount + (deltas.appointmentsCount ?? 0)),
+  }));
 };
 
 export const getUserProfileById = async (userId: string): Promise<AppUser | null> => {
@@ -252,6 +304,7 @@ export const createClinicForUser = async (params: { userId: string; name: string
     asaasCheckoutId: null,
     subscriptionStatus: null,
     plan: null,
+    stats: defaultClinicStats(),
     createdAt: now,
     updatedAt: now,
   };
@@ -426,6 +479,7 @@ export const upsertDoctorRecord = async (params: {
   };
 
   await ref.set(sanitizeFirestoreValue(doctor) as DocumentData);
+  if (!existing) await bumpClinicStats(params.clinicId, { doctorsCount: 1 });
   invalidateClinicScopedCache(params.clinicId);
   invalidateDoctorScopedCache(doctorId);
   return doctor;
@@ -440,6 +494,12 @@ export const deleteDoctorRecord = async (doctorId: string) => {
   await deleteDocsInChunks(appointmentsSnapshot.docs);
   await doctorSnapshot.ref.delete();
   const existingDoctor = fromDoc<Doctor>(doctorSnapshot);
+  if (existingDoctor?.clinicId) {
+    await bumpClinicStats(existingDoctor.clinicId, {
+      doctorsCount: -1,
+      appointmentsCount: -appointmentsSnapshot.docs.length,
+    });
+  }
   invalidateClinicScopedCache(existingDoctor?.clinicId ?? null);
   invalidateDoctorScopedCache(doctorId);
 };
@@ -469,6 +529,9 @@ const countCollectionByClinicId = async (collectionName: string, clinicId: strin
 };
 
 export const countDoctorsByClinicId = async (clinicId: string): Promise<number> => {
+  const clinic = await getClinicById(clinicId);
+  if (clinic?.stats && typeof clinic.stats.doctorsCount === 'number') return clinic.stats.doctorsCount;
+
   return countCollectionByClinicId(COLLECTIONS.doctors, clinicId, async () => {
     const doctors = await listDoctorsByClinicId(clinicId);
     return doctors.length;
@@ -476,6 +539,9 @@ export const countDoctorsByClinicId = async (clinicId: string): Promise<number> 
 };
 
 export const countPatientsByClinicId = async (clinicId: string): Promise<number> => {
+  const clinic = await getClinicById(clinicId);
+  if (clinic?.stats && typeof clinic.stats.patientsCount === 'number') return clinic.stats.patientsCount;
+
   return countCollectionByClinicId(COLLECTIONS.patients, clinicId, async () => {
     const patients = await listPatientsByClinicId(clinicId);
     return patients.length;
@@ -526,6 +592,7 @@ export const upsertPatientRecord = async (params: {
   };
 
   await ref.set(sanitizeFirestoreValue(patient) as DocumentData);
+  if (!existing) await bumpClinicStats(params.clinicId, { patientsCount: 1 });
   invalidateClinicScopedCache(params.clinicId);
   return patient;
 };
@@ -539,6 +606,12 @@ export const deletePatientRecord = async (patientId: string) => {
   await deleteDocsInChunks(appointmentsSnapshot.docs);
   await patientSnapshot.ref.delete();
   const existingPatient = fromDoc<Patient>(patientSnapshot);
+  if (existingPatient?.clinicId) {
+    await bumpClinicStats(existingPatient.clinicId, {
+      patientsCount: -1,
+      appointmentsCount: -appointmentsSnapshot.docs.length,
+    });
+  }
   invalidateClinicScopedCache(existingPatient?.clinicId ?? null);
 };
 
@@ -599,6 +672,7 @@ export const createAppointmentRecord = async (params: {
     updatedAt: now,
   };
   await getFirestoreDb().collection(COLLECTIONS.appointments).doc(appointmentId).set(sanitizeFirestoreValue(appointment) as DocumentData);
+  await bumpClinicStats(params.clinicId, { appointmentsCount: 1 });
   invalidateClinicScopedCache(params.clinicId);
   invalidateDoctorScopedCache(params.doctorId);
   return appointment;
@@ -704,6 +778,7 @@ export const setAppointmentStatus = async (params: {
 export const deleteAppointmentRecord = async (appointmentId: string) => {
   const existing = await getAppointmentById(appointmentId);
   await getFirestoreDb().collection(COLLECTIONS.appointments).doc(appointmentId).delete();
+  if (existing?.clinicId) await bumpClinicStats(existing.clinicId, { appointmentsCount: -1 });
   invalidateClinicScopedCache(existing?.clinicId ?? null);
   invalidateDoctorScopedCache(existing?.doctorId ?? null);
 };
@@ -976,16 +1051,45 @@ export const getDashboardData = async (params: { clinicId: string; from: string;
     const todayEnd = dayjs().endOf('day').toDate();
     const todayInRange = inDateRange(todayStart, fromDate, toDate);
     const daysInRange = dayjs(toDate).diff(dayjs(fromDate), 'day') + 1;
+    const clinic = await getClinicById(params.clinicId);
+    const clinicStats = normalizeClinicStats(clinic);
 
-    const [
-      totalDoctors,
-      totalPatients,
-      appointmentsInRangeRaw,
-      upcomingAppointmentsRaw,
-      todayAppointmentsFallbackRaw,
-    ] = await Promise.all([
-      countDoctorsByClinicId(params.clinicId),
-      countPatientsByClinicId(params.clinicId),
+    const buildEmptyDashboard = (totalDoctors: number, totalPatients: number) => ({
+      totalRevenue: { total: 0 },
+      pendingRevenue: { total: 0 },
+      collectionRate: 0,
+      totalAppointments: { total: 0 },
+      totalPatients: { total: totalPatients },
+      totalDoctors: { total: totalDoctors },
+      completedAppointments: { total: 0 },
+      topDoctors: [],
+      topSpecialties: [],
+      todayAppointments: [],
+      dailyAppointmentsData: Array.from({ length: Math.max(daysInRange, 1) }).map((_, index) => ({
+        date: dayjs(fromDate).add(index, 'day').format('YYYY-MM-DD'),
+        appointments: 0,
+        revenue: 0,
+      })),
+      upcomingAppointments: [],
+    });
+
+    if (clinic?.stats && clinicStats.appointmentsCount === 0) {
+      return buildEmptyDashboard(clinicStats.doctorsCount, clinicStats.patientsCount);
+    }
+
+    const [totalDoctors, totalPatients] = clinic?.stats
+      ? [clinicStats.doctorsCount, clinicStats.patientsCount]
+      : await Promise.all([
+          countDoctorsByClinicId(params.clinicId),
+          countPatientsByClinicId(params.clinicId),
+        ]);
+
+    if (!clinic?.stats && totalDoctors === 0 && totalPatients === 0) {
+      await updateClinicStats(params.clinicId, () => defaultClinicStats());
+      return buildEmptyDashboard(0, 0);
+    }
+
+    const [appointmentsInRangeRaw, upcomingAppointmentsRaw, todayAppointmentsFallbackRaw] = await Promise.all([
       listAppointmentsByClinicIdInRange(params.clinicId, fromDate, toDate),
       listUpcomingAppointmentsByClinicId(params.clinicId, 8),
       todayInRange ? Promise.resolve([] as Appointment[]) : listAppointmentsByClinicIdInRange(params.clinicId, todayStart, todayEnd),

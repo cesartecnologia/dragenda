@@ -1,7 +1,8 @@
 import { Suspense } from 'react';
 
 import dayjs from 'dayjs';
-import { Calendar, Clock3 } from 'lucide-react';
+import { Calendar, Clock3, LineChart } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { redirect } from 'next/navigation';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,13 +14,48 @@ import { canAccessDashboard } from '@/lib/access';
 import { requireSubscribedSession } from '@/lib/auth';
 
 import { DatePicker } from '../dashboard/_components/date-picker';
-import AppointmentsChart from '../dashboard/_components/revenue-chart';
 import StatsCards from '../dashboard/_components/stats-card';
 import TopDoctors from '../dashboard/_components/top-doctors';
 import TodayAppointmentsList from './_components/today-appointments-list';
 
 interface DashboardPageProps {
   searchParams: Promise<{ from: string; to: string }>;
+}
+
+const AppointmentsChart = dynamic(() => import('../dashboard/_components/revenue-chart'), {
+  loading: () => <ChartCardSkeleton />,
+});
+
+function ChartCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-5 w-48" />
+      </CardHeader>
+      <CardContent>
+        <Skeleton className="h-[260px] w-full" />
+      </CardContent>
+    </Card>
+  );
+}
+
+function EmptyChartCard() {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-3">
+          <LineChart className="text-muted-foreground" />
+          <CardTitle className="text-base">Visão do período</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="flex min-h-[260px] items-center justify-center">
+        <div className="space-y-2 text-center">
+          <p className="font-medium text-slate-800">Ainda não há movimentação neste período.</p>
+          <p className="text-sm text-muted-foreground">Assim que os agendamentos forem criados, o painel mostrará a evolução do mês.</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 async function PainelDataSection({ clinicId, from, to }: { clinicId: string; from: string; to: string }) {
@@ -42,7 +78,11 @@ async function PainelDataSection({ clinicId, from, to }: { clinicId: string; fro
       />
 
       <div className="grid gap-4 xl:grid-cols-[2.25fr_1fr]">
-        <AppointmentsChart dailyAppointmentsData={dashboard.dailyAppointmentsData} />
+        {dashboard.totalAppointments.total > 0 ? (
+          <AppointmentsChart dailyAppointmentsData={dashboard.dailyAppointmentsData} />
+        ) : (
+          <EmptyChartCard />
+        )}
         <TopDoctors doctors={dashboard.topDoctors} />
       </div>
 
