@@ -5,7 +5,7 @@ import { Calendar, ChevronRight, Clock3, LineChart } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { redirect } from 'next/navigation';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageActions, PageContainer, PageContent, PageDescription, PageHeader, PageHeaderContent, PageTitle } from '@/components/ui/page-container';
 import { getDashboard } from '@/data/get-dashboard';
@@ -31,7 +31,7 @@ function ChartCardSkeleton() {
     <Card className="overflow-hidden">
       <CardHeader>
         <Skeleton className="h-5 w-48" />
-        <Skeleton className="h-4 w-72" />
+        <Skeleton className="h-4 w-56" />
       </CardHeader>
       <CardContent>
         <Skeleton className="h-[280px] w-full rounded-[24px]" />
@@ -43,21 +43,21 @@ function ChartCardSkeleton() {
 function EmptyChartCard() {
   return (
     <Card className="overflow-hidden">
-      <CardHeader className="border-b border-slate-200/80 pb-5">
+      <CardHeader className="border-b border-slate-100 pb-5">
         <div className="flex items-center gap-3">
-          <div className="flex size-11 items-center justify-center rounded-2xl bg-[#eef5f5] text-primary">
+          <div className="flex size-11 items-center justify-center rounded-2xl bg-[#eef4ff] text-primary">
             <LineChart className="size-5" />
           </div>
           <div>
-            <CardTitle className="text-xl text-slate-900">Visão do período</CardTitle>
-            <CardDescription>Aqui você acompanha a evolução diária da clínica.</CardDescription>
+            <CardTitle className="text-xl text-slate-900">Movimento do período</CardTitle>
+            <div className="text-sm text-slate-500">Os números vão aparecer aqui assim que houver movimentação.</div>
           </div>
         </div>
       </CardHeader>
       <CardContent className="flex min-h-[320px] items-center justify-center">
         <div className="space-y-2 text-center">
           <p className="font-medium text-slate-800">Ainda não há movimentação neste período.</p>
-          <p className="text-sm text-slate-500">Assim que os agendamentos forem criados, o painel mostrará a evolução do mês.</p>
+          <p className="text-sm text-slate-500">Quando os agendamentos começarem, o painel será atualizado automaticamente.</p>
         </div>
       </CardContent>
     </Card>
@@ -83,56 +83,58 @@ async function PainelDataSection({ clinicId, from, to }: { clinicId: string; fro
         collectionRate={dashboard.collectionRate ?? 0}
       />
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,2.1fr)_360px]">
-        {dashboard.totalAppointments.total > 0 ? (
-          <AppointmentsChart dailyAppointmentsData={dashboard.dailyAppointmentsData} />
-        ) : (
-          <EmptyChartCard />
-        )}
-        <TopDoctors doctors={dashboard.topDoctors} />
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.75fr)_minmax(280px,320px)]">
+        <div className="min-w-0">
+          {dashboard.totalAppointments.total > 0 ? (
+            <AppointmentsChart dailyAppointmentsData={dashboard.dailyAppointmentsData} />
+          ) : (
+            <EmptyChartCard />
+          )}
+        </div>
+        <div className="min-w-0">
+          <TopDoctors doctors={dashboard.topDoctors} />
+        </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,2.1fr)_360px]">
-        <Card className="animate-panel-fade-up overflow-hidden" style={{ animationDelay: '120ms' }}>
-          <CardHeader className="flex flex-col gap-4 border-b border-slate-200/80 pb-5 lg:flex-row lg:items-end lg:justify-between">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.75fr)_minmax(280px,320px)]">
+        <Card className="animate-panel-fade-up min-w-0 overflow-hidden" style={{ animationDelay: '120ms' }}>
+          <CardHeader className="flex flex-col gap-4 border-b border-slate-100 pb-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="flex items-center gap-2 text-slate-500">
                 <Calendar className="size-4 text-primary" />
-                <span className="text-sm font-medium">Agenda do dia</span>
+                <span className="text-sm font-medium">Hoje</span>
               </div>
-              <CardTitle className="mt-1 text-xl text-slate-900">Agendamentos de hoje</CardTitle>
-              <CardDescription>Uma leitura rápida da operação para o time acompanhar ao longo do dia.</CardDescription>
+              <CardTitle className="mt-1 text-xl text-slate-900">Agenda do dia</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="px-5 py-5 md:px-6">
+          <CardContent className="min-w-0 px-5 py-5 md:px-6">
             <TodayAppointmentsList appointments={dashboard.todayAppointments} />
           </CardContent>
         </Card>
 
-        <Card className="animate-panel-fade-up overflow-hidden" style={{ animationDelay: '180ms' }}>
-          <CardHeader className="border-b border-slate-200/80 pb-5">
+        <Card className="animate-panel-fade-up min-w-0 overflow-hidden" style={{ animationDelay: '180ms' }}>
+          <CardHeader className="border-b border-slate-100 pb-5">
             <div className="flex items-center gap-2 text-slate-500">
               <Clock3 className="size-4 text-primary" />
-              <span className="text-sm font-medium">Próximos passos</span>
+              <span className="text-sm font-medium">Em seguida</span>
             </div>
-            <CardTitle className="mt-1 text-xl text-slate-900">Próximos atendimentos</CardTitle>
-            <CardDescription>Os próximos compromissos confirmados para a equipe se organizar.</CardDescription>
+            <CardTitle className="mt-1 text-xl text-slate-900">Próximos horários</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 px-5 py-5">
             {dashboard.upcomingAppointments.length ? dashboard.upcomingAppointments.map((appointment, index) => (
-              <div key={appointment.id} className="animate-panel-fade-up rounded-[22px] border border-slate-200/70 bg-white p-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(15,23,42,0.06)]" style={{ animationDelay: `${index * 70}ms` }}>
+              <div key={appointment.id} className="animate-panel-fade-up rounded-[22px] border border-slate-100 bg-white p-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(125,160,220,0.12)]" style={{ animationDelay: `${index * 70}ms` }}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <strong className="block truncate text-slate-900">{appointment.patient.name}</strong>
-                    <p className="mt-1 text-sm text-slate-500">{appointment.doctor.name} • {appointment.doctor.specialty}</p>
+                    <p className="mt-1 truncate text-sm text-slate-500">{appointment.doctor.name} • {appointment.doctor.specialty}</p>
                   </div>
                   <ChevronRight className="size-4 shrink-0 text-slate-300" />
                 </div>
-                <div className="mt-3 rounded-full bg-[#f7fbfa] px-3 py-2 text-xs font-semibold text-slate-700">
+                <div className="mt-3 rounded-full bg-[#f5f8ff] px-3 py-2 text-xs font-semibold text-slate-700">
                   {formatDateTimeBr(appointment.date)}
                 </div>
               </div>
-            )) : <p className="text-sm text-slate-500">Sem atendimentos futuros cadastrados.</p>}
+            )) : <p className="text-sm text-slate-500">Sem horários futuros cadastrados.</p>}
           </CardContent>
         </Card>
       </div>
@@ -149,7 +151,7 @@ function PainelSkeleton() {
             <CardContent className="space-y-3 px-6 py-6">
               <Skeleton className="h-4 w-32" />
               <Skeleton className="h-10 w-40" />
-              <Skeleton className="h-4 w-52" />
+              <Skeleton className="h-4 w-28" />
             </CardContent>
           </Card>
         ))}
@@ -169,11 +171,11 @@ function PainelSkeleton() {
         ))}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,2.1fr)_360px]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.75fr)_minmax(280px,320px)]">
         <Card>
           <CardHeader>
             <Skeleton className="h-5 w-44" />
-            <Skeleton className="h-4 w-72" />
+            <Skeleton className="h-4 w-52" />
           </CardHeader>
           <CardContent>
             <Skeleton className="h-[320px] w-full rounded-[24px]" />
@@ -182,7 +184,7 @@ function PainelSkeleton() {
         <Card>
           <CardHeader>
             <Skeleton className="h-5 w-36" />
-            <Skeleton className="h-4 w-44" />
+            <Skeleton className="h-4 w-32" />
           </CardHeader>
           <CardContent className="space-y-3">
             {Array.from({ length: 4 }).map((_, index) => (
@@ -206,13 +208,10 @@ export default async function PainelPage({ searchParams }: DashboardPageProps) {
 
   return (
     <PageContainer>
-      <PageHeader className="animate-panel-fade-up">
+      <PageHeader className="animate-panel-fade-up rounded-[26px] border border-white/80 bg-white/72 px-5 py-5 shadow-[0_12px_28px_rgba(125,160,220,0.12)] backdrop-blur-sm md:px-6">
         <PageHeaderContent>
-          <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-slate-400">Dashboard</div>
-          <PageTitle>Painel da clínica</PageTitle>
-          <PageDescription>
-            Um resumo elegante da operação para acompanhar agenda, faturamento e equipe com rapidez.
-          </PageDescription>
+          <PageTitle>Resumo da clínica</PageTitle>
+          <PageDescription>Acompanhe agenda, faturamento e equipe em um só lugar.</PageDescription>
         </PageHeaderContent>
         <PageActions>
           <DatePicker />

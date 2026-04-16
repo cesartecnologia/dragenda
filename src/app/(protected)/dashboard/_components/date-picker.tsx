@@ -58,13 +58,13 @@ export function DatePicker({ className }: React.HTMLAttributes<HTMLDivElement>) 
           <Button
             id="date"
             variant="outline"
-            className="h-11 min-w-44 justify-start gap-2 rounded-2xl border-slate-200/80 bg-white/90 px-4 text-left font-medium text-slate-700 hover:bg-[#f7fbfa]"
+            className="h-11 min-w-44 justify-start gap-2 rounded-2xl border-white/80 bg-white/92 px-4 text-left font-medium text-slate-700 shadow-[0_10px_24px_rgba(125,160,220,0.10)] hover:bg-white"
           >
             <CalendarIcon className="size-4 text-primary" />
             <span>{currentMonthLabel}</span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[300px] rounded-[24px] border border-slate-200/80 bg-white/96 p-4 shadow-[0_24px_50px_rgba(15,23,42,0.12)]" align="end">
+        <PopoverContent className="w-[300px] rounded-[24px] border border-white/80 bg-white/96 p-4 shadow-[0_24px_50px_rgba(125,160,220,0.16)]" align="end">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <Button type="button" variant="ghost" size="icon" className="size-9 rounded-xl" onClick={() => setDisplayYear((current) => current - 1)}>
@@ -89,7 +89,7 @@ export function DatePicker({ className }: React.HTMLAttributes<HTMLDivElement>) 
                     variant={isActive ? 'default' : 'outline'}
                     className={cn(
                       'h-10 justify-center rounded-xl px-2 text-sm',
-                      !isActive && 'border-slate-200/80 bg-white text-slate-600 hover:bg-[#f7fbfa]',
+                      !isActive && 'border-slate-200/80 bg-white text-slate-600 hover:bg-[#f5f8ff]',
                     )}
                     onClick={() => handleMonthSelect(monthIndex)}
                   >

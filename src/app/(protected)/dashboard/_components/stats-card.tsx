@@ -23,16 +23,16 @@ interface StatsCardsProps {
 }
 
 const primaryCardTone = [
-  'from-[#edf4ff] via-[#f8fbff] to-white text-[#295a96]',
-  'from-[#edf9f7] via-[#f8fcfb] to-white text-[#0d7769]',
-  'from-[#f2f6ff] via-[#fafcff] to-white text-[#4863a8]',
+  'from-[#eef4ff] via-[#f7faff] to-white text-[#4a6fa8]',
+  'from-[#edf5ff] via-[#f8fbff] to-white text-[#5678b5]',
+  'from-[#f2f6ff] via-[#fbfcff] to-white text-[#6478b8]',
 ] as const;
 
 const compactTone = [
-  'bg-[#f8fbfb] text-[#0d7769]',
-  'bg-[#f7f8fd] text-[#4863a8]',
-  'bg-[#f8fbfb] text-[#0d7769]',
-  'bg-[#f7f8fd] text-[#4863a8]',
+  'bg-[#eef4ff] text-[#5f76ab]',
+  'bg-[#f3f7ff] text-[#7486ba]',
+  'bg-[#eef4ff] text-[#5f76ab]',
+  'bg-[#f3f7ff] text-[#7486ba]',
 ] as const;
 
 const StatsCards = ({
@@ -46,21 +46,21 @@ const StatsCards = ({
 }: StatsCardsProps) => {
   const primaryStats = [
     {
-      title: 'Faturamento do período',
+      title: 'Faturamento',
       value: totalRevenue ? formatCurrencyInCents(totalRevenue) : 'R$ 0,00',
-      note: 'Receita confirmada no intervalo selecionado',
+      note: 'no período selecionado',
       icon: DollarSignIcon,
     },
     {
       title: 'Agendamentos',
       value: totalAppointments.toString(),
-      note: 'Consultas registradas no período',
+      note: 'no mês atual',
       icon: CalendarIcon,
     },
     {
-      title: 'Pacientes ativos',
+      title: 'Pacientes',
       value: totalPatients.toString(),
-      note: 'Base de pacientes com cadastro ativo',
+      note: 'com cadastro ativo',
       icon: UserIcon,
     },
   ];
@@ -72,17 +72,17 @@ const StatsCards = ({
       icon: UsersIcon,
     },
     {
-      title: 'Em aberto',
+      title: 'A receber',
       value: pendingRevenue ? formatCurrencyInCents(pendingRevenue) : 'R$ 0,00',
       icon: ReceiptIcon,
     },
     {
-      title: 'Consultas concluídas',
+      title: 'Concluídos',
       value: completedAppointments.toString(),
       icon: Stethoscope,
     },
     {
-      title: 'Taxa de recebimento',
+      title: 'Recebido',
       value: `${Math.round(collectionRate ?? 0)}%`,
       icon: PercentIcon,
     },
@@ -97,20 +97,20 @@ const StatsCards = ({
             <Card
               key={stat.title}
               className={cn(
-                'animate-panel-fade-up relative overflow-hidden border-white/70 bg-gradient-to-br shadow-[0_18px_38px_rgba(15,23,42,0.08)]',
+                'animate-panel-fade-up relative overflow-hidden border-white/80 bg-gradient-to-br shadow-[0_14px_30px_rgba(125,160,220,0.12)]',
                 primaryCardTone[index],
               )}
-              style={{ animationDelay: `${index * 90}ms` }}
+              style={{ animationDelay: `${index * 80}ms` }}
             >
-              <div className="pointer-events-none absolute right-[-24px] top-[-34px] h-32 w-32 rounded-full bg-white/35 blur-2xl" />
+              <div className="pointer-events-none absolute right-[-18px] top-[-24px] h-28 w-28 rounded-full bg-white/40 blur-2xl" />
               <CardContent className="relative px-6 py-6">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     <div className="text-sm font-medium text-slate-600">{stat.title}</div>
-                    <div className="text-4xl font-semibold tracking-[-0.04em] text-slate-950">{stat.value}</div>
+                    <div className="text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">{stat.value}</div>
                     <div className="text-sm text-slate-500">{stat.note}</div>
                   </div>
-                  <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white/85 shadow-[0_8px_16px_rgba(15,23,42,0.06)]">
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white/90 shadow-[0_8px_18px_rgba(125,160,220,0.10)]">
                     <Icon className="size-5" />
                   </div>
                 </div>
@@ -124,7 +124,7 @@ const StatsCards = ({
         {compactStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={stat.title} className="animate-panel-fade-up bg-white/92" style={{ animationDelay: `${(index + 3) * 75}ms` }}>
+            <Card key={stat.title} className="animate-panel-fade-up bg-white/92" style={{ animationDelay: `${(index + 3) * 70}ms` }}>
               <CardContent className="flex items-center justify-between gap-4 px-5 py-5">
                 <div>
                   <p className="text-sm text-slate-500">{stat.title}</p>

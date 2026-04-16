@@ -6,15 +6,15 @@ type WithChildren = {
 };
 
 export const PageContainer = ({ children, className }: WithChildren) => {
-  return <div className={cn('w-full space-y-6 px-4 py-4 md:px-6 md:py-6', className)}>{children}</div>;
+  return <div className={cn('min-w-0 w-full space-y-6 overflow-x-hidden px-4 py-4 md:px-6 md:py-6 lg:px-7', className)}>{children}</div>;
 };
 
 export const PageHeader = ({ children, className }: WithChildren) => {
-  return <div className={cn('flex w-full flex-col gap-4 lg:flex-row lg:items-end lg:justify-between', className)}>{children}</div>;
+  return <div className={cn('flex w-full min-w-0 flex-col gap-4 lg:flex-row lg:items-center lg:justify-between', className)}>{children}</div>;
 };
 
 export const PageHeaderContent = ({ children, className }: WithChildren) => {
-  return <div className={cn('w-full space-y-1.5', className)}>{children}</div>;
+  return <div className={cn('min-w-0 w-full space-y-1.5', className)}>{children}</div>;
 };
 
 export const PageTitle = ({ children, className }: WithChildren) => {
@@ -30,5 +30,5 @@ export const PageActions = ({ children, className }: WithChildren) => {
 };
 
 export const PageContent = ({ children, className }: WithChildren) => {
-  return <div className={cn('space-y-6', className)}>{children}</div>;
+  return <div className={cn('min-w-0 w-full space-y-6 overflow-x-hidden', className)}>{children}</div>;
 };
