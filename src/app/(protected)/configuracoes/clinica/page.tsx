@@ -18,7 +18,7 @@ export default async function ConfiguracoesClinicaPage() {
           <PageTitle>Configurações da clínica</PageTitle>
         </PageHeaderContent>
       </PageHeader>
-      <PageContent><ClinicSettingsForm clinic={clinic} /></PageContent>
+      <PageContent><ClinicSettingsForm clinic={clinic} bypassSubscription={session.user.bypassSubscription} /></PageContent>
     </PageContainer>
   );
 }

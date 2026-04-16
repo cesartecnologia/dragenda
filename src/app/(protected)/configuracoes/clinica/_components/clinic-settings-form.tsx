@@ -53,7 +53,13 @@ function normalizeOptionalUrl(value?: string) {
   return normalized === '' ? null : normalized;
 }
 
-export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsTable.$inferSelect | null }) {
+export default function ClinicSettingsForm({
+  clinic,
+  bypassSubscription = false,
+}: {
+  clinic: typeof clinicsTable.$inferSelect | null;
+  bypassSubscription?: boolean;
+}) {
   const [uploading, setUploading] = useState(false);
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
@@ -150,7 +156,9 @@ export default function ClinicSettingsForm({ clinic }: { clinic: typeof clinicsT
           <CardDescription>
             {clinic
               ? 'Atualize os dados principais e a identidade visual.'
-              : 'Cadastre os dados completos da empresa para liberar a integração com o Asaas.'}
+              : bypassSubscription
+                ? 'Cadastre os dados da clínica para concluir o acesso ao sistema.'
+                : 'Cadastre os dados completos da empresa para liberar a integração com o Asaas.'}
           </CardDescription>
         </CardHeader>
         <CardContent>

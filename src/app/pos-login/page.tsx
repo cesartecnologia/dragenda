@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import { requireSession } from '@/lib/auth';
-import { getDefaultPostLoginRoute, hasPrivilegedAccess } from '@/lib/auth';
+import { getDefaultPostLoginRoute, requireSession } from '@/lib/auth';
 import { getClinicById } from '@/server/clinic-data';
 
 export default async function PosLoginPage() {
@@ -9,10 +8,6 @@ export default async function PosLoginPage() {
 
   if (session.user.mustChangePassword) {
     redirect('/primeiro-login');
-  }
-
-  if (hasPrivilegedAccess(session)) {
-    redirect('/painel');
   }
 
   if (!session.user.hasSubscriptionAccess) {

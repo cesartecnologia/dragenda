@@ -32,7 +32,7 @@ export default function ProtectedRouteShell({ children, session, clinic }: Prote
   const isClinicSettingsRoute = pathname?.startsWith('/configuracoes/clinica') ?? false;
   const hasClinic = Boolean(session.user.clinic?.id);
   const hasFullAccess = Boolean(session.user.bypassSubscription || session.user.hasSubscriptionAccess);
-  const mustCompleteClinic = !hasClinic && !session.user.bypassSubscription;
+  const mustCompleteClinic = !hasClinic;
   const mustSubscribe = !hasFullAccess;
 
   const redirectTarget = mustCompleteClinic ? '/configuracoes/clinica' : mustSubscribe ? '/assinatura' : null;

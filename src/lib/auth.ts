@@ -160,7 +160,7 @@ export const requireSession = cache(async () => {
 
 export const requireClinicSession = cache(async () => {
   const session = await requireSession();
-  if (!session.user.clinic) redirect('/configuracoes/clinica');
+  if (!session.user.clinic) redirect('/configuracoes/clinica?onboarding=1');
   return session;
 });
 
@@ -168,7 +168,7 @@ export const requireSubscribedSession = cache(async () => {
   const session = await requireSession();
   if (session.user.mustChangePassword) redirect('/primeiro-login');
   if (!session.user.hasSubscriptionAccess) redirect('/assinatura');
-  if (!session.user.clinic && !hasPrivilegedAccess(session)) redirect('/configuracoes/clinica');
+  if (!session.user.clinic) redirect('/configuracoes/clinica?onboarding=1');
   return session;
 });
 

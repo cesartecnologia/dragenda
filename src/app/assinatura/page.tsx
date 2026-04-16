@@ -10,7 +10,7 @@ import { AutoStartCheckout } from './_components/auto-start-checkout';
 import { CheckoutSuccessSync } from './_components/checkout-success-sync';
 import { PublicSubscriptionView } from './_components/public-subscription-view';
 
-const parseLocalDate = (value?: string | null) => {
+const formatRenewalDate = (value?: string | null) => {
   if (!value) return null;
 
   const dateOnlyMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -18,48 +18,13 @@ const parseLocalDate = (value?: string | null) => {
     ? new Date(Number(dateOnlyMatch[1]), Number(dateOnlyMatch[2]) - 1, Number(dateOnlyMatch[3]))
     : new Date(value);
 
-  return Number.isNaN(date.getTime()) ? null : date;
-};
-
-const formatRenewalDate = (value?: string | null) => {
-  const date = parseLocalDate(value);
-  if (!date) return null;
+  if (Number.isNaN(date.getTime())) return null;
 
   return new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
   }).format(date);
-};
-
-const getNextRenewalValue = (params: {
-  subscriptionNextDueDate?: string | null;
-  latestPaymentDueDate?: string | null;
-  payments?: Array<{ dueDate?: string | null; status?: string | null }>;
-}) => {
-  if (params.subscriptionNextDueDate) return params.subscriptionNextDueDate;
-
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-
-  const ignoredStatuses = new Set(['RECEIVED', 'CONFIRMED', 'RECEIVED_IN_CASH', 'REFUNDED', 'DELETED']);
-
-  const upcomingPayment = (params.payments ?? [])
-    .filter((payment) => {
-      if (!payment.dueDate) return false;
-      const parsedDate = parseLocalDate(payment.dueDate);
-      if (!parsedDate) return false;
-      const normalizedStatus = payment.status?.trim().toUpperCase() ?? null;
-      if (normalizedStatus && ignoredStatuses.has(normalizedStatus)) return false;
-      return parsedDate.getTime() >= startOfToday.getTime();
-    })
-    .sort((a, b) => {
-      const aTime = parseLocalDate(a.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER;
-      const bTime = parseLocalDate(b.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER;
-      return aTime - bTime;
-    })[0];
-
-  return upcomingPayment?.dueDate ?? params.latestPaymentDueDate ?? null;
 };
 
 export default async function AssinaturaPage({
@@ -97,13 +62,7 @@ export default async function AssinaturaPage({
   const firstAccess = Array.isArray(params.firstAccess) ? params.firstAccess[0] : params.firstAccess;
   const startCheckout = Array.isArray(params.startCheckout) ? params.startCheckout[0] : params.startCheckout;
   const summary = await getSubscriptionSummaryForUser(session.user.id);
-  const nextRenewal = formatRenewalDate(
-    getNextRenewalValue({
-      subscriptionNextDueDate: summary.subscription?.nextDueDate ?? null,
-      latestPaymentDueDate: summary.latestPayment?.dueDate ?? null,
-      payments: summary.payments,
-    }),
-  );
+  const nextRenewal = formatRenewalDate(summary.subscription?.nextDueDate ?? summary.latestPayment?.dueDate ?? null);
 
   return (
     <div className="min-h-screen bg-muted/30 px-4 py-6 sm:px-6 lg:px-8">

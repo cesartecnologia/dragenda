@@ -12,7 +12,10 @@ import ClinicBrandHeader from './_components/clinic-brand-header';
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
   const session = await requireSession();
-  await headers();
+  const headerStore = await headers();
+  const pathname = headerStore.get('x-pathname') ?? '';
+  const isClinicSettingsRoute = pathname.startsWith('/configuracoes/clinica');
+
   if (session.user.mustChangePassword) {
     redirect('/primeiro-login');
   }
@@ -24,8 +27,12 @@ export default async function Layout({ children }: { children: React.ReactNode }
     redirect('/assinatura');
   }
 
-  if (!session.user.clinic && !privileged) {
+  if (!session.user.clinic && !isClinicSettingsRoute) {
     redirect('/configuracoes/clinica?onboarding=1');
+  }
+
+  if (!session.user.clinic) {
+    return <main className="min-h-screen bg-slate-50/60">{children}</main>;
   }
 
   return (
@@ -36,7 +43,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
           <SidebarTrigger className="rounded-xl border border-slate-200 bg-white shadow-sm hover:bg-primary/5 hover:text-primary" />
         </div>
         <ClinicBrandHeader
-          clinic={clinic ? {
+          clinic={{
             name: clinic.name,
             cnpj: clinic.cnpj,
             phoneNumber: clinic.phoneNumber,
@@ -46,10 +53,10 @@ export default async function Layout({ children }: { children: React.ReactNode }
             province: clinic.province,
             postalCode: clinic.postalCode,
             logoUrl: clinic.logoUrl,
-          } : null}
+          }}
         />
         {children}
-        <SupportFloatButton clinicName={clinic?.name ?? formatClinicAddress(clinic)} />
+        <SupportFloatButton clinicName={clinic.name ?? formatClinicAddress(clinic)} />
       </main>
     </SidebarProvider>
   );
