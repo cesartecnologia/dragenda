@@ -3,8 +3,7 @@
 import 'dayjs/locale/pt-br';
 
 import dayjs from 'dayjs';
-import { ActivitySquare } from 'lucide-react';
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { Line, LineChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 dayjs.locale('pt-br');
 
@@ -38,7 +37,7 @@ const AppointmentsChart = ({ dailyAppointmentsData }: AppointmentsChartProps) =>
   const chartConfig = {
     appointments: {
       label: 'Agendamentos',
-      color: '#334155',
+      color: '#1d4ed8',
     },
     revenue: {
       label: 'Faturamento',
@@ -47,28 +46,38 @@ const AppointmentsChart = ({ dailyAppointmentsData }: AppointmentsChartProps) =>
   } satisfies ChartConfig;
 
   return (
-    <Card className="rounded-3xl border-slate-200 bg-white shadow-sm">
-      <CardHeader className="flex flex-row items-center gap-3 border-b border-slate-100 pb-4">
-        <div className="rounded-2xl bg-slate-100 p-2.5 text-slate-700">
-          <ActivitySquare className="size-4" />
-        </div>
+    <Card className="rounded-[1.85rem] border border-slate-200/80 bg-white shadow-[0_20px_38px_-30px_rgba(15,23,42,0.24)]">
+      <CardHeader className="flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <CardTitle className="text-base text-slate-900">Movimento do período</CardTitle>
-          <p className="mt-1 text-sm text-slate-500">Atendimentos e faturamento dia a dia.</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Painel analítico</p>
+          <CardTitle className="mt-2 text-xl font-semibold tracking-tight text-slate-950">Movimento do período</CardTitle>
+          <p className="mt-1 text-sm text-slate-500">Acompanhe o ritmo dos agendamentos e do faturamento dia a dia.</p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 text-sm">
+          <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-600">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#1d4ed8]" />
+            Agendamentos
+          </span>
+          <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-600">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#0f766e]" />
+            Faturamento
+          </span>
         </div>
       </CardHeader>
-      <CardContent className="pt-4">
-        <ChartContainer config={chartConfig} className="min-h-[260px] w-full">
-          <AreaChart data={chartData} margin={{ top: 10, right: 8, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="date" tickLine={false} tickMargin={10} axisLine={false} minTickGap={18} />
-            <YAxis yAxisId="left" tickLine={false} axisLine={false} tickMargin={8} allowDecimals={false} />
+
+      <CardContent className="pt-5">
+        <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+          <LineChart data={chartData} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+            <XAxis dataKey="date" tickLine={false} tickMargin={12} axisLine={false} minTickGap={18} />
+            <YAxis yAxisId="left" tickLine={false} axisLine={false} tickMargin={10} allowDecimals={false} />
             <YAxis
               yAxisId="right"
               orientation="right"
               tickLine={false}
               axisLine={false}
-              tickMargin={8}
+              tickMargin={10}
               tickFormatter={(value) => formatCurrencyInCents(value)}
             />
             <ChartTooltip
@@ -101,25 +110,25 @@ const AppointmentsChart = ({ dailyAppointmentsData }: AppointmentsChartProps) =>
                 />
               }
             />
-            <Area
+            <Line
               yAxisId="left"
               type="monotone"
               dataKey="appointments"
               stroke="var(--color-appointments)"
-              fill="var(--color-appointments)"
-              fillOpacity={0.12}
-              strokeWidth={2}
+              strokeWidth={2.5}
+              dot={false}
+              activeDot={{ r: 5, strokeWidth: 0 }}
             />
-            <Area
+            <Line
               yAxisId="right"
               type="monotone"
               dataKey="revenue"
               stroke="var(--color-revenue)"
-              fill="var(--color-revenue)"
-              fillOpacity={0.12}
-              strokeWidth={2}
+              strokeWidth={2.5}
+              dot={false}
+              activeDot={{ r: 5, strokeWidth: 0 }}
             />
-          </AreaChart>
+          </LineChart>
         </ChartContainer>
       </CardContent>
     </Card>
