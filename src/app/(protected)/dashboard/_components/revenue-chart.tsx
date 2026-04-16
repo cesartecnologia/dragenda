@@ -3,10 +3,10 @@
 import 'dayjs/locale/pt-br';
 
 import dayjs from 'dayjs';
+import { ActivitySquare } from 'lucide-react';
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 dayjs.locale('pt-br');
-import { DollarSign } from 'lucide-react';
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -27,62 +27,42 @@ interface AppointmentsChartProps {
   dailyAppointmentsData: DailyAppointment[];
 }
 
-const AppointmentsChart = ({
-  dailyAppointmentsData,
-}: AppointmentsChartProps) => {
-  // Gerar 21 dias: 10 antes + hoje + 10 depois
-  const chartDays = Array.from({ length: 21 }).map((_, i) =>
-    dayjs()
-      .subtract(10 - i, 'days')
-      .format('YYYY-MM-DD')
-  );
-
-  const chartData = chartDays.map((date) => {
-    const dataForDay = dailyAppointmentsData.find((item) => item.date === date);
-    return {
-      date: dayjs(date).format('DD/MM'),
-      fullDate: date,
-      appointments: dataForDay?.appointments || 0,
-      revenue: Number(dataForDay?.revenue || 0),
-    };
-  });
+const AppointmentsChart = ({ dailyAppointmentsData }: AppointmentsChartProps) => {
+  const chartData = dailyAppointmentsData.map((item) => ({
+    date: dayjs(item.date).format('DD/MM'),
+    fullDate: item.date,
+    appointments: item.appointments || 0,
+    revenue: Number(item.revenue || 0),
+  }));
 
   const chartConfig = {
     appointments: {
       label: 'Agendamentos',
-      color: '#0B68F7',
+      color: '#334155',
     },
     revenue: {
       label: 'Faturamento',
-      color: '#10B981',
+      color: '#0f766e',
     },
   } satisfies ChartConfig;
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center gap-2">
-        <DollarSign />
-        <CardTitle>Agendamentos e Faturamento</CardTitle>
+    <Card className="rounded-3xl border-slate-200 bg-white shadow-sm">
+      <CardHeader className="flex flex-row items-center gap-3 border-b border-slate-100 pb-4">
+        <div className="rounded-2xl bg-slate-100 p-2.5 text-slate-700">
+          <ActivitySquare className="size-4" />
+        </div>
+        <div>
+          <CardTitle className="text-base text-slate-900">Movimento do período</CardTitle>
+          <p className="mt-1 text-sm text-slate-500">Atendimentos e faturamento dia a dia.</p>
+        </div>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="min-h-[200px]">
-          <AreaChart
-            data={chartData}
-            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-            />
-            <YAxis
-              yAxisId="left"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-            />
+      <CardContent className="pt-4">
+        <ChartContainer config={chartConfig} className="min-h-[260px] w-full">
+          <AreaChart data={chartData} margin={{ top: 10, right: 8, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="date" tickLine={false} tickMargin={10} axisLine={false} minTickGap={18} />
+            <YAxis yAxisId="left" tickLine={false} axisLine={false} tickMargin={8} allowDecimals={false} />
             <YAxis
               yAxisId="right"
               orientation="right"
@@ -98,31 +78,23 @@ const AppointmentsChart = ({
                     if (name === 'revenue') {
                       return (
                         <>
-                          <div className="h-3 w-3 rounded bg-[#10B981]" />
-                          <span className="text-muted-foreground">
-                            Faturamento:
-                          </span>
-                          <span className="font-semibold">
-                            {formatCurrencyInCents(Number(value))}
-                          </span>
+                          <div className="h-3 w-3 rounded bg-[var(--color-revenue)]" />
+                          <span className="text-muted-foreground">Faturamento:</span>
+                          <span className="font-semibold">{formatCurrencyInCents(Number(value))}</span>
                         </>
                       );
                     }
                     return (
                       <>
-                        <div className="h-3 w-3 rounded bg-[#0B68F7]" />
-                        <span className="text-muted-foreground">
-                          Agendamentos:
-                        </span>
+                        <div className="h-3 w-3 rounded bg-[var(--color-appointments)]" />
+                        <span className="text-muted-foreground">Agendamentos:</span>
                         <span className="font-semibold">{value}</span>
                       </>
                     );
                   }}
                   labelFormatter={(label, payload) => {
                     if (payload && payload[0]) {
-                      return dayjs(payload[0].payload?.fullDate).format(
-                        'DD/MM/YYYY (dddd)'
-                      );
+                      return dayjs(payload[0].payload?.fullDate).format('DD/MM/YYYY');
                     }
                     return label;
                   }}
@@ -135,7 +107,7 @@ const AppointmentsChart = ({
               dataKey="appointments"
               stroke="var(--color-appointments)"
               fill="var(--color-appointments)"
-              fillOpacity={0.2}
+              fillOpacity={0.12}
               strokeWidth={2}
             />
             <Area
@@ -144,7 +116,7 @@ const AppointmentsChart = ({
               dataKey="revenue"
               stroke="var(--color-revenue)"
               fill="var(--color-revenue)"
-              fillOpacity={0.2}
+              fillOpacity={0.12}
               strokeWidth={2}
             />
           </AreaChart>

@@ -30,6 +30,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -48,7 +49,7 @@ const roleLabel: Record<AppSession['user']['role'], string> = {
 };
 
 const navButtonClass =
-  'min-h-[52px] gap-3 rounded-xl px-3.5 py-3.5 text-[15px] font-medium leading-tight transition-all duration-200 hover:bg-primary/5 hover:text-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:shadow-[0_10px_24px_rgba(37,99,235,0.18)] [&>svg]:size-[18px] [&>span:last-child]:whitespace-normal [&>span:last-child]:leading-tight';
+  'min-h-[46px] gap-3 rounded-2xl px-3.5 py-2.5 text-[14px] font-medium text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900 data-[active=true]:bg-slate-900 data-[active=true]:text-white data-[active=true]:shadow-sm [&>svg]:size-[18px]';
 
 export function AppSidebar({ session }: { session: AppSession }) {
   const router = useRouter();
@@ -88,14 +89,25 @@ export function AppSidebar({ session }: { session: AppSession }) {
   };
 
   return (
-    <Sidebar>
-      <SidebarHeader className="border-b bg-white/90 p-4">
-        <Image src="/logo.svg" alt="Dr. Agenda" width={136} height={28} priority />
+    <Sidebar variant="floating" className="p-3">
+      <SidebarHeader className="rounded-[1.75rem] border border-slate-200 bg-white px-4 py-4 shadow-sm">
+        <div className="space-y-4">
+          <Image src="/logo.svg" alt="Dr. Agenda" width={136} height={28} priority />
+          <div className="rounded-2xl bg-slate-50 px-3 py-3">
+            <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">Clínica</p>
+            <p className="mt-1 truncate text-sm font-semibold text-slate-900">{session.user.clinic?.name ?? 'Configuração inicial'}</p>
+            <p className="mt-1 truncate text-xs text-slate-500">{session.user.email}</p>
+          </div>
+        </div>
       </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup className="pt-2">
+
+      <SidebarContent className="mt-3 rounded-[1.75rem] border border-slate-200 bg-white px-2 py-3 shadow-sm">
+        <SidebarGroup className="px-1 pt-1">
+          <SidebarGroupLabel className="px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+            Navegação
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="gap-2.5 px-3">
+            <SidebarMenu className="gap-1.5 px-2">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url} className={navButtonClass}>
@@ -111,9 +123,12 @@ export function AppSidebar({ session }: { session: AppSession }) {
         </SidebarGroup>
 
         {canAccessFinancial(role) || !hasFullAccess ? (
-          <SidebarGroup className="pt-3">
+          <SidebarGroup className="px-1 pt-2">
+            <SidebarGroupLabel className="px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+              Conta
+            </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu className="gap-2.5 px-3">
+              <SidebarMenu className="gap-1.5 px-2">
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={pathname === '/assinatura'} className={navButtonClass}>
                     <Link href="/assinatura" prefetch>
@@ -127,32 +142,31 @@ export function AppSidebar({ session }: { session: AppSession }) {
           </SidebarGroup>
         ) : null}
       </SidebarContent>
-      <SidebarFooter className="border-t bg-white/90">
+
+      <SidebarFooter className="mt-3 rounded-[1.75rem] border border-slate-200 bg-white p-2 shadow-sm">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton size="lg" className="h-auto px-4 py-4">
-                  <Avatar className="size-10">
-                    <AvatarFallback>{session.user.name?.charAt(0)?.toUpperCase() ?? 'U'}</AvatarFallback>
+                <SidebarMenuButton size="lg" className="h-auto rounded-2xl px-3 py-3 hover:bg-slate-50">
+                  <Avatar className="size-10 border border-slate-200">
+                    <AvatarFallback className="bg-slate-100 text-slate-700">{session.user.name?.charAt(0)?.toUpperCase() ?? 'U'}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1 text-left leading-tight">
                     <div className="flex items-center gap-2">
-                      <p className="truncate text-base font-semibold" title={session.user.name}>{session.user.name}</p>
-                      {session.user.role === 'master' ? <ShieldCheck className="size-4 shrink-0 text-primary" /> : null}
-                      {session.user.role === 'support' ? <LifeBuoy className="size-4 shrink-0 text-primary" /> : null}
-                      {session.user.role === 'admin' ? <BriefcaseMedical className="size-4 shrink-0 text-primary" /> : null}
+                      <p className="truncate text-sm font-semibold text-slate-900" title={session.user.name}>{session.user.name}</p>
+                      {session.user.role === 'master' ? <ShieldCheck className="size-4 shrink-0 text-slate-500" /> : null}
+                      {session.user.role === 'support' ? <LifeBuoy className="size-4 shrink-0 text-slate-500" /> : null}
+                      {session.user.role === 'admin' ? <BriefcaseMedical className="size-4 shrink-0 text-slate-500" /> : null}
                     </div>
-                    {session.user.clinic?.name ? <p className="text-muted-foreground truncate text-[14px]" title={session.user.clinic.name}>{session.user.clinic.name}</p> : null}
-                    <p className="text-muted-foreground truncate text-[14px]" title={session.user.email}>{session.user.email}</p>
                     <div className="mt-1 flex flex-wrap items-center gap-2">
-                      <Badge variant="secondary">{roleLabel[session.user.role]}</Badge>
-                      {session.user.bypassSubscription ? <Badge className="bg-primary/10 text-primary hover:bg-primary/10">Sem bloqueio</Badge> : null}
+                      <Badge variant="secondary" className="rounded-full bg-slate-100 text-slate-700 hover:bg-slate-100">{roleLabel[session.user.role]}</Badge>
+                      {session.user.bypassSubscription ? <Badge className="rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-50">Acesso livre</Badge> : null}
                     </div>
                   </div>
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
+              <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut />
                   Sair

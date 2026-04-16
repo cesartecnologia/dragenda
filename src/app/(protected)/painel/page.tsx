@@ -3,18 +3,26 @@ import { Calendar, Clock3 } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PageActions, PageContainer, PageContent, PageHeader, PageHeaderContent, PageTitle } from '@/components/ui/page-container';
+import {
+  PageActions,
+  PageContainer,
+  PageContent,
+  PageDescription,
+  PageHeader,
+  PageHeaderContent,
+  PageTitle,
+} from '@/components/ui/page-container';
 import { getDashboard } from '@/data/get-dashboard';
 import { formatDateTimeBr } from '@/helpers/time';
 import { canAccessDashboard } from '@/lib/access';
 import { requireSubscribedSession } from '@/lib/auth';
 import { getClinicById } from '@/server/clinic-data';
 
-import AppointmentsDataTable from '../appointments/_components/appointments-data-table';
 import { DatePicker } from '../dashboard/_components/date-picker';
 import AppointmentsChart from '../dashboard/_components/revenue-chart';
 import StatsCards from '../dashboard/_components/stats-card';
 import TopDoctors from '../dashboard/_components/top-doctors';
+import TodayAppointmentsList from './_components/today-appointments-list';
 
 interface DashboardPageProps {
   searchParams: Promise<{ from: string; to: string }>;
@@ -32,14 +40,20 @@ export default async function PainelPage({ searchParams }: DashboardPageProps) {
   ]);
 
   return (
-    <PageContainer>
+    <PageContainer className="pb-8">
       <PageHeader>
         <PageHeaderContent>
-          <PageTitle>Painel</PageTitle>
+          <PageTitle className="text-slate-900">Painel</PageTitle>
+          <PageDescription className="text-slate-500">
+            Acompanhe os números principais e os próximos atendimentos da clínica.
+          </PageDescription>
         </PageHeaderContent>
-        <PageActions><DatePicker /></PageActions>
+        <PageActions>
+          <DatePicker />
+        </PageActions>
       </PageHeader>
-      <PageContent>
+
+      <PageContent className="space-y-6">
         <StatsCards
           totalRevenue={dashboard.totalRevenue.total ? Number(dashboard.totalRevenue.total) : null}
           totalAppointments={dashboard.totalAppointments.total}
@@ -49,39 +63,52 @@ export default async function PainelPage({ searchParams }: DashboardPageProps) {
           completedAppointments={dashboard.completedAppointments?.total ?? 0}
           collectionRate={dashboard.collectionRate ?? 0}
         />
-        <div className="grid gap-4 xl:grid-cols-[2.25fr_1fr]">
+
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,1fr)]">
           <AppointmentsChart dailyAppointmentsData={dashboard.dailyAppointmentsData} />
           <TopDoctors doctors={dashboard.topDoctors} />
         </div>
-        <div className="grid gap-4 xl:grid-cols-[2.25fr_1fr]">
-          <Card>
-            <CardHeader>
+
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,1fr)]">
+          <Card className="overflow-hidden rounded-3xl border-slate-200 bg-white shadow-sm">
+            <CardHeader className="border-b border-slate-100 pb-4">
               <div className="flex items-center gap-3">
-                <Calendar className="text-muted-foreground" />
-                <CardTitle className="text-base">Agendamentos de hoje</CardTitle>
+                <div className="rounded-2xl bg-slate-100 p-2.5 text-slate-700">
+                  <Calendar className="size-4" />
+                </div>
+                <div>
+                  <CardTitle className="text-base text-slate-900">Atendimentos de hoje</CardTitle>
+                  <p className="mt-1 text-sm text-slate-500">Uma visão rápida da agenda do dia.</p>
+                </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <AppointmentsDataTable data={dashboard.todayAppointments} patients={[]} doctors={[]} role={session.user.role} clinic={clinic} />
+            <CardContent className="p-4">
+              <TodayAppointmentsList appointments={dashboard.todayAppointments} />
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader>
+
+          <Card className="overflow-hidden rounded-3xl border-slate-200 bg-white shadow-sm">
+            <CardHeader className="border-b border-slate-100 pb-4">
               <div className="flex items-center gap-3">
-                <Clock3 className="text-muted-foreground" />
-                <CardTitle className="text-base">Próximos atendimentos</CardTitle>
+                <div className="rounded-2xl bg-slate-100 p-2.5 text-slate-700">
+                  <Clock3 className="size-4" />
+                </div>
+                <div>
+                  <CardTitle className="text-base text-slate-900">Próximos atendimentos</CardTitle>
+                  <p className="mt-1 text-sm text-slate-500">Os próximos horários confirmados na agenda.</p>
+                </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 p-4">
               {dashboard.upcomingAppointments.length ? dashboard.upcomingAppointments.map((appointment) => (
-                <div key={appointment.id} className="rounded-lg border p-3 text-sm">
+                <div key={appointment.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-sm">
                   <div className="flex items-center justify-between gap-3">
-                    <strong>{appointment.patient.name}</strong>
-                    <span className="text-muted-foreground">{formatDateTimeBr(appointment.date)}</span>
+                    <strong className="text-slate-900">{appointment.patient.name}</strong>
+                    <span className="text-slate-500">{formatDateTimeBr(appointment.date)}</span>
                   </div>
-                  <p className="text-muted-foreground">{appointment.doctor.name} • {appointment.doctor.specialty}</p>
+                  <p className="mt-1 text-slate-500">{appointment.doctor.name} • {appointment.doctor.specialty}</p>
                 </div>
-              )) : <p className="text-sm text-muted-foreground">Sem atendimentos futuros cadastrados.</p>}
+              )) : <p className="text-sm text-slate-500">Sem atendimentos futuros cadastrados.</p>}
             </CardContent>
           </Card>
         </div>
