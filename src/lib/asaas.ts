@@ -194,7 +194,8 @@ const formatAsaasDate = (date: Date) => {
 };
 
 export const createAsaasCheckoutSession = async (params: {
-  billingTypes: Array<'CREDIT_CARD' | 'BOLETO'>;
+  billingTypes: Array<'CREDIT_CARD' | 'BOLETO' | 'PIX'>;
+  chargeTypes?: Array<'DETACHED' | 'RECURRENT' | 'INSTALLMENT'>;
   customerId?: string | null;
   customerData?: {
     name: string;
@@ -234,7 +235,7 @@ export const createAsaasCheckoutSession = async (params: {
         : undefined,
       billingTypes: params.billingTypes,
       externalReference: params.externalReference?.trim() || undefined,
-      chargeTypes: ['RECURRENT'],
+      chargeTypes: params.chargeTypes ?? ['RECURRENT'],
       minutesToExpire: params.minutesToExpire ?? 60,
       callback: {
         successUrl: params.successUrl,

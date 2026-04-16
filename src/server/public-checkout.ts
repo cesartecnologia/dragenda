@@ -1,26 +1,17 @@
 import {
   createAsaasCheckoutSession,
-  createAsaasCustomerMinimal,
-  createAsaasPayment,
+  createAsaasPaymentLink,
 } from '@/lib/asaas';
 import {
   attachAsaasCheckoutToSession,
+  attachAsaasPaymentLinkToSession,
   createCheckoutSession,
-  updateCheckoutSession,
-  upsertPaymentFromCheckoutSession,
 } from '@/server/checkout-sessions';
 
 const PLAN_LABEL = 'Plano Premium';
 const PLAN_VALUE = Number(process.env.ASAAS_PLAN_VALUE ?? '99.90');
 
 export type PublicCheckoutMethod = 'credit_card' | 'boleto';
-
-export type PublicBoletoPayer = {
-  name: string;
-  email: string;
-  cpfCnpj: string;
-  phone: string;
-};
 
 const getAppUrl = () => {
   const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
@@ -33,7 +24,7 @@ const getAppUrl = () => {
 
 export async function startPublicCheckout(paymentMethod: PublicCheckoutMethod) {
   if (paymentMethod === 'boleto') {
-    throw new Error('BOLETO_REQUIRES_PAYER_DATA');
+    return startPublicBoletoCheckout();
   }
 
   const session = await createCheckoutSession({ paymentMethod });
@@ -42,6 +33,7 @@ export async function startPublicCheckout(paymentMethod: PublicCheckoutMethod) {
 
   const checkout = await createAsaasCheckoutSession({
     billingTypes: ['CREDIT_CARD'],
+    chargeTypes: ['RECURRENT'],
     planName: PLAN_LABEL,
     description: 'Assinatura mensal do plano premium.',
     value: PLAN_VALUE,
@@ -63,63 +55,33 @@ export async function startPublicCheckout(paymentMethod: PublicCheckoutMethod) {
   };
 }
 
-const onlyDigits = (value?: string | null) => (value ?? '').replace(/\D/g, '');
-
-export async function startPublicBoletoCheckout(payer: PublicBoletoPayer) {
+export async function startPublicBoletoCheckout() {
   const session = await createCheckoutSession({ paymentMethod: 'boleto' });
   const appUrl = getAppUrl();
   const callbackBase = `${appUrl}/primeiro-acesso?sessionId=${encodeURIComponent(session.id)}`;
 
-  const customer = await createAsaasCustomerMinimal({
-    name: payer.name,
-    email: payer.email,
-    cpfCnpj: onlyDigits(payer.cpfCnpj),
-    phone: onlyDigits(payer.phone),
-    externalReference: session.id,
-    notificationDisabled: false,
-  });
-
-  const payment = await createAsaasPayment({
-    customerId: customer.id,
+  const paymentLink = await createAsaasPaymentLink({
     billingType: 'BOLETO',
+    chargeType: 'DETACHED',
+    name: PLAN_LABEL,
+    description: 'Primeira mensalidade do plano premium.',
     value: PLAN_VALUE,
-    description: `${PLAN_LABEL} - primeira mensalidade`,
-    dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
     successUrl: callbackBase,
-    autoRedirect: false,
     externalReference: session.id,
-    daysAfterDueDateToRegistrationCancellation: 1,
+    dueDateLimitDays: 3,
+    autoRedirect: false,
+    notificationEnabled: false,
   });
 
-  const invoiceUrl = payment.invoiceUrl ?? payment.bankSlipUrl ?? null;
-
-  await updateCheckoutSession(session.id, {
-    status: 'waiting_payment',
-    asaasCustomerId: customer.id,
-    paymentId: payment.id,
-    paymentStatus: payment.status ?? 'PENDING',
-    invoiceUrl,
-    checkoutUrl: invoiceUrl,
-    payerName: customer.name ?? payer.name,
-    payerEmail: customer.email ?? payer.email,
-    payerPhone: customer.mobilePhone ?? customer.phone ?? payer.phone,
-    payerCpfCnpj: customer.cpfCnpj ?? onlyDigits(payer.cpfCnpj),
-  });
-
-  await upsertPaymentFromCheckoutSession({
-    sessionId: session.id,
-    asaasPaymentId: payment.id,
-    status: payment.status ?? 'PENDING',
-    method: 'boleto',
-    value: payment.value ?? PLAN_VALUE,
-    invoiceUrl,
-    asaasCustomerId: customer.id,
+  await attachAsaasPaymentLinkToSession(session.id, {
+    asaasPaymentLinkId: paymentLink.id,
+    checkoutUrl: paymentLink.url,
   });
 
   return {
     sessionId: session.id,
-    paymentId: payment.id,
-    checkoutUrl: invoiceUrl,
-    invoiceUrl,
+    paymentLinkId: paymentLink.id,
+    checkoutUrl: paymentLink.url,
+    invoiceUrl: null,
   };
 }

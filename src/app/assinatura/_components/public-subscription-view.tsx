@@ -5,7 +5,6 @@ import { CheckCircle2, CreditCard, FileText, ShieldCheck, Stethoscope } from 'lu
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
-import { PublicBoletoCheckoutForm } from './public-boleto-checkout-form';
 import { PublicCheckoutButton } from './public-checkout-button';
 
 type PublicSubscriptionViewProps = {
@@ -116,18 +115,14 @@ export function PublicSubscriptionView({ source = 'subscription' }: PublicSubscr
                       </div>
 
                       <div className="mt-6 flex flex-1 items-end">
-                        {method.paymentMethod === 'boleto' ? (
-                          <PublicBoletoCheckoutForm
-                            triggerClassName="h-12 w-full rounded-2xl border-slate-300 bg-white text-sm font-semibold text-slate-900 hover:bg-slate-50"
-                          />
-                        ) : (
-                          <PublicCheckoutButton
-                            paymentMethod={method.paymentMethod}
-                            label={method.buttonLabel}
-                            variant={method.buttonVariant}
-                            className="h-12 w-full rounded-2xl bg-slate-950 text-sm font-semibold hover:bg-slate-800"
-                          />
-                        )}
+                        <PublicCheckoutButton
+                          paymentMethod={method.paymentMethod}
+                          label={method.buttonLabel}
+                          variant={method.buttonVariant}
+                          className={method.paymentMethod === 'boleto'
+                            ? 'h-12 w-full rounded-2xl border-slate-300 bg-white text-sm font-semibold text-slate-900 hover:bg-slate-50'
+                            : 'h-12 w-full rounded-2xl bg-slate-950 text-sm font-semibold hover:bg-slate-800'}
+                        />
                       </div>
                     </div>
                   </div>

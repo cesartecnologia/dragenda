@@ -18,6 +18,12 @@ type PublicCheckoutButtonProps = {
   className?: string;
 };
 
+type CheckoutPayload = {
+  error?: string;
+  checkoutUrl?: string;
+  sessionId?: string;
+};
+
 export function PublicCheckoutButton({
   paymentMethod,
   label,
@@ -35,10 +41,21 @@ export function PublicCheckoutButton({
         method: 'POST',
       });
 
-      const payload = (await response.json().catch(() => null)) as { error?: string; checkoutUrl?: string } | null;
+      const payload = (await response.json().catch(() => null)) as CheckoutPayload | null;
 
       if (!response.ok || !payload?.checkoutUrl) {
         throw new Error(payload?.error || 'Não foi possível abrir a página de pagamento agora.');
+      }
+
+      if (paymentMethod === 'boleto' && payload.sessionId) {
+        const opened = window.open(payload.checkoutUrl, '_blank', 'noopener,noreferrer');
+        if (!opened) {
+          window.location.assign(payload.checkoutUrl);
+          return;
+        }
+
+        window.location.assign(`/primeiro-acesso?sessionId=${encodeURIComponent(payload.sessionId)}`);
+        return;
       }
 
       window.location.assign(payload.checkoutUrl);

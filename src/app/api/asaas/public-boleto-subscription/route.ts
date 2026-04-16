@@ -2,45 +2,14 @@ import { NextResponse } from 'next/server';
 
 import { startPublicBoletoCheckout } from '@/server/public-checkout';
 
-const onlyDigits = (value?: string | null) => (value ?? '').replace(/\D/g, '');
-const validateEmail = (value: string) => /.+@.+\..+/.test(value);
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error && error.message.trim()) return error.message.trim();
+  return 'Não foi possível gerar o boleto agora.';
+};
 
-export const POST = async (request: Request) => {
+export const POST = async () => {
   try {
-    const body = (await request.json().catch(() => ({}))) as {
-      name?: string;
-      email?: string;
-      cpfCnpj?: string;
-      phone?: string;
-    };
-
-    const name = body.name?.trim() ?? '';
-    const email = body.email?.trim().toLowerCase() ?? '';
-    const cpfCnpj = onlyDigits(body.cpfCnpj);
-    const phone = onlyDigits(body.phone);
-
-    if (!name) {
-      return NextResponse.json({ error: 'Informe o nome do responsável.' }, { status: 400 });
-    }
-
-    if (!email || !validateEmail(email)) {
-      return NextResponse.json({ error: 'Informe um e-mail válido.' }, { status: 400 });
-    }
-
-    if (cpfCnpj.length !== 11 && cpfCnpj.length !== 14) {
-      return NextResponse.json({ error: 'Informe um CPF ou CNPJ válido.' }, { status: 400 });
-    }
-
-    if (phone.length < 10) {
-      return NextResponse.json({ error: 'Informe um telefone válido.' }, { status: 400 });
-    }
-
-    const checkout = await startPublicBoletoCheckout({
-      name,
-      email,
-      cpfCnpj,
-      phone,
-    });
+    const checkout = await startPublicBoletoCheckout();
 
     return NextResponse.json({
       ok: true,
@@ -49,7 +18,16 @@ export const POST = async (request: Request) => {
       sessionId: checkout.sessionId,
     });
   } catch (error) {
+    const message = getErrorMessage(error);
     console.error('PUBLIC_BOLETO_CHECKOUT_FAILED', error);
-    return NextResponse.json({ error: 'Não foi possível gerar o boleto agora.' }, { status: 500 });
+
+    return NextResponse.json(
+      {
+        error: message,
+      },
+      {
+        status: message.includes('não configurado') ? 500 : 502,
+      },
+    );
   }
 };
