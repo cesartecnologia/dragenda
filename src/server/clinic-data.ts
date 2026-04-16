@@ -708,22 +708,40 @@ export const deleteAppointmentRecord = async (appointmentId: string) => {
   invalidateDoctorScopedCache(existing?.doctorId ?? null);
 };
 
-const attachAppointmentRelations = async (appointments: Appointment[]): Promise<AppointmentWithRelations[]> => {
-  if (!appointments.length) return [];
+const loadAppointmentRelations = async (appointments: Appointment[]) => {
+  if (!appointments.length) {
+    return {
+      patientsById: {} as Record<string, Patient>,
+      doctorsById: {} as Record<string, Doctor>,
+    };
+  }
 
   const [patientsById, doctorsById] = await Promise.all([
     getEntitiesByIds<Patient>(COLLECTIONS.patients, appointments.map((appointment) => appointment.patientId)),
     getEntitiesByIds<Doctor>(COLLECTIONS.doctors, appointments.map((appointment) => appointment.doctorId)),
   ]);
 
+  return { patientsById, doctorsById };
+};
+
+const attachAppointmentRelationsFromMaps = (
+  appointments: Appointment[],
+  relations: { patientsById: Record<string, Patient>; doctorsById: Record<string, Doctor> },
+): AppointmentWithRelations[] => {
   return appointments
     .map((appointment) => {
-      const patient = patientsById[appointment.patientId];
-      const doctor = doctorsById[appointment.doctorId];
+      const patient = relations.patientsById[appointment.patientId];
+      const doctor = relations.doctorsById[appointment.doctorId];
       if (!patient || !doctor) return null;
       return { ...appointment, patient, doctor };
     })
     .filter((appointment): appointment is AppointmentWithRelations => Boolean(appointment));
+};
+
+const attachAppointmentRelations = async (appointments: Appointment[]): Promise<AppointmentWithRelations[]> => {
+  if (!appointments.length) return [];
+  const relations = await loadAppointmentRelations(appointments);
+  return attachAppointmentRelationsFromMaps(appointments, relations);
 };
 
 const queryAppointmentsByClinicIdInRange = async (clinicId: string, from: Date, to: Date) => {
@@ -769,10 +787,10 @@ export const listTodayAppointmentsByClinicIdWithRelations = async (clinicId: str
   return listAppointmentsByClinicIdWithRelationsInRange(clinicId, todayStart, todayEnd);
 };
 
-export const listUpcomingAppointmentsByClinicIdWithRelations = async (clinicId: string, limit = 8): Promise<AppointmentWithRelations[]> => {
+export const listUpcomingAppointmentsByClinicId = async (clinicId: string, limit = 8): Promise<Appointment[]> => {
   const todayStart = dayjs().startOf('day').toDate();
 
-  return withServerCache(`clinic:${clinicId}:appointments:upcoming:${limit}`, 90_000, async () => {
+  return withServerCache(`clinic:${clinicId}:appointments:upcoming:raw:${limit}`, 90_000, async () => {
     try {
       const snapshot = await getFirestoreDb()
         .collection(COLLECTIONS.appointments)
@@ -782,18 +800,21 @@ export const listUpcomingAppointmentsByClinicIdWithRelations = async (clinicId: 
         .limit(limit)
         .get();
 
-      const appointments = fromQuery<Appointment>(snapshot).filter(isActiveAppointment);
-      return attachAppointmentRelations(appointments);
+      return fromQuery<Appointment>(snapshot).filter(isActiveAppointment);
     } catch (error) {
       console.warn('UPCOMING_APPOINTMENTS_QUERY_FALLBACK', error);
       const appointments = await listAppointmentsByClinicId(clinicId);
-      const upcoming = appointments
+      return appointments
         .filter((appointment) => isActiveAppointment(appointment) && appointment.date.getTime() >= todayStart.getTime())
         .sort((left, right) => left.date.getTime() - right.date.getTime())
         .slice(0, limit);
-      return attachAppointmentRelations(upcoming);
     }
   });
+};
+
+export const listUpcomingAppointmentsByClinicIdWithRelations = async (clinicId: string, limit = 8): Promise<AppointmentWithRelations[]> => {
+  const appointments = await listUpcomingAppointmentsByClinicId(clinicId, limit);
+  return attachAppointmentRelations(appointments);
 };
 
 export const getAppointmentByIdWithRelations = async (appointmentId: string): Promise<AppointmentWithRelations | null> => {
@@ -948,93 +969,117 @@ export const completeUserFirstLogin = async (params: { userId: string; email: st
 };
 
 export const getDashboardData = async (params: { clinicId: string; from: string; to: string }) => {
-  const fromDate = dayjs(params.from).startOf('day').toDate();
-  const toDate = dayjs(params.to).endOf('day').toDate();
-  const daysInRange = dayjs(toDate).diff(dayjs(fromDate), 'day') + 1;
+  return withServerCache(`clinic:${params.clinicId}:dashboard:${params.from}:${params.to}`, 60_000, async () => {
+    const fromDate = dayjs(params.from).startOf('day').toDate();
+    const toDate = dayjs(params.to).endOf('day').toDate();
+    const todayStart = dayjs().startOf('day').toDate();
+    const todayEnd = dayjs().endOf('day').toDate();
+    const todayInRange = inDateRange(todayStart, fromDate, toDate);
+    const daysInRange = dayjs(toDate).diff(dayjs(fromDate), 'day') + 1;
 
-  const [totalDoctors, totalPatients, appointmentsWithRelations, todayAppointmentsRaw, upcomingAppointmentsRaw] = await Promise.all([
-    countDoctorsByClinicId(params.clinicId),
-    countPatientsByClinicId(params.clinicId),
-    listAppointmentsByClinicIdWithRelationsInRange(params.clinicId, fromDate, toDate),
-    listTodayAppointmentsByClinicIdWithRelations(params.clinicId),
-    listUpcomingAppointmentsByClinicIdWithRelations(params.clinicId, 8),
-  ]);
+    const [
+      totalDoctors,
+      totalPatients,
+      appointmentsInRangeRaw,
+      upcomingAppointmentsRaw,
+      todayAppointmentsFallbackRaw,
+    ] = await Promise.all([
+      countDoctorsByClinicId(params.clinicId),
+      countPatientsByClinicId(params.clinicId),
+      listAppointmentsByClinicIdInRange(params.clinicId, fromDate, toDate),
+      listUpcomingAppointmentsByClinicId(params.clinicId, 8),
+      todayInRange ? Promise.resolve([] as Appointment[]) : listAppointmentsByClinicIdInRange(params.clinicId, todayStart, todayEnd),
+    ]);
 
-  const activeAppointments = appointmentsWithRelations.filter(isActiveAppointment);
-  const todayAppointments = todayAppointmentsRaw.filter(isActiveAppointment);
-  const upcomingAppointments = upcomingAppointmentsRaw.filter(isActiveAppointment);
-  const paidAppointmentsInRange = activeAppointments.filter((appointment) => appointment.paymentConfirmed && appointment.paymentDate && inDateRange(appointment.paymentDate, fromDate, toDate));
-  const completedAppointmentsInRange = activeAppointments.filter((appointment) => appointment.status === 'completed');
+    const relationSeed = [
+      ...appointmentsInRangeRaw,
+      ...upcomingAppointmentsRaw,
+      ...todayAppointmentsFallbackRaw,
+    ];
+    const relations = await loadAppointmentRelations(relationSeed);
 
-  const doctorStats = activeAppointments.reduce<Record<string, { id: string; name: string; avatarImageUrl: string | null; specialty: string; appointments: number }>>((acc, appointment) => {
-    const current = acc[appointment.doctorId];
-    if (current) {
-      current.appointments += 1;
+    const appointmentsWithRelations = attachAppointmentRelationsFromMaps(appointmentsInRangeRaw, relations);
+    const todayAppointmentsRaw = todayInRange
+      ? appointmentsWithRelations.filter((appointment) => inDateRange(appointment.date, todayStart, todayEnd))
+      : attachAppointmentRelationsFromMaps(todayAppointmentsFallbackRaw, relations);
+    const upcomingAppointmentsRawWithRelations = attachAppointmentRelationsFromMaps(upcomingAppointmentsRaw, relations);
+
+    const activeAppointments = appointmentsWithRelations.filter(isActiveAppointment);
+    const todayAppointments = todayAppointmentsRaw.filter(isActiveAppointment);
+    const upcomingAppointments = upcomingAppointmentsRawWithRelations.filter(isActiveAppointment);
+    const paidAppointmentsInRange = activeAppointments.filter((appointment) => appointment.paymentConfirmed && appointment.paymentDate && inDateRange(appointment.paymentDate, fromDate, toDate));
+    const completedAppointmentsInRange = activeAppointments.filter((appointment) => appointment.status === 'completed');
+
+    const doctorStats = activeAppointments.reduce<Record<string, { id: string; name: string; avatarImageUrl: string | null; specialty: string; appointments: number }>>((acc, appointment) => {
+      const current = acc[appointment.doctorId];
+      if (current) {
+        current.appointments += 1;
+        return acc;
+      }
+
+      acc[appointment.doctorId] = {
+        id: appointment.doctor.id,
+        name: appointment.doctor.name,
+        avatarImageUrl: appointment.doctor.avatarImageUrl,
+        specialty: appointment.doctor.specialty,
+        appointments: 1,
+      };
+
       return acc;
-    }
+    }, {});
 
-    acc[appointment.doctorId] = {
-      id: appointment.doctor.id,
-      name: appointment.doctor.name,
-      avatarImageUrl: appointment.doctor.avatarImageUrl,
-      specialty: appointment.doctor.specialty,
-      appointments: 1,
-    };
+    const topDoctors = Object.values(doctorStats)
+      .sort((left, right) => (right.appointments !== left.appointments ? right.appointments - left.appointments : left.name.localeCompare(right.name, 'pt-BR')))
+      .slice(0, 6);
 
-    return acc;
-  }, {});
+    const specialtyMap = activeAppointments.reduce<Record<string, number>>((acc, appointment) => {
+      acc[appointment.doctor.specialty] = (acc[appointment.doctor.specialty] ?? 0) + 1;
+      return acc;
+    }, {});
 
-  const topDoctors = Object.values(doctorStats)
-    .sort((left, right) => (right.appointments !== left.appointments ? right.appointments - left.appointments : left.name.localeCompare(right.name, 'pt-BR')))
-    .slice(0, 6);
+    const topSpecialties = Object.entries(specialtyMap)
+      .map(([specialty, appointments]) => ({ specialty, appointments }))
+      .sort((left, right) => right.appointments - left.appointments);
 
-  const specialtyMap = activeAppointments.reduce<Record<string, number>>((acc, appointment) => {
-    acc[appointment.doctor.specialty] = (acc[appointment.doctor.specialty] ?? 0) + 1;
-    return acc;
-  }, {});
+    const dailyMap = activeAppointments.reduce<Record<string, { appointments: number; revenue: number }>>((acc, appointment) => {
+      const key = dayjs(appointment.date).format('YYYY-MM-DD');
+      acc[key] = acc[key] ?? { appointments: 0, revenue: 0 };
+      acc[key].appointments += 1;
+      if (appointment.paymentConfirmed) acc[key].revenue += appointment.appointmentPriceInCents;
+      return acc;
+    }, {});
 
-  const topSpecialties = Object.entries(specialtyMap)
-    .map(([specialty, appointments]) => ({ specialty, appointments }))
-    .sort((left, right) => right.appointments - left.appointments);
+    const dailyAppointmentsData = Array.from({ length: Math.max(daysInRange, 1) }).map((_, index) => {
+      const date = dayjs(fromDate).add(index, 'day').format('YYYY-MM-DD');
+      const values = dailyMap[date] ?? { appointments: 0, revenue: 0 };
+      return {
+        date,
+        appointments: values.appointments,
+        revenue: values.revenue,
+      };
+    });
 
-  const dailyMap = activeAppointments.reduce<Record<string, { appointments: number; revenue: number }>>((acc, appointment) => {
-    const key = dayjs(appointment.date).format('YYYY-MM-DD');
-    acc[key] = acc[key] ?? { appointments: 0, revenue: 0 };
-    acc[key].appointments += 1;
-    if (appointment.paymentConfirmed) acc[key].revenue += appointment.appointmentPriceInCents;
-    return acc;
-  }, {});
+    const totalRevenue = paidAppointmentsInRange.reduce((acc, appointment) => acc + appointment.appointmentPriceInCents, 0);
+    const pendingRevenue = activeAppointments
+      .filter((appointment) => !appointment.paymentConfirmed)
+      .reduce((acc, appointment) => acc + appointment.appointmentPriceInCents, 0);
+    const collectionRate = activeAppointments.length
+      ? (activeAppointments.filter((appointment) => appointment.paymentConfirmed).length / activeAppointments.length) * 100
+      : 0;
 
-  const dailyAppointmentsData = Array.from({ length: Math.max(daysInRange, 1) }).map((_, index) => {
-    const date = dayjs(fromDate).add(index, 'day').format('YYYY-MM-DD');
-    const values = dailyMap[date] ?? { appointments: 0, revenue: 0 };
     return {
-      date,
-      appointments: values.appointments,
-      revenue: values.revenue,
+      totalRevenue: { total: totalRevenue },
+      pendingRevenue: { total: pendingRevenue },
+      collectionRate,
+      totalAppointments: { total: activeAppointments.length },
+      totalPatients: { total: totalPatients },
+      totalDoctors: { total: totalDoctors },
+      completedAppointments: { total: completedAppointmentsInRange.length },
+      topDoctors,
+      topSpecialties,
+      todayAppointments: [...todayAppointments].sort((left, right) => left.date.getTime() - right.date.getTime()),
+      dailyAppointmentsData,
+      upcomingAppointments,
     };
   });
-
-  const totalRevenue = paidAppointmentsInRange.reduce((acc, appointment) => acc + appointment.appointmentPriceInCents, 0);
-  const pendingRevenue = activeAppointments
-    .filter((appointment) => !appointment.paymentConfirmed)
-    .reduce((acc, appointment) => acc + appointment.appointmentPriceInCents, 0);
-  const collectionRate = activeAppointments.length
-    ? (activeAppointments.filter((appointment) => appointment.paymentConfirmed).length / activeAppointments.length) * 100
-    : 0;
-
-  return {
-    totalRevenue: { total: totalRevenue },
-    pendingRevenue: { total: pendingRevenue },
-    collectionRate,
-    totalAppointments: { total: activeAppointments.length },
-    totalPatients: { total: totalPatients },
-    totalDoctors: { total: totalDoctors },
-    completedAppointments: { total: completedAppointmentsInRange.length },
-    topDoctors,
-    topSpecialties,
-    todayAppointments: [...todayAppointments].sort((left, right) => left.date.getTime() - right.date.getTime()),
-    dailyAppointmentsData,
-    upcomingAppointments,
-  };
 };
