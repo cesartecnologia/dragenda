@@ -190,8 +190,14 @@ export default function AppointmentsDataTable({
       );
     }
 
+    const gridClassName = orderedAppointments.length <= 1
+      ? 'grid-cols-1'
+      : orderedAppointments.length === 2
+        ? 'grid-cols-1 xl:grid-cols-2'
+        : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4';
+
     return (
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className={`grid gap-4 ${gridClassName}`}>
         {orderedAppointments.map((appointment) => {
           const statusBadge = appointment.status === 'cancelled'
             ? <span className="inline-flex min-h-9 items-center rounded-full bg-red-50 px-4 py-2 text-sm font-medium text-red-700">Cancelado</span>
@@ -200,7 +206,7 @@ export default function AppointmentsDataTable({
               : <span className="inline-flex min-h-9 items-center rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">Agendado</span>;
 
           return (
-            <Card key={appointment.id} className="overflow-hidden border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+            <Card key={appointment.id} className="h-full overflow-hidden border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
               <CardHeader className="border-b border-slate-100 bg-slate-50/60 px-4 py-3">
                 <div className="flex items-start justify-between gap-2.5">
                   <div className="flex min-w-0 flex-1 items-start gap-2.5">

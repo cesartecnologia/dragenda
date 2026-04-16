@@ -138,11 +138,20 @@
 
   html,
   body {
+    width: 100%;
+    min-width: 100%;
     overflow-x: hidden;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
+    min-height: 100vh;
+  }
+
+  body > div:first-child,
+  body [data-slot="sidebar-wrapper"] {
+    width: 100%;
+    max-width: 100%;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
   }

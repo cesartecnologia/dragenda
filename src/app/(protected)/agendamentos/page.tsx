@@ -86,10 +86,10 @@ export default async function AgendamentosPage({ searchParams }: Props) {
         </PageHeaderContent>
       </PageHeader>
 
-      <PageContent className="space-y-4">
+      <PageContent className="w-full space-y-4">
         <div className="rounded-2xl border bg-background p-4 shadow-sm">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex-1 lg:max-w-xl">
+            <div className="min-w-0 flex-1">
               <DebouncedSearchForm
                 placeholder="Buscar paciente, médico ou especialidade"
                 initialValue={q}
