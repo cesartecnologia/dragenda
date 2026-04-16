@@ -55,19 +55,23 @@ export function DatePicker({ className }: React.HTMLAttributes<HTMLDivElement>) 
     <div className={cn('grid gap-2', className)}>
       <Popover>
         <PopoverTrigger asChild>
-          <Button id="date" variant="outline" className="min-w-40 justify-start gap-2 text-left font-medium">
-            <CalendarIcon className="size-4" />
+          <Button
+            id="date"
+            variant="outline"
+            className="h-11 min-w-44 justify-start gap-2 rounded-2xl border-slate-200/80 bg-white/90 px-4 text-left font-medium text-slate-700 hover:bg-[#f7fbfa]"
+          >
+            <CalendarIcon className="size-4 text-primary" />
             <span>{currentMonthLabel}</span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[280px] p-3" align="end">
-          <div className="space-y-3">
+        <PopoverContent className="w-[300px] rounded-[24px] border border-slate-200/80 bg-white/96 p-4 shadow-[0_24px_50px_rgba(15,23,42,0.12)]" align="end">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Button type="button" variant="ghost" size="icon" className="size-8" onClick={() => setDisplayYear((current) => current - 1)}>
+              <Button type="button" variant="ghost" size="icon" className="size-9 rounded-xl" onClick={() => setDisplayYear((current) => current - 1)}>
                 <ChevronLeft className="size-4" />
               </Button>
-              <span className="text-sm font-semibold text-slate-700">{displayYear}</span>
-              <Button type="button" variant="ghost" size="icon" className="size-8" onClick={() => setDisplayYear((current) => current + 1)}>
+              <span className="text-sm font-semibold text-slate-800">{displayYear}</span>
+              <Button type="button" variant="ghost" size="icon" className="size-9 rounded-xl" onClick={() => setDisplayYear((current) => current + 1)}>
                 <ChevronRight className="size-4" />
               </Button>
             </div>
@@ -83,7 +87,10 @@ export function DatePicker({ className }: React.HTMLAttributes<HTMLDivElement>) 
                     key={monthName}
                     type="button"
                     variant={isActive ? 'default' : 'outline'}
-                    className="h-9 justify-center rounded-md px-2 text-sm"
+                    className={cn(
+                      'h-10 justify-center rounded-xl px-2 text-sm',
+                      !isActive && 'border-slate-200/80 bg-white text-slate-600 hover:bg-[#f7fbfa]',
+                    )}
                     onClick={() => handleMonthSelect(monthIndex)}
                   >
                     {capitalize(monthName.slice(0, 3))}
