@@ -18,8 +18,8 @@ import { patientsTable } from '@/db/schema';
 
 const formSchema = z.object({
   name: z.string().trim().min(1, { message: 'Nome é obrigatório.' }),
-  email: z.string().email({ message: 'Email inválido.' }),
-  phoneNumber: z.string().trim().min(1, { message: 'Telefone é obrigatório.' }),
+  email: z.string().trim().refine((value) => value === '' || z.string().email().safeParse(value).success, { message: 'Email inválido.' }),
+  phoneNumber: z.string().trim().refine((value) => value === '' || value.replace(/\D/g, '').length >= 10, { message: 'Informe um telefone válido.' }),
   address: z.string().trim().optional().nullable(),
   sex: z.enum(['male', 'female']),
 });
@@ -79,13 +79,13 @@ const UpsertPatientForm = ({ patient, onSuccess, isOpen }: UpsertPatientFormProp
               <FormItem><FormLabel>Nome</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="email" render={({ field }) => (
-              <FormItem><FormLabel>Email</FormLabel><FormControl><Input {...field} type="email" /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>Email</FormLabel><FormControl><Input {...field} type="email" placeholder="Opcional" /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="phoneNumber" render={({ field }) => (
               <FormItem>
                 <FormLabel>Telefone</FormLabel>
                 <FormControl>
-                  <PatternFormat customInput={Input} format="(##) #####-####" allowEmptyFormatting mask="_" value={field.value} onValueChange={(value) => field.onChange(value.value)} />
+                  <PatternFormat customInput={Input} format="(##) #####-####" value={field.value} placeholder="Opcional" onValueChange={(value) => field.onChange(value.value)} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

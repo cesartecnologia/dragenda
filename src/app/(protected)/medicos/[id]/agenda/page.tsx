@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import { Mail, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -10,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { PageContainer, PageContent, PageHeader, PageHeaderContent, PageTitle } from '@/components/ui/page-container';
 import { formatCurrencyInCents } from '@/helpers/currency';
 import { formatClinicAddress, formatCnpj, formatPhoneNumber } from '@/helpers/format';
-import { formatDateBr, formatDateTimeBr } from '@/helpers/time';
+import { endOfBrazilDay, formatDateBr, formatDateTimeBr, formatTimeBr, getBrazilDateKey, getBrazilMonthEndKey, getBrazilMonthStartKey, startOfBrazilDay } from '@/helpers/time';
 import { requireSubscribedSession } from '@/lib/auth';
 import { getClinicById, getDoctorById, getPatientById, listAppointmentsByDoctorId } from '@/server/clinic-data';
 
@@ -22,7 +21,7 @@ interface Props {
 export default async function AgendaMedicoPage({ params, searchParams }: Props) {
   await requireSubscribedSession();
   const { id } = await params;
-  const { from = dayjs().startOf('month').format('YYYY-MM-DD'), to = dayjs().endOf('month').format('YYYY-MM-DD') } = await searchParams;
+  const { from = getBrazilMonthStartKey(), to = getBrazilMonthEndKey() } = await searchParams;
   const doctor = await getDoctorById(id);
   if (!doctor) notFound();
 
@@ -31,7 +30,7 @@ export default async function AgendaMedicoPage({ params, searchParams }: Props) 
   const appointments = (await Promise.all(
     doctorAppointments.map(async (appointment) => {
       if (appointment.status === 'cancelled') return null;
-      if (dayjs(appointment.date).isBefore(dayjs(from).startOf('day')) || dayjs(appointment.date).isAfter(dayjs(to).endOf('day'))) return null;
+      if (appointment.date.getTime() < startOfBrazilDay(from).getTime() || appointment.date.getTime() > endOfBrazilDay(to).getTime()) return null;
       const patient = await getPatientById(appointment.patientId);
       if (!patient) return null;
       return { ...appointment, patient };
@@ -41,7 +40,7 @@ export default async function AgendaMedicoPage({ params, searchParams }: Props) 
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 
   const groupedByDay = appointments.reduce<Record<string, typeof appointments>>((acc, appointment) => {
-    const key = dayjs(appointment.date).format('YYYY-MM-DD');
+    const key = getBrazilDateKey(appointment.date);
     acc[key] = acc[key] ?? [];
     acc[key].push(appointment);
     return acc;
@@ -49,7 +48,7 @@ export default async function AgendaMedicoPage({ params, searchParams }: Props) 
 
   const shareLines = [
     `Agenda do médico ${doctor.name}`,
-    `Período: ${dayjs(from).format('DD/MM/YYYY')} a ${dayjs(to).format('DD/MM/YYYY')}`,
+    `Período: ${formatDateBr(startOfBrazilDay(from))} a ${formatDateBr(startOfBrazilDay(to))}`,
     ...appointments.slice(0, 15).map((appointment) => `${formatDateTimeBr(appointment.date)} - ${appointment.patient.name}`),
     appointments.length > 15 ? `... e mais ${appointments.length - 15} agendamento(s).` : '',
   ].filter(Boolean);
@@ -102,7 +101,7 @@ export default async function AgendaMedicoPage({ params, searchParams }: Props) 
                     <div key={appointment.id} className="rounded-lg border p-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div><p className="font-medium">{appointment.patient.name}</p><p className="text-sm text-muted-foreground">{appointment.patient.phoneNumber ? formatPhoneNumber(appointment.patient.phoneNumber) : 'Sem telefone'}{appointment.patient.email ? ` • ${appointment.patient.email}` : ''}</p></div>
-                        <div className="text-right"><p className="font-medium">{dayjs(appointment.date).format('HH:mm')}</p><p className="text-sm text-muted-foreground">{appointment.paymentConfirmed ? 'Pagamento confirmado' : 'Pagamento pendente'}</p></div>
+                        <div className="text-right"><p className="font-medium">{formatTimeBr(appointment.date)}</p><p className="text-sm text-muted-foreground">{appointment.paymentConfirmed ? 'Pagamento confirmado' : 'Pagamento pendente'}</p></div>
                       </div>
                       {appointment.notes ? <p className="mt-2 text-sm text-muted-foreground">Observações: {appointment.notes}</p> : null}
                     </div>

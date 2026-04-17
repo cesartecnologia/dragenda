@@ -76,7 +76,11 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
   });
 
   const handleWhatsapp = () => {
-    const phone = appointment.patient.phoneNumber.replace(/\D/g, '');
+    const phone = appointment.patient.phoneNumber?.replace(/\D/g, '') ?? '';
+    if (!phone) {
+      toast.error('Este paciente não possui telefone cadastrado.');
+      return;
+    }
     const message = encodeURIComponent(buildAppointmentWhatsappText({
       clinic,
       patientName: appointment.patient.name,

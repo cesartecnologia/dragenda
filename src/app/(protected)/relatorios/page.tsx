@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
@@ -7,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { PageContainer, PageContent, PageHeader, PageHeaderContent, PageTitle } from '@/components/ui/page-container';
 import { formatCurrencyInCents } from '@/helpers/currency';
-import { formatDateTimeBr } from '@/helpers/time';
+import { endOfBrazilDay, formatDateTimeBr, getBrazilMonthEndKey, getBrazilMonthStartKey, startOfBrazilDay } from '@/helpers/time';
 import { canAccessReports } from '@/lib/access';
 import { requireSubscribedSession } from '@/lib/auth';
 import { listAppointmentsByClinicIdWithRelationsFiltered, listDoctorsByClinicId } from '@/server/clinic-data';
@@ -21,15 +20,15 @@ export default async function RelatoriosPage({ searchParams }: Props) {
   if (!canAccessReports(session.user.role)) redirect('/agendamentos');
   const clinicId = session.user.clinic!.id;
   const clinicName = session.user.clinic?.name ?? 'Clínica';
-  const { from = dayjs().startOf('month').format('YYYY-MM-DD'), to = dayjs().endOf('month').format('YYYY-MM-DD'), doctor = 'all', payment = 'all' } = await searchParams;
+  const { from = getBrazilMonthStartKey(), to = getBrazilMonthEndKey(), doctor = 'all', payment = 'all' } = await searchParams;
 
   const [doctors, appointments] = await Promise.all([
     listDoctorsByClinicId(clinicId),
     listAppointmentsByClinicIdWithRelationsFiltered(clinicId, {
       doctorId: doctor === 'all' ? null : doctor,
       paymentConfirmed: payment === 'all' ? null : payment === 'confirmed',
-      from: dayjs(from).startOf('day').toDate(),
-      to: dayjs(to).endOf('day').toDate(),
+      from: startOfBrazilDay(from),
+      to: endOfBrazilDay(to),
     }),
   ]);
 

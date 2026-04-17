@@ -1,10 +1,9 @@
 'use server';
 
-import dayjs from 'dayjs';
 import { z } from 'zod';
 
 import { auth } from '@/lib/auth';
-import { generateTimeSlots, getMinimumBookableTimeForDate, isPastDate } from '@/helpers/time';
+import { generateTimeSlots, getBrazilDateKey, getBrazilTimeKey, getMinimumBookableTimeForDate, isPastDate, parseBrazilDate } from '@/helpers/time';
 import { actionClient } from '@/lib/next-safe-action';
 import { getDoctorById, listAppointmentsByDoctorId } from '@/server/clinic-data';
 
@@ -24,12 +23,12 @@ export const getAvailableTimes = actionClient
     const doctor = await getDoctorById(parsedInput.doctorId);
     if (!doctor || doctor.clinicId !== session.user.clinic.id) throw new Error('Doctor not found');
 
-    const selectedDate = dayjs(parsedInput.date);
+    const selectedDate = parseBrazilDate(parsedInput.date);
     if (isPastDate(selectedDate.toDate())) return [];
 
     const matchingRange = (doctor.availabilityRanges ?? []).find((range) => {
-      const start = dayjs(range.startDate).startOf('day');
-      const end = dayjs(range.endDate).endOf('day');
+      const start = parseBrazilDate(range.startDate).startOf('day');
+      const end = parseBrazilDate(range.endDate).endOf('day');
       return selectedDate.isAfter(start.subtract(1, 'millisecond')) && selectedDate.isBefore(end.add(1, 'millisecond'));
     });
 
@@ -50,9 +49,9 @@ export const getAvailableTimes = actionClient
         (appointment) =>
           appointment.id !== parsedInput.appointmentId &&
           appointment.status !== 'cancelled' &&
-          dayjs(appointment.date).isSame(parsedInput.date, 'day'),
+          getBrazilDateKey(appointment.date) === parsedInput.date,
       )
-      .map((appointment) => dayjs(appointment.date).format('HH:mm:ss'));
+      .map((appointment) => getBrazilTimeKey(appointment.date));
 
     const minimumBookableTime = getMinimumBookableTimeForDate(selectedDate.toDate());
     const timeSlots = generateTimeSlots();

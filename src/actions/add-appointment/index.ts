@@ -1,9 +1,8 @@
 'use server';
 
-import dayjs from 'dayjs';
 import { revalidatePath } from 'next/cache';
 
-import { combineDateAndTime, isPastDate, isPastDateTime } from '@/helpers/time';
+import { combineDateAndTime, getBrazilDateKey, getBrazilTimeKey, isPastDate, isPastDateTime } from '@/helpers/time';
 import { auth } from '@/lib/auth';
 import { actionClient } from '@/lib/next-safe-action';
 import {
@@ -36,7 +35,7 @@ export const addAppointment = actionClient.schema(addAppointmentSchema).action(a
     getPatientById(parsedInput.patientId),
     getAvailableTimes({
       doctorId: parsedInput.doctorId,
-      date: parsedInput.date.toISOString().slice(0, 10),
+      date: getBrazilDateKey(parsedInput.date),
       appointmentId: parsedInput.id,
     }),
     parsedInput.id ? getAppointmentById(parsedInput.id) : Promise.resolve(null),
@@ -48,11 +47,11 @@ export const addAppointment = actionClient.schema(addAppointmentSchema).action(a
   if (!availableTimes?.data) throw new Error('No available times');
 
   const normalizedInputTime = parsedInput.time.length === 5 ? `${parsedInput.time}:00` : parsedInput.time;
-  const normalizedInputDate = dayjs(parsedInput.date).format('YYYY-MM-DD');
+  const normalizedInputDate = getBrazilDateKey(parsedInput.date);
 
   const hasConflict = doctorAppointments.some((appointment) => {
     if (appointment.id === parsedInput.id || appointment.status === 'cancelled') return false;
-    return dayjs(appointment.date).format('YYYY-MM-DD') === normalizedInputDate && dayjs(appointment.date).format('HH:mm:ss') === normalizedInputTime;
+    return getBrazilDateKey(appointment.date) === normalizedInputDate && getBrazilTimeKey(appointment.date) === normalizedInputTime;
   });
 
   if (hasConflict) {
@@ -62,8 +61,8 @@ export const addAppointment = actionClient.schema(addAppointmentSchema).action(a
   const isEditingSameSlot = Boolean(
     existingAppointment &&
       existingAppointment.doctorId === parsedInput.doctorId &&
-      dayjs(existingAppointment.date).format('YYYY-MM-DD') === normalizedInputDate &&
-      dayjs(existingAppointment.date).format('HH:mm:ss') === normalizedInputTime,
+      getBrazilDateKey(existingAppointment.date) === normalizedInputDate &&
+      getBrazilTimeKey(existingAppointment.date) === normalizedInputTime,
   );
 
   const isTimeAvailable = availableTimes.data.some((time) => time.value === normalizedInputTime && time.available) || isEditingSameSlot;

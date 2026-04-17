@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
 
-import dayjs from 'dayjs';
 import { Calendar, ChevronRight, Clock3, LineChart } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { redirect } from 'next/navigation';
@@ -9,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageActions, PageContainer, PageContent, PageDescription, PageHeader, PageHeaderContent, PageTitle } from '@/components/ui/page-container';
 import { getDashboard } from '@/data/get-dashboard';
-import { formatDateTimeBr } from '@/helpers/time';
+import { formatDateTimeBr, getBrazilMonthEndKey, getBrazilMonthStartKey } from '@/helpers/time';
 import { canAccessDashboard } from '@/lib/access';
 import { requireSubscribedSession } from '@/lib/auth';
 
@@ -204,7 +203,7 @@ export default async function PainelPage({ searchParams }: DashboardPageProps) {
 
   const { from, to } = await searchParams;
   if (!from || !to) {
-    redirect(`/painel?from=${dayjs().startOf('month').format('YYYY-MM-DD')}&to=${dayjs().endOf('month').format('YYYY-MM-DD')}`);
+    redirect(`/painel?from=${getBrazilMonthStartKey()}&to=${getBrazilMonthEndKey()}`);
   }
 
   return (

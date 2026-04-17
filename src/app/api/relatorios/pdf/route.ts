@@ -1,11 +1,11 @@
 import { formatClinicAddress } from '@/helpers/format';
-import dayjs from 'dayjs';
 import { NextRequest } from 'next/server';
 
 import { getServerSession } from '@/lib/auth';
 import { generateReportPdf } from '@/lib/pdf-documents';
 import { listAppointmentsByClinicIdWithRelationsFiltered, listDoctorsByClinicId, getClinicById } from '@/server/clinic-data';
 import { canAccessReports } from '@/lib/access';
+import { endOfBrazilDay, getBrazilDateKey, getBrazilMonthEndKey, getBrazilMonthStartKey, getBrazilTimeKey, startOfBrazilDay } from '@/helpers/time';
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession();
@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
 
   const clinicId = session.user.clinic.id;
   const params = request.nextUrl.searchParams;
-  const from = params.get('from') || dayjs().startOf('month').format('YYYY-MM-DD');
-  const to = params.get('to') || dayjs().endOf('month').format('YYYY-MM-DD');
+  const from = params.get('from') || getBrazilMonthStartKey();
+  const to = params.get('to') || getBrazilMonthEndKey();
   const doctor = params.get('doctor') || 'all';
   const payment = params.get('payment') || 'all';
 
@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
     listAppointmentsByClinicIdWithRelationsFiltered(clinicId, {
       doctorId: doctor === 'all' ? null : doctor,
       paymentConfirmed: payment === 'all' ? null : payment === 'confirmed',
-      from: dayjs(from).startOf('day').toDate(),
-      to: dayjs(to).endOf('day').toDate(),
+      from: startOfBrazilDay(from),
+      to: endOfBrazilDay(to),
     }).then((appointments) => appointments.filter((appointment) => appointment.status !== 'cancelled')),
   ]);
 
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
   });
 
   const arrayBuffer = doc.output('arraybuffer');
-  const fileName = `relatorio-${dayjs().format('YYYYMMDD-HHmm')}.pdf`;
+  const fileName = `relatorio-${getBrazilDateKey(new Date()).replace(/-/g, '')}-${getBrazilTimeKey(new Date()).slice(0, 5).replace(':', '')}.pdf`;
 
   return new Response(arrayBuffer, {
     headers: {

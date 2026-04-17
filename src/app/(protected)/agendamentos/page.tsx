@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import Link from 'next/link';
 
 import DebouncedSearchForm from '@/components/common/debounced-search-form';
@@ -7,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { PageContainer, PageContent, PageHeader, PageHeaderContent, PageTitle } from '@/components/ui/page-container';
 import type { AppointmentStatus } from '@/db/schema';
 import { normalizeSearchText } from '@/helpers/format';
+import { endOfBrazilDay, startOfBrazilDay } from '@/helpers/time';
 import { requireSubscribedSession } from '@/lib/auth';
 import {
   listAppointmentsByClinicIdWithRelations,
@@ -34,8 +34,8 @@ export default async function AgendamentosPage({ searchParams }: Props) {
   const hasStructuredFilters = doctor !== 'all' || payment !== 'all' || status !== 'all' || hasDateFilter;
   const showResultsSummary = Boolean(normalizedQuery) || hasStructuredFilters;
 
-  const fromDate = from ? dayjs(from).startOf('day').toDate() : null;
-  const toDate = to ? dayjs(to).endOf('day').toDate() : null;
+  const fromDate = from ? startOfBrazilDay(from) : null;
+  const toDate = to ? endOfBrazilDay(to) : null;
   const paymentConfirmed = payment === 'all' ? null : payment === 'confirmed';
   const statusFilter: AppointmentStatus | null = status === 'all' ? null : (status as AppointmentStatus);
   const doctorFilter = doctor === 'all' ? null : doctor;
@@ -124,8 +124,8 @@ export default async function AgendamentosPage({ searchParams }: Props) {
                     {status === 'scheduled' ? 'Agendada' : status === 'completed' ? 'Consulta concluída' : 'Cancelada'}
                   </Badge>
                 ) : null}
-                {from ? <Badge variant="secondary">De: {dayjs(from).format('DD/MM/YYYY')}</Badge> : null}
-                {to ? <Badge variant="secondary">Até: {dayjs(to).format('DD/MM/YYYY')}</Badge> : null}
+                {from ? <Badge variant="secondary">De: {formatDateBr(startOfBrazilDay(from))}</Badge> : null}
+                {to ? <Badge variant="secondary">Até: {formatDateBr(startOfBrazilDay(to))}</Badge> : null}
               </div>
             </div>
           ) : null}

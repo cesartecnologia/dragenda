@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -8,7 +7,7 @@ import PrintButton from '@/components/common/print-button';
 import { Button } from '@/components/ui/button';
 import { formatCurrencyInCents } from '@/helpers/currency';
 import { formatClinicAddress, formatCnpj, formatPhoneNumber } from '@/helpers/format';
-import { formatDateBr, formatDateTimeBr } from '@/helpers/time';
+import { endOfBrazilDay, formatDateBr, formatDateTimeBr, getBrazilMonthEndKey, getBrazilMonthStartKey, startOfBrazilDay } from '@/helpers/time';
 import { canAccessReports } from '@/lib/access';
 import { requireSubscribedSession } from '@/lib/auth';
 import { getClinicById, listAppointmentsByClinicIdWithRelationsFiltered, listDoctorsByClinicId } from '@/server/clinic-data';
@@ -22,15 +21,15 @@ export default async function RelatorioImpressaoPage({ searchParams }: Props) {
   const clinicId = session.user.clinic!.id;
   const clinic = await getClinicById(clinicId);
   const doctors = await listDoctorsByClinicId(clinicId);
-  const { from = dayjs().startOf('month').format('YYYY-MM-DD'), to = dayjs().endOf('month').format('YYYY-MM-DD'), payment = 'all', doctor = 'all' } = await searchParams;
+  const { from = getBrazilMonthStartKey(), to = getBrazilMonthEndKey(), payment = 'all', doctor = 'all' } = await searchParams;
   const doctorName = doctor === 'all' ? 'Todos os médicos' : doctors.find((item) => item.id === doctor)?.name ?? 'Médico';
   const paymentLabel = payment === 'all' ? 'Todos' : payment === 'confirmed' ? 'Confirmados' : 'Pendentes';
 
   const appointments = await listAppointmentsByClinicIdWithRelationsFiltered(clinicId, {
     doctorId: doctor === 'all' ? null : doctor,
     paymentConfirmed: payment === 'all' ? null : payment === 'confirmed',
-    from: dayjs(from).startOf('day').toDate(),
-    to: dayjs(to).endOf('day').toDate(),
+    from: startOfBrazilDay(from),
+    to: endOfBrazilDay(to),
   }).then((items) => items.filter((appointment) => appointment.status !== 'cancelled'));
 
   const confirmed = appointments.filter((item) => item.paymentConfirmed);
@@ -123,7 +122,7 @@ export default async function RelatorioImpressaoPage({ searchParams }: Props) {
           </section>
 
           <footer className="mt-4 text-[11px] text-slate-500">
-            Gerado em {dayjs().format('DD/MM/YYYY HH:mm')}
+            Gerado em {formatDateTimeBr(new Date())}
           </footer>
         </article>
       </div>

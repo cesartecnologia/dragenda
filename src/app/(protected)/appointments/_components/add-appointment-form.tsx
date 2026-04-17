@@ -2,7 +2,6 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
-import dayjs from 'dayjs';
 import { CalendarIcon, Check, Clock3, CreditCard, Search, Stethoscope, X } from 'lucide-react';
 import { useAction } from 'next-safe-action/hooks';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -22,7 +21,7 @@ import { Input } from '@/components/ui/input';
 import { appointmentsTable, doctorsTable, patientsTable } from '@/db/schema';
 import { formatCurrencyInCents } from '@/helpers/currency';
 import { normalizeSearchText } from '@/helpers/format';
-import { getMinimumBookableTimeForDate, isPastDate } from '@/helpers/time';
+import { getBrazilDateKey, getBrazilTimeKey, getMinimumBookableTimeForDate, isPastDate, isSameBrazilDay, parseBrazilDate } from '@/helpers/time';
 import { cn } from '@/lib/utils';
 
 const formSchema = z
@@ -67,12 +66,12 @@ const choiceButtonClass = 'h-10 rounded-xl border px-4 text-sm font-medium trans
 
 function isDateAllowedForDoctor(date: Date, doctor?: typeof doctorsTable.$inferSelect) {
   if (!doctor) return false;
-  const selectedDate = dayjs(date).startOf('day');
+  const selectedDate = parseBrazilDate(getBrazilDateKey(date)).startOf('day');
 
   if (doctor.availabilityRanges?.length) {
     return doctor.availabilityRanges.some((range) => {
-      const start = dayjs(range.startDate).startOf('day');
-      const end = dayjs(range.endDate).endOf('day');
+      const start = parseBrazilDate(range.startDate).startOf('day');
+      const end = parseBrazilDate(range.endDate).endOf('day');
       return selectedDate.isAfter(start.subtract(1, 'millisecond')) && selectedDate.isBefore(end.add(1, 'millisecond'));
     });
   }
@@ -201,7 +200,7 @@ function SearchSelect<T extends SearchableItem>(props: {
 }
 
 function getDateInputValue(date?: Date | null) {
-  return date ? dayjs(date).format('YYYY-MM-DD') : '';
+  return date ? getBrazilDateKey(date) : '';
 }
 
 export default function AddAppointmentForm({ patients, doctors, appointment, onSuccess, onClose, isOpen }: AddAppointmentFormProps) {
@@ -213,7 +212,7 @@ export default function AddAppointmentForm({ patients, doctors, appointment, onS
       doctorId: appointment?.doctorId ?? '',
       appointmentPrice: appointment?.appointmentPriceInCents ? appointment.appointmentPriceInCents / 100 : 0,
       date: appointment?.date ? new Date(appointment.date) : null,
-      time: appointment?.date ? dayjs(appointment.date).format('HH:mm') : '',
+      time: appointment?.date ? getBrazilTimeKey(appointment.date).slice(0, 5) : '',
       notes: appointment?.notes ?? '',
       paymentConfirmed: appointment?.paymentConfirmed ?? false,
       paymentMethod: appointment?.paymentMethod ?? 'pix',
@@ -258,7 +257,7 @@ export default function AddAppointmentForm({ patients, doctors, appointment, onS
   const paymentConfirmed = form.watch('paymentConfirmed');
 
   const selectedDoctor = useMemo(() => doctors.find((doctor) => doctor.id === selectedDoctorId), [doctors, selectedDoctorId]);
-  const selectedDateKey = selectedDate ? dayjs(selectedDate).format('YYYY-MM-DD') : '';
+  const selectedDateKey = selectedDate ? getBrazilDateKey(selectedDate) : '';
   const minimumBookableTime = useMemo(() => (selectedDate ? getMinimumBookableTimeForDate(selectedDate) : null), [selectedDate]);
 
   useEffect(() => {
@@ -443,7 +442,7 @@ export default function AddAppointmentForm({ patients, doctors, appointment, onS
                     control={form.control}
                     name="date"
                     render={({ field }) => {
-                      const minimumDate = dayjs().format('YYYY-MM-DD');
+                      const minimumDate = getBrazilDateKey(new Date());
 
                       return (
                         <FormItem>
@@ -456,7 +455,7 @@ export default function AddAppointmentForm({ patients, doctors, appointment, onS
                                 value={getDateInputValue(field.value)}
                                 min={minimumDate}
                                 disabled={!selectedDoctor}
-                                onChange={(event) => handleDateSelection(event.target.value ? dayjs(event.target.value, 'YYYY-MM-DD').toDate() : undefined)}
+                                onChange={(event) => handleDateSelection(event.target.value ? parseBrazilDate(event.target.value).toDate() : undefined)}
                                 className={cn(inputClass, 'pl-11', !selectedDoctor && 'cursor-not-allowed bg-slate-50 text-slate-400')}
                               />
                             </div>
@@ -520,7 +519,7 @@ export default function AddAppointmentForm({ patients, doctors, appointment, onS
                       <Clock3 className="size-4 text-primary" />
                       <h3 className={titleClass}>Horários disponíveis</h3>
                     </div>
-                    {selectedDate && minimumBookableTime && dayjs(selectedDate).isSame(dayjs(), 'day') ? (
+                    {selectedDate && minimumBookableTime && isSameBrazilDay(selectedDate, new Date()) ? (
                       <p className="mt-1 text-xs text-slate-500">Hoje são exibidos apenas horários a partir de {minimumBookableTime.slice(0, 5)}.</p>
                     ) : null}
                   </div>

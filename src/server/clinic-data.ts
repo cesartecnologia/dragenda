@@ -19,6 +19,7 @@ import {
   usersTable,
 } from '@/db/schema';
 import { normalizeSearchText } from '@/helpers/format';
+import { endOfBrazilDay, getBrazilDateKey, startOfBrazilDay } from '@/helpers/time';
 import { resolvePrivilegedAccess } from '@/lib/access';
 import { getFirestoreDb } from '@/lib/firebase-admin';
 import { invalidateServerCache, withServerCache } from '@/lib/server-cache';
@@ -621,8 +622,8 @@ export const upsertPatientRecord = async (params: {
   id?: string;
   clinicId: string;
   name: string;
-  email: string;
-  phoneNumber: string;
+  email?: string | null;
+  phoneNumber?: string | null;
   address?: string | null;
   sex: Patient['sex'];
 }) => {
@@ -635,9 +636,9 @@ export const upsertPatientRecord = async (params: {
     id: patientId,
     clinicId: params.clinicId,
     name: params.name,
-    searchName: normalizeSearchText(`${params.name} ${params.email} ${params.phoneNumber}`),
-    email: params.email,
-    phoneNumber: params.phoneNumber,
+    searchName: normalizeSearchText(`${params.name} ${params.email ?? ''} ${params.phoneNumber ?? ''}`),
+    email: params.email ?? null,
+    phoneNumber: params.phoneNumber ?? null,
     address: params.address ?? existing?.address ?? null,
     sex: params.sex,
     createdAt: existing?.createdAt ?? now,
@@ -1007,13 +1008,13 @@ export const listAppointmentsByClinicIdWithRelationsFiltered = async (
 };
 
 export const listTodayAppointmentsByClinicIdWithRelations = async (clinicId: string): Promise<AppointmentWithRelations[]> => {
-  const todayStart = dayjs().startOf('day').toDate();
-  const todayEnd = dayjs().endOf('day').toDate();
+  const todayStart = startOfBrazilDay();
+  const todayEnd = endOfBrazilDay();
   return listAppointmentsByClinicIdWithRelationsInRange(clinicId, todayStart, todayEnd);
 };
 
 export const listUpcomingAppointmentsByClinicId = async (clinicId: string, limit = 8): Promise<Appointment[]> => {
-  const todayStart = dayjs().startOf('day').toDate();
+  const todayStart = startOfBrazilDay();
 
   return withServerCache(`clinic:${clinicId}:appointments:upcoming:raw:${limit}`, 90_000, async () => {
     try {
@@ -1195,10 +1196,10 @@ export const completeUserFirstLogin = async (params: { userId: string; email: st
 
 export const getDashboardData = async (params: { clinicId: string; from: string; to: string }) => {
   return withServerCache(`clinic:${params.clinicId}:dashboard:${params.from}:${params.to}`, 60_000, async () => {
-    const fromDate = dayjs(params.from).startOf('day').toDate();
-    const toDate = dayjs(params.to).endOf('day').toDate();
-    const todayStart = dayjs().startOf('day').toDate();
-    const todayEnd = dayjs().endOf('day').toDate();
+    const fromDate = startOfBrazilDay(params.from);
+    const toDate = endOfBrazilDay(params.to);
+    const todayStart = startOfBrazilDay();
+    const todayEnd = endOfBrazilDay();
     const todayInRange = inDateRange(todayStart, fromDate, toDate);
     const daysInRange = dayjs(toDate).diff(dayjs(fromDate), 'day') + 1;
     const clinic = await getClinicById(params.clinicId);
@@ -1216,7 +1217,7 @@ export const getDashboardData = async (params: { clinicId: string; from: string;
       topSpecialties: [],
       todayAppointments: [],
       dailyAppointmentsData: Array.from({ length: Math.max(daysInRange, 1) }).map((_, index) => ({
-        date: dayjs(fromDate).add(index, 'day').format('YYYY-MM-DD'),
+        date: getBrazilDateKey(dayjs(fromDate).add(index, 'day').toDate()),
         appointments: 0,
         revenue: 0,
       })),
@@ -1296,7 +1297,7 @@ export const getDashboardData = async (params: { clinicId: string; from: string;
       .sort((left, right) => right.appointments - left.appointments);
 
     const dailyMap = activeAppointments.reduce<Record<string, { appointments: number; revenue: number }>>((acc, appointment) => {
-      const key = dayjs(appointment.date).format('YYYY-MM-DD');
+      const key = getBrazilDateKey(appointment.date);
       acc[key] = acc[key] ?? { appointments: 0, revenue: 0 };
       acc[key].appointments += 1;
       if (appointment.paymentConfirmed) acc[key].revenue += appointment.appointmentPriceInCents;
@@ -1304,7 +1305,7 @@ export const getDashboardData = async (params: { clinicId: string; from: string;
     }, {});
 
     const dailyAppointmentsData = Array.from({ length: Math.max(daysInRange, 1) }).map((_, index) => {
-      const date = dayjs(fromDate).add(index, 'day').format('YYYY-MM-DD');
+      const date = getBrazilDateKey(dayjs(fromDate).add(index, 'day').toDate());
       const values = dailyMap[date] ?? { appointments: 0, revenue: 0 };
       return {
         date,

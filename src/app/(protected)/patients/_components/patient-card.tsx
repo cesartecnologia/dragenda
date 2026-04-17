@@ -74,12 +74,12 @@ export default function PatientCard({ patient, role, onEdit, onDelete }: Patient
       <CardContent className="space-y-3 px-4 py-4 text-sm text-slate-600">
         <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
           <Phone className="size-4 shrink-0 text-slate-400" />
-          <span className="truncate">{formatPhoneNumber(patient.phoneNumber)}</span>
+          <span className="truncate">{patient.phoneNumber ? formatPhoneNumber(patient.phoneNumber) : 'Telefone não informado.'}</span>
         </div>
 
         <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
           <Mail className="size-4 shrink-0 text-slate-400" />
-          <span className="truncate">{patient.email}</span>
+          <span className="truncate">{patient.email?.trim() || 'Email não informado.'}</span>
         </div>
       </CardContent>
 

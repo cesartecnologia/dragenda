@@ -11,6 +11,7 @@ import { canDeleteRecords, canManageFinancialActions } from '@/lib/access';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { openAppointmentPrintPopup } from '@/helpers/open-appointment-print-popup';
+import { formatDateTimeBr } from '@/helpers/time';
 import { appointmentsTable, doctorsTable, patientsTable, type UserRole } from '@/db/schema';
 
 import AddAppointmentForm from './add-appointment-form';
@@ -46,8 +47,12 @@ const AppointmentsTableActions = ({ appointment, patients, doctors, role }: Prop
   });
 
   const handleWhatsapp = () => {
-    const phone = appointment.patient.phoneNumber.replace(/\D/g, '');
-    const message = encodeURIComponent(`Olá, ${appointment.patient.name}! 👋\n\n🧾 Seu comprovante de agendamento está pronto.\n📅 Data: ${new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(appointment.date))}.`);
+    const phone = appointment.patient.phoneNumber?.replace(/\D/g, '') ?? '';
+    if (!phone) {
+      toast.error('Este paciente não possui telefone cadastrado.');
+      return;
+    }
+    const message = encodeURIComponent(`Olá, ${appointment.patient.name}! 👋\n\n🧾 Seu comprovante de agendamento está pronto.\n📅 Data: ${formatDateTimeBr(appointment.date)}.`);
     window.open(`https://wa.me/55${phone}?text=${message}`, '_blank');
   };
 

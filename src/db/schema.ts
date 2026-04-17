@@ -89,8 +89,8 @@ export interface PatientRecord {
   clinicId: string;
   name: string;
   searchName?: string | null;
-  email: string;
-  phoneNumber: string;
+  email: string | null;
+  phoneNumber: string | null;
   address: string | null;
   sex: PatientSex;
   createdAt: Date;

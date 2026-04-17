@@ -21,7 +21,7 @@ export const getPatientsTableColumns = (params: {
     id: 'phoneNumber',
     accessorKey: 'phoneNumber',
     header: 'Telefone',
-    cell: ({ row }) => formatPhoneNumber(row.original.phoneNumber),
+    cell: ({ row }) => (row.original.phoneNumber ? formatPhoneNumber(row.original.phoneNumber) : 'Não informado'),
   },
   {
     id: 'address',

@@ -91,7 +91,11 @@ export default function AppointmentsDataTable({
   });
 
   const renderWhatsapp = (appointment: AppointmentWithRelations) => {
-    const phone = appointment.patient.phoneNumber.replace(/\D/g, '');
+    const phone = appointment.patient.phoneNumber?.replace(/\D/g, '') ?? '';
+    if (!phone) {
+      toast.error('Este paciente não possui telefone cadastrado.');
+      return;
+    }
     const message = encodeURIComponent(buildAppointmentWhatsappText({
       clinic,
       patientName: appointment.patient.name,
@@ -237,7 +241,7 @@ export default function AppointmentsDataTable({
                     <div className="min-w-0 flex-1 pt-0.5">
                       <div className="space-y-1">
                         <h3 className="truncate text-[1.7rem] font-semibold leading-tight tracking-[-0.03em] text-slate-800">{appointment.patient.name}</h3>
-                        <p className="truncate text-sm font-medium text-slate-500">{formatPhoneNumber(appointment.patient.phoneNumber)}</p>
+                        <p className="truncate text-sm font-medium text-slate-500">{appointment.patient.phoneNumber ? formatPhoneNumber(appointment.patient.phoneNumber) : 'Telefone não informado'}</p>
                       </div>
                     </div>
                   </div>
