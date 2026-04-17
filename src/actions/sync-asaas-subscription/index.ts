@@ -15,7 +15,8 @@ export const syncAsaasSubscription = actionClient.action(async () => {
     asaasCustomerId: summary.asaasCustomerId ?? undefined,
     asaasSubscriptionId: summary.asaasSubscriptionId ?? undefined,
     subscriptionStatus: summary.resolvedStatus,
-    plan: summary.accessReleased ? PLAN_NAME : null,
+    paidThroughDate: summary.paidThroughDate ?? undefined,
+    plan: ['cancelled', 'deleted', 'inactive', 'refunded'].includes(summary.resolvedStatus ?? '') ? null : PLAN_NAME,
   });
 
   return {

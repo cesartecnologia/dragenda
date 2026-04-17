@@ -71,6 +71,7 @@ export const createAsaasCheckout = actionClient.action(async () => {
     successUrl: `${appUrl}/assinatura?checkout=success`,
     cancelUrl: `${appUrl}/assinatura?checkout=cancelled`,
     expiredUrl: `${appUrl}/assinatura?checkout=expired`,
+    externalReference: clinic.id,
   });
 
   await updateUserAsaasSubscription(session.user.id, {

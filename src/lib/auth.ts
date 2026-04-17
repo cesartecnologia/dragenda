@@ -15,7 +15,7 @@ import { getSubscriptionSummaryForUser } from '@/server/subscription-data';
 export const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME ?? '__clinic_smart_session';
 
 const ACCESS_RELEASING_STATUSES = new Set(['active']);
-
+const SUBSCRIPTION_OVERDUE_GRACE_DAYS = Number(process.env.SUBSCRIPTION_OVERDUE_GRACE_DAYS ?? '3');
 const DEFAULT_SUBSCRIPTION_PLAN = 'essential';
 
 export interface AppSession {
@@ -28,6 +28,7 @@ export interface AppSession {
     asaasCustomerId: string | null;
     asaasSubscriptionId: string | null;
     subscriptionStatus: string | null;
+    paidThroughDate: Date | null;
     role: UserRole;
     bypassSubscription: boolean;
     hasSubscriptionAccess: boolean;
@@ -44,12 +45,20 @@ const normalizeSubscriptionStatus = (value?: string | null) => value?.trim().toL
 const hasAccessBySubscription = (params: {
   plan?: string | null;
   subscriptionStatus?: string | null;
+  paidThroughDate?: Date | null;
   bypassSubscription?: boolean;
 }) => {
   if (params.bypassSubscription) return true;
-  if (params.plan) return true;
+
   const normalizedStatus = normalizeSubscriptionStatus(params.subscriptionStatus);
-  return Boolean(normalizedStatus && ACCESS_RELEASING_STATUSES.has(normalizedStatus));
+  if (normalizedStatus && ACCESS_RELEASING_STATUSES.has(normalizedStatus)) return true;
+
+  if (normalizedStatus === 'overdue' && params.paidThroughDate instanceof Date) {
+    const graceUntil = params.paidThroughDate.getTime() + SUBSCRIPTION_OVERDUE_GRACE_DAYS * 24 * 60 * 60 * 1000;
+    return Date.now() <= graceUntil;
+  }
+
+  return false;
 };
 
 const buildFallbackSession = (decodedToken: DecodedIdToken): AppSession | null => {
@@ -70,6 +79,7 @@ const buildFallbackSession = (decodedToken: DecodedIdToken): AppSession | null =
       subscriptionStatus: null,
       role: access.role,
       bypassSubscription: access.bypassSubscription,
+      paidThroughDate: null,
       hasSubscriptionAccess: hasAccessBySubscription({ bypassSubscription: access.bypassSubscription }),
       mustChangePassword: false,
     },
@@ -85,6 +95,7 @@ export const hasSubscriptionAccess = (session: AppSession | null) =>
       hasAccessBySubscription({
         plan: session.user.plan,
         subscriptionStatus: session.user.subscriptionStatus,
+        paidThroughDate: session.user.paidThroughDate,
         bypassSubscription: session.user.bypassSubscription,
       }),
   );
@@ -141,11 +152,13 @@ export const getServerSession = cache(async (): Promise<AppSession | null> => {
         asaasCustomerId: clinic?.asaasCustomerId ?? userProfile.asaasCustomerId ?? null,
         asaasSubscriptionId: clinic?.asaasSubscriptionId ?? userProfile.asaasSubscriptionId ?? null,
         subscriptionStatus,
+        paidThroughDate: clinic?.paidThroughDate ?? userProfile.paidThroughDate ?? null,
         role: access.role,
         bypassSubscription: access.bypassSubscription,
         hasSubscriptionAccess: hasAccessBySubscription({
           plan,
           subscriptionStatus,
+          paidThroughDate: clinic?.paidThroughDate ?? userProfile.paidThroughDate ?? null,
           bypassSubscription: access.bypassSubscription,
         }),
         mustChangePassword: Boolean(userProfile.mustChangePassword),
@@ -169,17 +182,26 @@ export const ensureSessionSubscriptionAccess = async (session: AppSession) => {
 
   try {
     const summary = await getSubscriptionSummaryForUser(session.user.id);
-
-    if (!summary.accessReleased) return session;
-
-    const nextPlan = session.user.plan ?? DEFAULT_SUBSCRIPTION_PLAN;
+    const nextPlan = ['cancelled', 'deleted', 'inactive', 'refunded'].includes(summary.resolvedStatus ?? '')
+      ? null
+      : session.user.plan ?? DEFAULT_SUBSCRIPTION_PLAN;
 
     await updateUserAsaasSubscription(session.user.id, {
       asaasCustomerId: summary.asaasCustomerId ?? undefined,
       asaasSubscriptionId: summary.asaasSubscriptionId ?? undefined,
-      subscriptionStatus: 'active',
+      subscriptionStatus: summary.resolvedStatus,
+      paidThroughDate: summary.paidThroughDate ?? undefined,
       plan: nextPlan,
     }).catch(() => null);
+
+    const nextStatus = summary.resolvedStatus ?? session.user.subscriptionStatus;
+    const nextPaidThroughDate = summary.paidThroughDate ?? session.user.paidThroughDate;
+    const hasSubscriptionAccess = hasAccessBySubscription({
+      plan: nextPlan,
+      subscriptionStatus: nextStatus,
+      paidThroughDate: nextPaidThroughDate,
+      bypassSubscription: session.user.bypassSubscription,
+    });
 
     return {
       ...session,
@@ -188,8 +210,9 @@ export const ensureSessionSubscriptionAccess = async (session: AppSession) => {
         plan: nextPlan,
         asaasCustomerId: summary.asaasCustomerId ?? session.user.asaasCustomerId,
         asaasSubscriptionId: summary.asaasSubscriptionId ?? session.user.asaasSubscriptionId,
-        subscriptionStatus: 'active',
-        hasSubscriptionAccess: true,
+        subscriptionStatus: nextStatus,
+        paidThroughDate: nextPaidThroughDate,
+        hasSubscriptionAccess,
       },
     };
   } catch (error) {

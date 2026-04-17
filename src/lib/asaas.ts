@@ -217,8 +217,9 @@ export const createAsaasCheckoutSession = async (params: {
   minutesToExpire?: number;
   externalReference?: string | null;
 }) => {
-  const now = new Date(Date.now() + 5 * 60 * 1000);
-  const nextDueDate = formatAsaasDateTime(now);
+  const minutesToExpire = Math.min(Math.max(params.minutesToExpire ?? 60, 10), 1440);
+  const nextDueDateAt = new Date(Date.now() + (minutesToExpire + 60) * 60 * 1000);
+  const nextDueDate = formatAsaasDateTime(nextDueDateAt);
 
   const checkout = await asaasRequest<AsaasCheckout>('/checkouts', {
     method: 'POST',
@@ -236,7 +237,7 @@ export const createAsaasCheckoutSession = async (params: {
       billingTypes: params.billingTypes,
       externalReference: params.externalReference?.trim() || undefined,
       chargeTypes: params.chargeTypes ?? ['RECURRENT'],
-      minutesToExpire: params.minutesToExpire ?? 60,
+      minutesToExpire,
       callback: {
         successUrl: params.successUrl,
         cancelUrl: params.cancelUrl,
@@ -353,6 +354,7 @@ export const createAsaasRecurringCheckout = async (params: {
   successUrl: string;
   cancelUrl: string;
   expiredUrl: string;
+  externalReference?: string | null;
 }) => {
   return createAsaasCheckoutSession({
     billingTypes: ['CREDIT_CARD'],
@@ -364,6 +366,7 @@ export const createAsaasRecurringCheckout = async (params: {
     successUrl: params.successUrl,
     cancelUrl: params.cancelUrl,
     expiredUrl: params.expiredUrl,
+    externalReference: params.externalReference,
   });
 };
 
@@ -374,6 +377,7 @@ export const createAsaasSubscription = async (params: {
   description: string;
   nextDueDate?: Date;
   cycle?: 'MONTHLY' | 'WEEKLY' | 'BIWEEKLY' | 'QUARTERLY' | 'SEMIANNUALLY' | 'YEARLY';
+  externalReference?: string | null;
 }) => {
   const subscription = await asaasRequest<AsaasSubscription>('/subscriptions', {
     method: 'POST',
@@ -384,6 +388,7 @@ export const createAsaasSubscription = async (params: {
       value: params.value,
       cycle: params.cycle ?? 'MONTHLY',
       description: params.description,
+      externalReference: params.externalReference?.trim() || undefined,
     }),
     headers: getHeaders(true),
   });
@@ -393,6 +398,35 @@ export const createAsaasSubscription = async (params: {
 
 export const getAsaasCustomer = async (customerId: string) => {
   return await asaasRequest<AsaasCustomer>(`/customers/${customerId}`, { method: 'GET' });
+};
+
+export const updateAsaasSubscription = async (
+  subscriptionId: string,
+  params: {
+    endDate?: Date | null;
+    nextDueDate?: Date | null;
+    value?: number | null;
+    description?: string | null;
+    status?: 'ACTIVE' | 'INACTIVE' | null;
+    billingType?: 'BOLETO' | 'PIX' | 'CREDIT_CARD' | null;
+    updatePendingPayments?: boolean;
+    externalReference?: string | null;
+  },
+) => {
+  return await asaasRequest<AsaasSubscription>(`/subscriptions/${subscriptionId}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      endDate: params.endDate ? formatAsaasDate(params.endDate) : undefined,
+      nextDueDate: params.nextDueDate ? formatAsaasDate(params.nextDueDate) : undefined,
+      value: params.value ?? undefined,
+      description: params.description?.trim() || undefined,
+      status: params.status ?? undefined,
+      billingType: params.billingType ?? undefined,
+      updatePendingPayments: params.updatePendingPayments ?? undefined,
+      externalReference: params.externalReference?.trim() || undefined,
+    }),
+    headers: getHeaders(true),
+  });
 };
 
 export const listAsaasPayments = async (params: { checkoutSession?: string | null; externalReference?: string | null; limit?: number } = {}) => {

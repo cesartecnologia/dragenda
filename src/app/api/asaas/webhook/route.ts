@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+import { type DocumentData } from 'firebase-admin/firestore';
+
+import { getFirestoreDb } from '@/lib/firebase-admin';
 import {
   findUserProfileByAsaasCustomerId,
   findUserProfileByAsaasSubscriptionId,
@@ -10,8 +13,10 @@ import {
   markCheckoutSessionFromPaymentWebhook,
 } from '@/server/checkout-sessions';
 import { markPendingSignupFromCheckoutWebhook, markPendingSignupFromPaymentWebhook } from '@/server/pending-signups';
+import { getSubscriptionSummaryForUser, type SubscriptionResolvedStatus } from '@/server/subscription-data';
 
 const PLAN_NAME = 'essential';
+const WEBHOOK_EVENTS_COLLECTION = 'asaasWebhookEvents';
 
 const ACTIVATION_EVENTS = new Set(['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED', 'PAYMENT_RESTORED']);
 const DEACTIVATION_EVENTS = new Set([
@@ -28,6 +33,8 @@ const SUBSCRIPTION_DEACTIVATION_EVENTS = new Set([
   'SUBSCRIPTION_SPLIT_DIVERGENCE_BLOCK',
 ]);
 
+const TERMINAL_STATUSES = new Set(['cancelled', 'deleted', 'inactive', 'refunded']);
+
 const extractResource = (payload: Record<string, unknown>) => {
   const candidates = [
     payload.payment,
@@ -43,6 +50,87 @@ const extractResource = (payload: Record<string, unknown>) => {
 
   if (payload.customer || payload.subscription) return payload;
   return null;
+};
+
+const resolveWebhookEventId = (payload: Record<string, unknown>, event: string, resourceId?: string | null) => {
+  const explicitId = typeof payload.id === 'string' ? payload.id.trim() : '';
+  if (explicitId) return explicitId;
+
+  const dateCreated = typeof payload.dateCreated === 'string' ? payload.dateCreated.trim() : '';
+  return [event, resourceId ?? 'unknown', dateCreated || 'undated'].join(':');
+};
+
+const registerWebhookEvent = async (eventId: string, params: { event: string; resourceId?: string | null }) => {
+  const ref = getFirestoreDb().collection(WEBHOOK_EVENTS_COLLECTION).doc(eventId);
+  const snapshot = await ref.get();
+  if (snapshot.exists) return false;
+
+  await ref.set({
+    id: eventId,
+    event: params.event,
+    resourceId: params.resourceId ?? null,
+    createdAt: new Date(),
+  } as DocumentData);
+
+  return true;
+};
+
+const deriveFallbackStatus = (event: string, currentStatus?: string | null): SubscriptionResolvedStatus => {
+  const normalizedCurrent = currentStatus?.trim().toLowerCase() ?? null;
+
+  if (ACTIVATION_EVENTS.has(event)) return 'active';
+  if (event === 'PAYMENT_OVERDUE') return 'overdue';
+  if (event === 'PAYMENT_DELETED') return 'deleted';
+  if (event === 'PAYMENT_REFUNDED' || event === 'PAYMENT_CHARGEBACK_REQUESTED' || event === 'PAYMENT_RECEIVED_IN_CASH_UNDONE') {
+    return 'refunded';
+  }
+  if (event === 'SUBSCRIPTION_DELETED') return 'cancelled';
+  if (event === 'SUBSCRIPTION_INACTIVATED' || event === 'SUBSCRIPTION_SPLIT_DIVERGENCE_BLOCK') return 'inactive';
+
+  if (TRACKING_EVENTS.has(event)) {
+    if (normalizedCurrent === 'active') return 'active';
+    if (normalizedCurrent === 'overdue') return 'overdue';
+    if (normalizedCurrent === 'checkout_pending') return 'checkout_pending';
+    if (normalizedCurrent === 'pending') return 'pending';
+    return 'pending';
+  }
+
+  return normalizedCurrent as SubscriptionResolvedStatus;
+};
+
+const planForStatus = (status: SubscriptionResolvedStatus, currentPlan?: string | null) =>
+  TERMINAL_STATUSES.has(status ?? '') ? null : currentPlan ?? PLAN_NAME;
+
+const reconcileUserSubscription = async (params: {
+  userId: string;
+  event: string;
+  currentPlan?: string | null;
+  currentStatus?: string | null;
+  customerId?: string | null;
+  subscriptionId?: string | null;
+}) => {
+  const fallbackStatus = deriveFallbackStatus(params.event, params.currentStatus);
+
+  try {
+    const summary = await getSubscriptionSummaryForUser(params.userId);
+    const nextStatus = summary.resolvedStatus ?? fallbackStatus;
+
+    await updateUserAsaasSubscription(params.userId, {
+      asaasCustomerId: params.customerId ?? summary.asaasCustomerId ?? undefined,
+      asaasSubscriptionId: params.subscriptionId ?? summary.asaasSubscriptionId ?? undefined,
+      subscriptionStatus: nextStatus,
+      paidThroughDate: summary.paidThroughDate ?? undefined,
+      plan: planForStatus(nextStatus, params.currentPlan),
+    });
+  } catch (error) {
+    console.error('ASAAS_WEBHOOK_RECONCILE_FAILED', error);
+    await updateUserAsaasSubscription(params.userId, {
+      asaasCustomerId: params.customerId ?? undefined,
+      asaasSubscriptionId: params.subscriptionId ?? undefined,
+      subscriptionStatus: fallbackStatus,
+      plan: planForStatus(fallbackStatus, params.currentPlan),
+    });
+  }
 };
 
 export const POST = async (request: Request) => {
@@ -64,6 +152,32 @@ export const POST = async (request: Request) => {
   const checkoutCustomerId = typeof checkoutResource?.customer === 'string' ? checkoutResource.customer : null;
   const checkoutSubscriptionId = typeof checkoutResource?.subscription === 'string' ? checkoutResource.subscription : null;
 
+  const paymentId = typeof resource?.id === 'string' && event.startsWith('PAYMENT_') ? resource.id : null;
+  const paymentStatus = typeof resource?.status === 'string' ? resource.status : null;
+  const invoiceUrl = typeof resource?.invoiceUrl === 'string' ? resource.invoiceUrl : null;
+  const billingType = typeof resource?.billingType === 'string' ? resource.billingType : null;
+  const paymentValue = typeof resource?.value === 'number' ? resource.value : null;
+  const paymentCheckoutId = typeof resource?.checkoutSession === 'string' ? resource.checkoutSession : checkoutId;
+  const paymentLinkId = typeof resource?.paymentLink === 'string' ? resource.paymentLink : null;
+  const externalReference = typeof resource?.externalReference === 'string' ? resource.externalReference : null;
+
+  const customerId = typeof resource?.customer === 'string' ? resource.customer : null;
+  const subscriptionId = typeof resource?.subscription === 'string'
+    ? resource.subscription
+    : typeof resource?.id === 'string' && event.startsWith('SUBSCRIPTION_')
+      ? resource.id
+      : null;
+
+  const eventId = resolveWebhookEventId(payload, event, paymentId ?? subscriptionId ?? checkoutId);
+  const shouldProcess = await registerWebhookEvent(eventId, {
+    event,
+    resourceId: paymentId ?? subscriptionId ?? checkoutId,
+  }).catch(() => true);
+
+  if (!shouldProcess) {
+    return NextResponse.json({ received: true, duplicate: true });
+  }
+
   if (event.startsWith('CHECKOUT_') && checkoutId) {
     await Promise.allSettled([
       markCheckoutSessionFromCheckoutWebhook({
@@ -82,22 +196,6 @@ export const POST = async (request: Request) => {
 
     return NextResponse.json({ received: true });
   }
-
-  const paymentId = typeof resource?.id === 'string' && event.startsWith('PAYMENT_') ? resource.id : null;
-  const paymentStatus = typeof resource?.status === 'string' ? resource.status : null;
-  const invoiceUrl = typeof resource?.invoiceUrl === 'string' ? resource.invoiceUrl : null;
-  const billingType = typeof resource?.billingType === 'string' ? resource.billingType : null;
-  const paymentValue = typeof resource?.value === 'number' ? resource.value : null;
-  const paymentCheckoutId = typeof resource?.checkoutSession === 'string' ? resource.checkoutSession : checkoutId;
-  const paymentLinkId = typeof resource?.paymentLink === 'string' ? resource.paymentLink : null;
-  const externalReference = typeof resource?.externalReference === 'string' ? resource.externalReference : null;
-
-  const customerId = typeof resource?.customer === 'string' ? resource.customer : null;
-  const subscriptionId = typeof resource?.subscription === 'string'
-    ? resource.subscription
-    : typeof resource?.id === 'string' && event.startsWith('SUBSCRIPTION_')
-      ? resource.id
-      : null;
 
   const [checkoutSessionResult, pendingSignupResult] = await Promise.allSettled([
     event.startsWith('PAYMENT_') || event.startsWith('SUBSCRIPTION_')
@@ -138,57 +236,14 @@ export const POST = async (request: Request) => {
     });
   }
 
-  if (TRACKING_EVENTS.has(event)) {
-    await updateUserAsaasSubscription(user.id, {
-      asaasCustomerId: customerId ?? undefined,
-      asaasSubscriptionId: subscriptionId ?? undefined,
-      subscriptionStatus:
-        event === 'PAYMENT_CREATED'
-          ? 'pending'
-          : event === 'SUBSCRIPTION_CREATED'
-            ? 'pending'
-            : user.subscriptionStatus ?? 'pending',
-    });
-
-    return NextResponse.json({ received: true });
-  }
-
-  if (ACTIVATION_EVENTS.has(event)) {
-    await updateUserAsaasSubscription(user.id, {
-      asaasCustomerId: customerId ?? undefined,
-      asaasSubscriptionId: subscriptionId ?? undefined,
-      subscriptionStatus: 'active',
-      plan: PLAN_NAME,
-    });
-
-    return NextResponse.json({ received: true });
-  }
-
-  if (DEACTIVATION_EVENTS.has(event)) {
-    const statusByEvent: Record<string, string> = {
-      PAYMENT_OVERDUE: 'overdue',
-      PAYMENT_DELETED: 'deleted',
-      PAYMENT_REFUNDED: 'refunded',
-      PAYMENT_CHARGEBACK_REQUESTED: 'chargeback',
-      PAYMENT_RECEIVED_IN_CASH_UNDONE: 'reverted',
-    };
-
-    await updateUserAsaasSubscription(user.id, {
-      asaasCustomerId: customerId ?? undefined,
-      asaasSubscriptionId: subscriptionId ?? undefined,
-      subscriptionStatus: statusByEvent[event] ?? 'inactive',
-      plan: null,
-    });
-
-    return NextResponse.json({ received: true });
-  }
-
-  if (SUBSCRIPTION_DEACTIVATION_EVENTS.has(event)) {
-    await updateUserAsaasSubscription(user.id, {
-      asaasCustomerId: customerId ?? undefined,
-      asaasSubscriptionId: subscriptionId ?? undefined,
-      subscriptionStatus: event === 'SUBSCRIPTION_DELETED' ? 'cancelled' : 'inactive',
-      plan: null,
+  if (TRACKING_EVENTS.has(event) || ACTIVATION_EVENTS.has(event) || DEACTIVATION_EVENTS.has(event) || SUBSCRIPTION_DEACTIVATION_EVENTS.has(event)) {
+    await reconcileUserSubscription({
+      userId: user.id,
+      event,
+      currentPlan: user.plan,
+      currentStatus: user.subscriptionStatus,
+      customerId,
+      subscriptionId,
     });
 
     return NextResponse.json({ received: true });

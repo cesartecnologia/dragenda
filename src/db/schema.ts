@@ -21,6 +21,7 @@ export interface UserRecord {
   asaasSubscriptionId: string | null;
   asaasCheckoutId: string | null;
   subscriptionStatus: string | null;
+  paidThroughDate: Date | null;
   plan: string | null;
   clinicId: string | null;
   createdAt: Date;
@@ -43,6 +44,7 @@ export interface ClinicRecord {
   asaasSubscriptionId: string | null;
   asaasCheckoutId: string | null;
   subscriptionStatus: string | null;
+  paidThroughDate: Date | null;
   plan: string | null;
   stats?: {
     doctorsCount: number;

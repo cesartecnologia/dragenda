@@ -263,6 +263,7 @@ export const upsertUserProfile = async (params: {
     asaasSubscriptionId: existing?.asaasSubscriptionId ?? null,
     asaasCheckoutId: existing?.asaasCheckoutId ?? null,
     subscriptionStatus: existing?.subscriptionStatus ?? null,
+    paidThroughDate: existing?.paidThroughDate ?? null,
     plan: existing?.plan ?? null,
     clinicId: existing?.clinicId ?? employee?.clinicId ?? null,
     createdAt: existing?.createdAt ?? now,
@@ -304,6 +305,7 @@ export const createClinicForUser = async (params: { userId: string; name: string
     asaasSubscriptionId: null,
     asaasCheckoutId: null,
     subscriptionStatus: null,
+    paidThroughDate: null,
     plan: null,
     stats: defaultClinicStats(),
     createdAt: now,
@@ -343,6 +345,7 @@ export const updateUserAsaasSubscription = async (
     asaasSubscriptionId?: string | null;
     asaasCheckoutId?: string | null;
     subscriptionStatus?: string | null;
+    paidThroughDate?: Date | null;
     plan?: string | null;
   },
 ) => {
@@ -357,6 +360,7 @@ export const updateUserAsaasSubscription = async (
       params.asaasSubscriptionId === undefined ? existing.asaasSubscriptionId : params.asaasSubscriptionId,
     asaasCheckoutId: params.asaasCheckoutId === undefined ? existing.asaasCheckoutId : params.asaasCheckoutId,
     subscriptionStatus: params.subscriptionStatus === undefined ? existing.subscriptionStatus : params.subscriptionStatus,
+    paidThroughDate: params.paidThroughDate === undefined ? existing.paidThroughDate ?? null : params.paidThroughDate,
     plan: params.plan === undefined ? existing.plan : params.plan,
     updatedAt: new Date(),
   };
@@ -377,6 +381,8 @@ export const updateUserAsaasSubscription = async (
         asaasCheckoutId: params.asaasCheckoutId === undefined ? existingClinic.asaasCheckoutId : params.asaasCheckoutId,
         subscriptionStatus:
           params.subscriptionStatus === undefined ? existingClinic.subscriptionStatus : params.subscriptionStatus,
+        paidThroughDate:
+          params.paidThroughDate === undefined ? existingClinic.paidThroughDate ?? null : params.paidThroughDate,
         plan: params.plan === undefined ? existingClinic.plan : params.plan,
         updatedAt: new Date(),
       };

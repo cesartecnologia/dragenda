@@ -183,6 +183,7 @@ export const POST = async (request: Request) => {
         description: `${checkoutSession.planName} - cobrança mensal`,
         nextDueDate,
         cycle: 'MONTHLY',
+        externalReference: clinic.id,
       }).catch(() => null);
 
       if (boletoSubscription?.id) {
