@@ -4,7 +4,7 @@ import { NextRequest } from 'next/server';
 
 import { getServerSession } from '@/lib/auth';
 import { generateReportPdf } from '@/lib/pdf-documents';
-import { listAppointmentsByClinicIdWithRelations, listDoctorsByClinicId, getClinicById } from '@/server/clinic-data';
+import { listAppointmentsByClinicIdWithRelationsFiltered, listDoctorsByClinicId, getClinicById } from '@/server/clinic-data';
 import { canAccessReports } from '@/lib/access';
 
 export async function GET(request: NextRequest) {
@@ -23,18 +23,16 @@ export async function GET(request: NextRequest) {
   const doctor = params.get('doctor') || 'all';
   const payment = params.get('payment') || 'all';
 
-  const [clinic, doctors, appointments] = await Promise.all([
+  const [clinic, doctors, filteredAppointments] = await Promise.all([
     getClinicById(clinicId),
     listDoctorsByClinicId(clinicId),
-    listAppointmentsByClinicIdWithRelations(clinicId),
+    listAppointmentsByClinicIdWithRelationsFiltered(clinicId, {
+      doctorId: doctor === 'all' ? null : doctor,
+      paymentConfirmed: payment === 'all' ? null : payment === 'confirmed',
+      from: dayjs(from).startOf('day').toDate(),
+      to: dayjs(to).endOf('day').toDate(),
+    }).then((appointments) => appointments.filter((appointment) => appointment.status !== 'cancelled')),
   ]);
-
-  const filteredAppointments = appointments.filter((appointment) => {
-    const inRange = dayjs(appointment.date).isAfter(dayjs(from).subtract(1, 'day')) && dayjs(appointment.date).isBefore(dayjs(to).add(1, 'day'));
-    const paymentMatch = payment === 'all' ? true : payment === 'confirmed' ? appointment.paymentConfirmed : !appointment.paymentConfirmed;
-    const doctorMatch = doctor === 'all' ? true : appointment.doctorId === doctor;
-    return appointment.status !== 'cancelled' && inRange && paymentMatch && doctorMatch;
-  });
 
   const doctorName = doctor === 'all' ? 'Todos os médicos' : doctors.find((item) => item.id === doctor)?.name ?? 'Médico';
   const paymentLabel = payment === 'all' ? 'Todos' : payment === 'confirmed' ? 'Pagos' : 'Pendentes';

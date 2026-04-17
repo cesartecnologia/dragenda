@@ -28,8 +28,8 @@ export default function TodayAppointmentsList({ appointments }: { appointments: 
       {appointments.map((appointment, index) => (
         <div
           key={appointment.id}
-          className="animate-panel-fade-up rounded-[22px] border border-slate-100 bg-white p-4 text-sm shadow-[0_10px_24px_rgba(125,160,220,0.10)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(125,160,220,0.14)]"
-          style={{ animationDelay: `${index * 70}ms` }}
+          className="rounded-[22px] border border-slate-100 bg-white p-4 text-sm shadow-[0_10px_24px_rgba(125,160,220,0.10)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(125,160,220,0.14)]"
+         
         >
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0 space-y-2">

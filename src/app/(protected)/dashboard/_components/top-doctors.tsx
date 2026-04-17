@@ -18,7 +18,7 @@ export default function TopDoctors({ doctors }: TopDoctorsProps) {
   const totalAppointments = doctors.reduce((sum, doctor) => sum + doctor.appointments, 0);
 
   return (
-    <Card className="animate-panel-fade-up overflow-hidden">
+    <Card className="overflow-hidden">
       <CardHeader className="space-y-4 border-b border-slate-100 pb-5">
         <div className="flex items-center justify-between gap-3">
           <div className="space-y-1.5">

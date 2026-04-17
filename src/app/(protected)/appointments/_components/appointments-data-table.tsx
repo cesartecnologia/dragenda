@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from 'react';
 
+import dynamic from 'next/dynamic';
+
 import dayjs from 'dayjs';
 import Image from 'next/image';
 
@@ -12,7 +14,6 @@ import { toast } from 'sonner';
 import { deleteAppointment } from '@/actions/delete-appointment';
 import { changeAppointmentStatus, updateAppointmentPayment } from '@/actions/update-appointment';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { PaymentMethodPicker } from '@/components/payments/payment-method-picker';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
@@ -25,9 +26,9 @@ import { formatPhoneNumber } from '@/helpers/format';
 import { formatDateTimeBr } from '@/helpers/time';
 import { canManageFinancialActions, isAdminRole } from '@/lib/access';
 
-import AddAppointmentForm from './add-appointment-form';
 import AppointmentRowActions from './appointment-row-actions';
 import { getAppointmentsTableColumns } from './table-columns';
+import { useAppointmentFormOptions } from './use-appointment-form-options';
 
 type AppointmentWithRelations = typeof appointmentsTable.$inferSelect & {
   patient: typeof patientsTable.$inferSelect;
@@ -38,19 +39,18 @@ type ClinicSummary = Pick<typeof clinicsTable.$inferSelect, 'name' | 'phoneNumbe
 
 const canCompleteAppointmentAt = (value: Date | string) => !dayjs(value).isAfter(dayjs());
 
+const AddAppointmentForm = dynamic(() => import('./add-appointment-form'), { ssr: false });
+const PaymentMethodPicker = dynamic(() => import('@/components/payments/payment-method-picker').then((mod) => mod.PaymentMethodPicker), { ssr: false });
+
 const getSexAvatarIcon = (sex?: PatientSex | null) => (sex === 'female' ? '/icons/patient-female.svg' : '/icons/patient-male.svg');
 
 export default function AppointmentsDataTable({
   data,
-  patients,
-  doctors,
   role,
   clinic,
   variant = 'table',
 }: {
   data: AppointmentWithRelations[];
-  patients: (typeof patientsTable.$inferSelect)[];
-  doctors: (typeof doctorsTable.$inferSelect)[];
   role?: UserRole | null;
   clinic?: ClinicSummary | null;
   variant?: 'table' | 'cards';
@@ -63,6 +63,7 @@ export default function AppointmentsDataTable({
   const [paymentMethod, setPaymentMethod] = useState<AppointmentPaymentMethod>('pix');
 
   const isAdmin = isAdminRole(role);
+  const { patients, doctors, ensureLoaded } = useAppointmentFormOptions();
 
   const deleteAppointmentAction = useAction(deleteAppointment, {
     onSuccess: () => {
@@ -110,13 +111,27 @@ export default function AppointmentsDataTable({
       key: 'edit',
       label: 'Editar agendamento',
       icon: EditIcon,
-      onClick: () => setEditingAppointment(appointment),
+      onClick: async () => {
+        try {
+          await ensureLoaded();
+          setEditingAppointment(appointment);
+        } catch {
+          toast.error('Não foi possível carregar os dados do agendamento.');
+        }
+      },
     },
     {
       key: 'reschedule',
       label: 'Remarcar horário',
       icon: CalendarRange,
-      onClick: () => setEditingAppointment(appointment),
+      onClick: async () => {
+        try {
+          await ensureLoaded();
+          setEditingAppointment(appointment);
+        } catch {
+          toast.error('Não foi possível carregar os dados do agendamento.');
+        }
+      },
     },
     {
       key: 'complete',
@@ -266,7 +281,14 @@ export default function AppointmentsDataTable({
     <>
       {variant === 'cards' ? renderCards() : <DataTable data={orderedAppointments} columns={columns} />}
 
-      <AddAppointmentForm isOpen={!!editingAppointment} appointment={editingAppointment ?? undefined} patients={patients} doctors={doctors} onSuccess={() => setEditingAppointment(null)} onClose={() => setEditingAppointment(null)} />
+      <AddAppointmentForm
+        isOpen={!!editingAppointment}
+        appointment={editingAppointment ?? undefined}
+        patients={patients}
+        doctors={doctors}
+        onSuccess={() => setEditingAppointment(null)}
+        onClose={() => setEditingAppointment(null)}
+      />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>

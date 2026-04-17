@@ -36,7 +36,7 @@ export default function AppointmentsChart({ dailyAppointmentsData }: Appointment
     }));
 
   return (
-    <Card className="animate-panel-fade-up overflow-hidden">
+    <Card className="overflow-hidden">
       <CardHeader className="flex flex-col gap-4 border-b border-slate-100 pb-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-1.5">
           <CardTitle className="text-xl text-slate-900">Movimento do período</CardTitle>

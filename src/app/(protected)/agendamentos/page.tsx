@@ -12,7 +12,6 @@ import {
   listAppointmentsByClinicIdWithRelations,
   listAppointmentsByClinicIdWithRelationsFiltered,
   listDoctorsByClinicId,
-  listPatientsByClinicId,
   listRecentAppointmentsByClinicIdWithRelations,
 } from '@/server/clinic-data';
 
@@ -62,8 +61,7 @@ export default async function AgendamentosPage({ searchParams }: Props) {
         })
       : listRecentAppointmentsByClinicIdWithRelations(clinicId, 120);
 
-  const [patients, doctors, baseAppointments] = await Promise.all([
-    listPatientsByClinicId(clinicId),
+  const [doctors, baseAppointments] = await Promise.all([
     listDoctorsByClinicId(clinicId),
     appointmentsPromise,
   ]);
@@ -98,7 +96,7 @@ export default async function AgendamentosPage({ searchParams }: Props) {
             </div>
 
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <AddAppointmentButton patients={patients} doctors={doctors} />
+              <AddAppointmentButton />
               <AppointmentsFiltersSheet doctors={doctors} q={q} doctor={doctor} payment={payment} status={status} from={from} to={to} />
               {hasStructuredFilters ? (
                 <Button type="button" variant="ghost" className="rounded-xl" asChild>
@@ -133,7 +131,7 @@ export default async function AgendamentosPage({ searchParams }: Props) {
           ) : null}
         </div>
 
-        <AppointmentsDataTable data={filteredAppointments} patients={patients} doctors={doctors} role={role} clinic={null} variant="cards" />
+        <AppointmentsDataTable data={filteredAppointments} role={role} clinic={null} variant="cards" />
       </PageContent>
     </PageContainer>
   );

@@ -88,8 +88,8 @@ export function AppSidebar({ session }: { session: AppSession }) {
           <SidebarGroupLabel className="px-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-2 px-1.5">
-              {mainMenu.map((item, index) => (
-                <SidebarMenuItem key={item.title} style={{ animationDelay: `${index * 60}ms` }} className="animate-panel-fade-up">
+              {mainMenu.map((item) => (
+                <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url} className={navButtonClass}>
                     <Link href={item.url} prefetch={false}>
                       <item.icon />
@@ -108,8 +108,8 @@ export function AppSidebar({ session }: { session: AppSession }) {
           <SidebarGroupLabel className="px-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Conta</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-2 px-1.5">
-              {managementMenu.map((item, index) => (
-                <SidebarMenuItem key={item.title} style={{ animationDelay: `${(index + mainMenu.length) * 60}ms` }} className="animate-panel-fade-up">
+              {managementMenu.map((item) => (
+                <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url} className={navButtonClass}>
                     <Link href={item.url} prefetch={false}>
                       <item.icon />
@@ -120,7 +120,7 @@ export function AppSidebar({ session }: { session: AppSession }) {
               ))}
 
               {canAccessFinancial(role) || !hasFullAccess ? (
-                <SidebarMenuItem style={{ animationDelay: `${(managementMenu.length + mainMenu.length) * 60}ms` }} className="animate-panel-fade-up">
+                <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={pathname === '/assinatura'} className={navButtonClass}>
                     <Link href="/assinatura" prefetch={false}>
                       <Gem />

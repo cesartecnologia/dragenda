@@ -98,7 +98,7 @@ async function PainelDataSection({ clinicId, from, to }: { clinicId: string; fro
       </div>
 
       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.75fr)_minmax(280px,320px)]">
-        <Card className="animate-panel-fade-up min-w-0 overflow-hidden" style={{ animationDelay: '120ms' }}>
+        <Card className="min-w-0 overflow-hidden">
           <CardHeader className="flex flex-col gap-4 border-b border-slate-100 pb-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="flex items-center gap-2 text-slate-500">
@@ -113,7 +113,7 @@ async function PainelDataSection({ clinicId, from, to }: { clinicId: string; fro
           </CardContent>
         </Card>
 
-        <Card className="animate-panel-fade-up min-w-0 overflow-hidden" style={{ animationDelay: '180ms' }}>
+        <Card className="min-w-0 overflow-hidden">
           <CardHeader className="border-b border-slate-100 pb-5">
             <div className="flex items-center gap-2 text-slate-500">
               <Clock3 className="size-4 text-primary" />
@@ -123,7 +123,7 @@ async function PainelDataSection({ clinicId, from, to }: { clinicId: string; fro
           </CardHeader>
           <CardContent className="space-y-3 px-5 py-5">
             {dashboard.upcomingAppointments.length ? dashboard.upcomingAppointments.map((appointment, index) => (
-              <div key={appointment.id} className="animate-panel-fade-up rounded-[22px] border border-slate-100 bg-white p-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(125,160,220,0.12)]" style={{ animationDelay: `${index * 70}ms` }}>
+              <div key={appointment.id} className="rounded-[22px] border border-slate-100 bg-white p-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(125,160,220,0.12)]">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <strong className="block truncate text-slate-900">{appointment.patient.name}</strong>
@@ -209,7 +209,7 @@ export default async function PainelPage({ searchParams }: DashboardPageProps) {
 
   return (
     <PageContainer>
-      <PageHeader className="animate-panel-fade-up rounded-[26px] border border-white/80 bg-white/72 px-5 py-5 shadow-[0_12px_28px_rgba(125,160,220,0.12)] backdrop-blur-sm md:px-6">
+      <PageHeader className="rounded-[26px] border border-slate-200 bg-white px-5 py-5 shadow-[0_6px_18px_rgba(15,23,42,0.05)] md:px-6">
         <PageHeaderContent>
           <PageTitle>Resumo da clínica</PageTitle>
           <PageDescription>Acompanhe agenda, faturamento e equipe em um só lugar.</PageDescription>

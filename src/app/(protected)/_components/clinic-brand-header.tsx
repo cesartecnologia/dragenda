@@ -31,7 +31,7 @@ export default function ClinicBrandHeader({ clinic }: Props) {
   const clinicAddress = formatClinicAddress(clinic);
 
   return (
-    <div className="animate-panel-fade-up px-4 pt-4 md:px-6 md:pt-5">
+    <div className="px-4 pt-4 md:px-6 md:pt-5">
       <div className="rounded-[28px] border border-slate-200/80 bg-[#f7fbfa] px-4 py-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)] md:px-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-4">

@@ -106,7 +106,7 @@ const StatsCards = ({
             <Card
               key={stat.title}
               className={cn(
-                'animate-panel-fade-up relative overflow-hidden border-white/80 bg-gradient-to-br shadow-[0_14px_30px_rgba(125,160,220,0.12)]',
+                'relative overflow-hidden border-white/80 bg-gradient-to-br shadow-[0_14px_30px_rgba(125,160,220,0.12)]',
                 primaryCardTone[index],
               )}
               style={{ animationDelay: `${index * 80}ms` }}
@@ -133,7 +133,7 @@ const StatsCards = ({
         {compactStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={stat.title} className="animate-panel-fade-up bg-white/92" style={{ animationDelay: `${(index + 3) * 70}ms` }}>
+            <Card key={stat.title} className="bg-white/92">
               <CardContent className="flex items-center justify-between gap-4 px-5 py-5">
                 <div>
                   <p className="text-sm text-slate-500">{stat.title}</p>

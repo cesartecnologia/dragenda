@@ -11,7 +11,7 @@ import { formatClinicAddress, formatCnpj, formatPhoneNumber } from '@/helpers/fo
 import { formatDateBr, formatDateTimeBr } from '@/helpers/time';
 import { canAccessReports } from '@/lib/access';
 import { requireSubscribedSession } from '@/lib/auth';
-import { getClinicById, listAppointmentsByClinicIdWithRelations, listDoctorsByClinicId } from '@/server/clinic-data';
+import { getClinicById, listAppointmentsByClinicIdWithRelationsFiltered, listDoctorsByClinicId } from '@/server/clinic-data';
 
 interface Props { searchParams: Promise<{ from?: string; to?: string; payment?: string; doctor?: string }> }
 
@@ -26,12 +26,12 @@ export default async function RelatorioImpressaoPage({ searchParams }: Props) {
   const doctorName = doctor === 'all' ? 'Todos os médicos' : doctors.find((item) => item.id === doctor)?.name ?? 'Médico';
   const paymentLabel = payment === 'all' ? 'Todos' : payment === 'confirmed' ? 'Confirmados' : 'Pendentes';
 
-  const appointments = (await listAppointmentsByClinicIdWithRelations(clinicId)).filter((appointment) => {
-    const inRange = dayjs(appointment.date).isAfter(dayjs(from).subtract(1, 'day')) && dayjs(appointment.date).isBefore(dayjs(to).add(1, 'day'));
-    const paymentMatch = payment === 'all' ? true : payment === 'confirmed' ? appointment.paymentConfirmed : !appointment.paymentConfirmed;
-    const doctorMatch = doctor === 'all' ? true : appointment.doctorId === doctor;
-    return appointment.status !== 'cancelled' && inRange && paymentMatch && doctorMatch;
-  });
+  const appointments = await listAppointmentsByClinicIdWithRelationsFiltered(clinicId, {
+    doctorId: doctor === 'all' ? null : doctor,
+    paymentConfirmed: payment === 'all' ? null : payment === 'confirmed',
+    from: dayjs(from).startOf('day').toDate(),
+    to: dayjs(to).endOf('day').toDate(),
+  }).then((items) => items.filter((appointment) => appointment.status !== 'cancelled'));
 
   const confirmed = appointments.filter((item) => item.paymentConfirmed);
   const totalConfirmed = confirmed.reduce((acc, item) => acc + item.appointmentPriceInCents, 0);
