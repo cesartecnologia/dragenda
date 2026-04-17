@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { useAction } from 'next-safe-action/hooks';
 import { toast } from 'sonner';
@@ -8,10 +8,9 @@ import { toast } from 'sonner';
 import { deletePatient } from '@/actions/delete-patient';
 import { type UserRole, patientsTable } from '@/db/schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { DataTable } from '@/components/ui/data-table';
 import { Dialog } from '@/components/ui/dialog';
 
-import { getPatientsTableColumns } from './table-columns';
+import PatientCard from './patient-card';
 import UpsertPatientForm from './upsert-patient-form';
 
 type Patient = typeof patientsTable.$inferSelect;
@@ -34,19 +33,29 @@ export default function PatientsDataTable({
     onError: () => toast.error('Erro ao excluir paciente.'),
   });
 
-  const columns = useMemo(
-    () =>
-      getPatientsTableColumns({
-        role,
-        onEdit: setEditingPatient,
-        onDelete: setDeleteTarget,
-      }),
-    [role],
-  );
+  if (!data.length) return null;
+
+  const gridClassName = data.length <= 1
+    ? 'grid-cols-1'
+    : data.length === 2
+      ? 'grid-cols-1 xl:grid-cols-2'
+      : data.length === 3
+        ? 'grid-cols-1 md:grid-cols-2 2xl:grid-cols-3'
+        : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4';
 
   return (
     <>
-      <DataTable data={data} columns={columns} />
+      <div className={`grid justify-items-start gap-4 ${gridClassName}`}>
+        {data.map((patient) => (
+          <PatientCard
+            key={patient.id}
+            patient={patient}
+            role={role}
+            onEdit={setEditingPatient}
+            onDelete={setDeleteTarget}
+          />
+        ))}
+      </div>
 
       <Dialog open={!!editingPatient} onOpenChange={(open) => !open && setEditingPatient(null)}>
         <UpsertPatientForm isOpen={!!editingPatient} patient={editingPatient ?? undefined} onSuccess={() => setEditingPatient(null)} />
