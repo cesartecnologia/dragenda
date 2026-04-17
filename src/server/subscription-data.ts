@@ -43,24 +43,40 @@ const sortPayments = (payments: AsaasSubscriptionPayment[]) =>
 const normalizeSubscriptionStatus = (value?: string | null) => value?.trim().toUpperCase() ?? null;
 const normalizePaymentStatus = (value?: string | null) => value?.trim().toUpperCase() ?? null;
 
+const findPaymentByStatus = (payments: AsaasSubscriptionPayment[], acceptedStatuses: Set<string>) =>
+  payments.find((payment) => {
+    const status = normalizePaymentStatus(payment.status);
+    return Boolean(status && acceptedStatuses.has(status));
+  }) ?? null;
+
 const inferResolvedStatus = (params: {
   storedStatus?: string | null;
   subscription?: AsaasSubscription | null;
-  latestPayment?: AsaasSubscriptionPayment | null;
+  payments?: AsaasSubscriptionPayment[];
 }): SubscriptionResolvedStatus => {
   const subscriptionStatus = normalizeSubscriptionStatus(params.subscription?.status);
-  const paymentStatus = normalizePaymentStatus(params.latestPayment?.status);
   const stored = params.storedStatus?.trim().toLowerCase() ?? null;
+  const payments = params.payments ?? [];
 
-  if (paymentStatus && ACTIVE_PAYMENT_STATUSES.has(paymentStatus)) return 'active';
-  if (paymentStatus && OVERDUE_PAYMENT_STATUSES.has(paymentStatus)) return 'overdue';
-  if (paymentStatus && REFUNDED_PAYMENT_STATUSES.has(paymentStatus)) return 'refunded';
-  if (paymentStatus && DELETED_PAYMENT_STATUSES.has(paymentStatus)) return 'deleted';
-  if (paymentStatus && PENDING_PAYMENT_STATUSES.has(paymentStatus)) return 'pending';
-
-  if (subscriptionStatus?.includes('ACTIVE')) return 'pending';
-  if (subscriptionStatus?.includes('INACTIV')) return 'inactive';
   if (subscriptionStatus?.includes('REMOV') || subscriptionStatus?.includes('DELET')) return 'cancelled';
+  if (subscriptionStatus?.includes('INACTIV')) return 'inactive';
+
+  const latestSettledPayment = findPaymentByStatus(payments, ACTIVE_PAYMENT_STATUSES);
+  if (latestSettledPayment) return 'active';
+
+  const latestOverduePayment = findPaymentByStatus(payments, OVERDUE_PAYMENT_STATUSES);
+  if (latestOverduePayment) return 'overdue';
+
+  const latestRefundedPayment = findPaymentByStatus(payments, REFUNDED_PAYMENT_STATUSES);
+  if (latestRefundedPayment) return 'refunded';
+
+  const latestDeletedPayment = findPaymentByStatus(payments, DELETED_PAYMENT_STATUSES);
+  if (latestDeletedPayment) return 'deleted';
+
+  const latestPendingPayment = findPaymentByStatus(payments, PENDING_PAYMENT_STATUSES);
+  if (latestPendingPayment) return 'pending';
+
+  if (subscriptionStatus?.includes('ACTIVE')) return stored === 'active' ? 'active' : 'pending';
 
   if (stored === 'active') return 'active';
   if (stored === 'overdue') return 'overdue';
@@ -118,7 +134,7 @@ export const getSubscriptionSummaryForUser = async (userId: string): Promise<Sub
     const resolvedStatus = inferResolvedStatus({
       storedStatus,
       subscription,
-      latestPayment,
+      payments: sortedPayments,
     });
 
     return {
