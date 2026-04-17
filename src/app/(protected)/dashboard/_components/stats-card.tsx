@@ -61,10 +61,10 @@ const StatsCards = ({
       icon: CalendarIcon,
     },
     {
-      title: 'Pacientes',
-      value: totalPatients.toString(),
-      note: 'com cadastro ativo',
-      icon: UserIcon,
+      title: 'Concluídos',
+      value: completedAppointments.toString(),
+      note: 'atendimentos finalizados',
+      icon: Stethoscope,
     },
     {
       title: 'Hoje',
@@ -86,9 +86,9 @@ const StatsCards = ({
       icon: ReceiptIcon,
     },
     {
-      title: 'Concluídos',
-      value: completedAppointments.toString(),
-      icon: Stethoscope,
+      title: 'Pacientes',
+      value: totalPatients.toString(),
+      icon: UserIcon,
     },
     {
       title: 'Recebido',
