@@ -76,24 +76,24 @@ const StatsCards = ({
 
   const compactStats = [
     {
-      title: 'Médicos',
-      value: totalDoctors.toString(),
-      icon: UsersIcon,
-    },
-    {
       title: 'A receber',
       value: pendingRevenue ? formatCurrencyInCents(pendingRevenue) : 'R$ 0,00',
       icon: ReceiptIcon,
     },
     {
-      title: 'Pacientes',
-      value: totalPatients.toString(),
-      icon: UserIcon,
-    },
-    {
       title: 'Recebido',
       value: `${Math.round(collectionRate ?? 0)}%`,
       icon: PercentIcon,
+    },
+    {
+      title: 'Médicos',
+      value: totalDoctors.toString(),
+      icon: UsersIcon,
+    },
+    {
+      title: 'Pacientes',
+      value: totalPatients.toString(),
+      icon: UserIcon,
     },
   ];
 
