@@ -3,12 +3,12 @@ import { redirect } from 'next/navigation';
 
 import SupportFloatButton from '@/components/common/support-float-button';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { hasPrivilegedAccess, requireSession } from '@/lib/auth';
+import { ensureSessionSubscriptionAccess, hasPrivilegedAccess, requireSession } from '@/lib/auth';
 
 import { AppSidebar } from './_components/app-sidebar';
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
-  const session = await requireSession();
+  const session = await ensureSessionSubscriptionAccess(await requireSession());
   const headerStore = await headers();
   const pathname = headerStore.get('x-pathname') ?? '';
   const isClinicSettingsRoute = pathname.startsWith('/configuracoes/clinica');

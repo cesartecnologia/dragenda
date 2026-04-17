@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation';
 
-import { getDefaultPostLoginRoute, requireSession } from '@/lib/auth';
+import { ensureSessionSubscriptionAccess, getDefaultPostLoginRoute, requireSession } from '@/lib/auth';
 import { getClinicById } from '@/server/clinic-data';
 
 export default async function PosLoginPage() {
-  const session = await requireSession();
+  const session = await ensureSessionSubscriptionAccess(await requireSession());
 
   if (session.user.mustChangePassword) {
     redirect('/primeiro-login');

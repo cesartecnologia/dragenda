@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { SubscriptionPlan } from '@/app/(protected)/subscription/_components/subscription-plan';
 import { canAccessFinancial } from '@/lib/access';
-import { getServerSession } from '@/lib/auth';
+import { ensureSessionSubscriptionAccess, getServerSession } from '@/lib/auth';
 import { getSubscriptionSummaryForUser } from '@/server/subscription-data';
 
 import { AutoStartCheckout } from './_components/auto-start-checkout';
@@ -32,7 +32,8 @@ export default async function AssinaturaPage({
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const session = await getServerSession();
+  const rawSession = await getServerSession();
+  const session = rawSession?.user ? await ensureSessionSubscriptionAccess(rawSession) : rawSession;
   const params = (await searchParams) ?? {};
   const checkoutState = Array.isArray(params.checkout) ? params.checkout[0] : params.checkout;
 

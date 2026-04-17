@@ -9,11 +9,14 @@ import type { UserRole } from '@/db/schema';
 import { getDefaultPostLoginRoute, resolvePrivilegedAccess } from '@/lib/access';
 import { adminAuth } from '@/lib/firebase-admin';
 import { withServerCache } from '@/lib/server-cache';
-import { getClinicById, getUserProfileById, upsertUserProfile } from '@/server/clinic-data';
+import { getClinicById, getUserProfileById, updateUserAsaasSubscription, upsertUserProfile } from '@/server/clinic-data';
+import { getSubscriptionSummaryForUser } from '@/server/subscription-data';
 
 export const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME ?? '__clinic_smart_session';
 
 const ACCESS_RELEASING_STATUSES = new Set(['active']);
+
+const DEFAULT_SUBSCRIPTION_PLAN = 'essential';
 
 export interface AppSession {
   user: {
@@ -161,6 +164,40 @@ export const requireSession = cache(async () => {
   return session;
 });
 
+export const ensureSessionSubscriptionAccess = async (session: AppSession) => {
+  if (session.user.hasSubscriptionAccess || session.user.bypassSubscription) return session;
+
+  try {
+    const summary = await getSubscriptionSummaryForUser(session.user.id);
+
+    if (!summary.accessReleased) return session;
+
+    const nextPlan = session.user.plan ?? DEFAULT_SUBSCRIPTION_PLAN;
+
+    await updateUserAsaasSubscription(session.user.id, {
+      asaasCustomerId: summary.asaasCustomerId ?? undefined,
+      asaasSubscriptionId: summary.asaasSubscriptionId ?? undefined,
+      subscriptionStatus: 'active',
+      plan: nextPlan,
+    }).catch(() => null);
+
+    return {
+      ...session,
+      user: {
+        ...session.user,
+        plan: nextPlan,
+        asaasCustomerId: summary.asaasCustomerId ?? session.user.asaasCustomerId,
+        asaasSubscriptionId: summary.asaasSubscriptionId ?? session.user.asaasSubscriptionId,
+        subscriptionStatus: 'active',
+        hasSubscriptionAccess: true,
+      },
+    };
+  } catch (error) {
+    console.error('SESSION_SUBSCRIPTION_RECONCILE_FAILED', error);
+    return session;
+  }
+};
+
 export const requireClinicSession = cache(async () => {
   const session = await requireSession();
   if (!session.user.clinic) redirect('/configuracoes/clinica?onboarding=1');
@@ -168,7 +205,7 @@ export const requireClinicSession = cache(async () => {
 });
 
 export const requireSubscribedSession = cache(async () => {
-  const session = await requireSession();
+  const session = await ensureSessionSubscriptionAccess(await requireSession());
   if (session.user.mustChangePassword) redirect('/primeiro-login');
   if (!session.user.hasSubscriptionAccess) redirect('/assinatura');
   if (!session.user.clinic) redirect('/configuracoes/clinica?onboarding=1');
