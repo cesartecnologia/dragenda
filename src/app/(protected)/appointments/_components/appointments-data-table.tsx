@@ -209,14 +209,10 @@ export default function AppointmentsDataTable({
       );
     }
 
-    const gridClassName = orderedAppointments.length <= 1
-      ? 'grid-cols-1'
-      : orderedAppointments.length === 2
-        ? 'grid-cols-1 xl:grid-cols-2'
-        : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4';
+    const cardsGridClassName = 'grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),340px))] justify-start gap-4';
 
     return (
-      <div className={`grid justify-items-start gap-4 ${gridClassName}`}>
+      <div className={cardsGridClassName}>
         {orderedAppointments.map((appointment) => {
           const statusBadge = appointment.status === 'cancelled'
             ? <span className="inline-flex min-h-9 items-center rounded-full bg-red-50 px-4 py-2 text-sm font-medium text-red-700">Cancelado</span>
@@ -225,8 +221,8 @@ export default function AppointmentsDataTable({
               : <span className="inline-flex min-h-9 items-center rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">Agendado</span>;
 
           return (
-            <Card key={appointment.id} className="h-full w-full max-w-[420px] overflow-hidden border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-              <CardHeader className="border-b border-slate-100 bg-slate-50/60 px-4 py-3">
+            <Card key={appointment.id} className="h-full w-full overflow-hidden border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+              <CardHeader className="border-b border-slate-100 bg-slate-50/60 px-4 py-2.5">
                 <div className="flex items-start justify-between gap-2.5">
                   <div className="flex min-w-0 flex-1 items-start gap-2.5">
                     <div className="flex h-12 w-10 shrink-0 items-center justify-center overflow-hidden">
@@ -240,7 +236,7 @@ export default function AppointmentsDataTable({
                     </div>
                     <div className="min-w-0 flex-1 pt-0.5">
                       <div className="space-y-1">
-                        <h3 className="truncate text-[1.7rem] font-semibold leading-tight tracking-[-0.03em] text-slate-800">{appointment.patient.name}</h3>
+                        <h3 className="truncate text-[1.45rem] font-semibold leading-tight tracking-[-0.02em] text-slate-800">{appointment.patient.name}</h3>
                         <p className="truncate text-sm font-medium text-slate-500">{appointment.patient.phoneNumber ? formatPhoneNumber(appointment.patient.phoneNumber) : 'Telefone não informado'}</p>
                       </div>
                     </div>
@@ -250,7 +246,7 @@ export default function AppointmentsDataTable({
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3 px-4 py-4 text-sm text-slate-600">
+              <CardContent className="space-y-3 px-4 py-3.5 text-sm text-slate-600">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="inline-flex min-h-9 items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
                     <UserRound className="size-4" />
