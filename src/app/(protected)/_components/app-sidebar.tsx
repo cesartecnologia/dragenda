@@ -1,6 +1,6 @@
 'use client';
 
-import type { ComponentType } from 'react';
+import { useCallback, useMemo, useState, type ComponentType } from 'react';
 
 import {
   CalendarDays,
@@ -33,8 +33,13 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar';
 import type { AppSession } from '@/lib/auth';
-import { authClient } from '@/lib/auth-client';
 import { canAccessClinicSettings, canAccessDashboard, canAccessFinancial, canAccessReports, canAccessUserManagement } from '@/lib/access';
+
+type NavItem = {
+  title: string;
+  url: string;
+  icon: ComponentType<{ className?: string }>;
+};
 
 const navButtonClass =
   "group min-h-[50px] gap-3 rounded-2xl border border-transparent px-3.5 py-3 text-[15px] font-medium text-slate-600 transition-all duration-300 hover:bg-[#f5f8ff] hover:text-slate-900 data-[active=true]:bg-[linear-gradient(135deg,#edf4ff_0%,#f7faff_100%)] data-[active=true]:text-slate-950 data-[active=true]:shadow-[0_12px_24px_rgba(125,160,220,0.12)] [&>svg]:size-[18px]";
@@ -44,36 +49,52 @@ export function AppSidebar({ session }: { session: AppSession }) {
   const pathname = usePathname();
   const role = session.user.role;
   const hasFullAccess = session.user.hasSubscriptionAccess || session.user.bypassSubscription;
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
-  const mainMenu = [
-    canAccessDashboard(role) ? { title: 'Painel', url: '/painel', icon: LayoutDashboard } : null,
-    { title: 'Agendamentos', url: '/agendamentos', icon: CalendarDays },
-    { title: 'Médicos', url: '/medicos', icon: Stethoscope },
-    { title: 'Pacientes', url: '/pacientes', icon: UsersRound },
-  ].filter(Boolean) as { title: string; url: string; icon: ComponentType<{ className?: string }> }[];
+  const mainMenu = useMemo(
+    () =>
+      [
+        canAccessDashboard(role) ? { title: 'Painel', url: '/painel', icon: LayoutDashboard } : null,
+        { title: 'Agendamentos', url: '/agendamentos', icon: CalendarDays },
+        { title: 'Médicos', url: '/medicos', icon: Stethoscope },
+        { title: 'Pacientes', url: '/pacientes', icon: UsersRound },
+      ].filter(Boolean) as NavItem[],
+    [role],
+  );
 
-  const managementMenu = (hasFullAccess
-    ? [
-        canAccessReports(role) ? { title: 'Relatórios', url: '/relatorios', icon: FileText } : null,
-        canAccessUserManagement(role) ? { title: 'Usuários', url: '/funcionarios', icon: Users } : null,
-        canAccessClinicSettings(role) ? { title: 'Configurações', url: '/configuracoes/clinica', icon: Settings2 } : null,
-      ]
-    : [canAccessClinicSettings(role) ? { title: 'Configurações', url: '/configuracoes/clinica', icon: Settings2 } : null]).filter(Boolean) as {
-    title: string;
-    url: string;
-    icon: ComponentType<{ className?: string }>;
-  }[];
+  const managementMenu = useMemo(
+    () =>
+      (hasFullAccess
+        ? [
+            canAccessReports(role) ? { title: 'Relatórios', url: '/relatorios', icon: FileText } : null,
+            canAccessUserManagement(role) ? { title: 'Usuários', url: '/funcionarios', icon: Users } : null,
+            canAccessClinicSettings(role) ? { title: 'Configurações', url: '/configuracoes/clinica', icon: Settings2 } : null,
+          ]
+        : [canAccessClinicSettings(role) ? { title: 'Configurações', url: '/configuracoes/clinica', icon: Settings2 } : null]).filter(
+        Boolean,
+      ) as NavItem[],
+    [hasFullAccess, role],
+  );
 
-  const handleSignOut = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          router.replace('/login');
-          router.refresh();
+  const handleSignOut = useCallback(async () => {
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+
+    try {
+      // Defer firebase/auth bundle to sign-out click, reducing protected routes initial JS.
+      const { authClient } = await import('@/lib/auth-client');
+      await authClient.signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            router.replace('/login');
+            router.refresh();
+          },
         },
-      },
-    });
-  };
+      });
+    } finally {
+      setIsSigningOut(false);
+    }
+  }, [isSigningOut, router]);
 
   return (
     <Sidebar variant="floating" className="py-3 pl-3 md:py-4 md:pl-4">
@@ -91,7 +112,7 @@ export function AppSidebar({ session }: { session: AppSession }) {
               {mainMenu.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url} className={navButtonClass}>
-                    <Link href={item.url} prefetch={false}>
+                    <Link href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>
@@ -111,7 +132,7 @@ export function AppSidebar({ session }: { session: AppSession }) {
               {managementMenu.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url} className={navButtonClass}>
-                    <Link href={item.url} prefetch={false}>
+                    <Link href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>
@@ -122,7 +143,7 @@ export function AppSidebar({ session }: { session: AppSession }) {
               {canAccessFinancial(role) || !hasFullAccess ? (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={pathname === '/assinatura'} className={navButtonClass}>
-                    <Link href="/assinatura" prefetch={false}>
+                    <Link href="/assinatura">
                       <Gem />
                       <span>Assinatura</span>
                     </Link>
@@ -156,7 +177,7 @@ export function AppSidebar({ session }: { session: AppSession }) {
           <DropdownMenuContent align="end" className="rounded-2xl border-slate-200/80 p-2 shadow-[0_18px_42px_rgba(125,160,220,0.16)]">
             <DropdownMenuItem onClick={handleSignOut} className="rounded-xl px-3 py-2 text-sm">
               <LogOut />
-              Sair
+              {isSigningOut ? 'Saindo...' : 'Sair'}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 
 import { Calendar, ChevronRight, Clock3, LineChart } from 'lucide-react';
-import dynamic from 'next/dynamic';
 import { redirect } from 'next/navigation';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,31 +11,14 @@ import { formatDateTimeBr, getBrazilMonthEndKey, getBrazilMonthStartKey } from '
 import { canAccessDashboard } from '@/lib/access';
 import { requireSubscribedSession } from '@/lib/auth';
 
-import { DatePicker } from '../dashboard/_components/date-picker';
 import StatsCards from '../dashboard/_components/stats-card';
 import TopDoctors from '../dashboard/_components/top-doctors';
+import LazyAppointmentsChart from './_components/lazy-appointments-chart';
+import LazyDatePicker from './_components/lazy-date-picker';
 import TodayAppointmentsList from './_components/today-appointments-list';
 
 interface DashboardPageProps {
   searchParams: Promise<{ from: string; to: string }>;
-}
-
-const AppointmentsChart = dynamic(() => import('../dashboard/_components/revenue-chart'), {
-  loading: () => <ChartCardSkeleton />,
-});
-
-function ChartCardSkeleton() {
-  return (
-    <Card className="overflow-hidden">
-      <CardHeader>
-        <Skeleton className="h-5 w-48" />
-        <Skeleton className="h-4 w-56" />
-      </CardHeader>
-      <CardContent>
-        <Skeleton className="h-[280px] w-full rounded-[24px]" />
-      </CardContent>
-    </Card>
-  );
 }
 
 function EmptyChartCard() {
@@ -86,7 +68,7 @@ async function PainelDataSection({ clinicId, from, to }: { clinicId: string; fro
       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.75fr)_minmax(280px,320px)]">
         <div className="min-w-0">
           {dashboard.totalAppointments.total > 0 ? (
-            <AppointmentsChart dailyAppointmentsData={dashboard.dailyAppointmentsData} />
+            <LazyAppointmentsChart dailyAppointmentsData={dashboard.dailyAppointmentsData} />
           ) : (
             <EmptyChartCard />
           )}
@@ -214,7 +196,7 @@ export default async function PainelPage({ searchParams }: DashboardPageProps) {
           <PageDescription>Acompanhe agenda, faturamento e equipe em um só lugar.</PageDescription>
         </PageHeaderContent>
         <PageActions>
-          <DatePicker />
+          <LazyDatePicker />
         </PageActions>
       </PageHeader>
 
