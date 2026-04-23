@@ -24,6 +24,7 @@ const END_HOUR = 21;
 const SLOT_INTERVAL_MINUTES = 30;
 const SLOT_HEIGHT_PX = 44;
 const DEFAULT_EVENT_DURATION_SLOTS = 2;
+const GRID_TOP_OFFSET_PX = 10;
 
 const getWeekStart = (date: dayjs.Dayjs) => {
   const day = date.day();
@@ -80,7 +81,7 @@ export default function AppointmentsCalendarView({
 
   const weekEnd = useMemo(() => weekStart.add(6, 'day').endOf('day'), [weekStart]);
 
-  const timelineHeight = (slots.length - 1) * SLOT_HEIGHT_PX;
+  const timelineHeight = GRID_TOP_OFFSET_PX + (slots.length - 1) * SLOT_HEIGHT_PX;
 
   const appointmentsByDay = useMemo(() => {
     const map = new Map<string, AppointmentWithRelations[]>();
@@ -133,30 +134,30 @@ export default function AppointmentsCalendarView({
 
       <div className="overflow-x-auto">
         <div className="min-w-[980px]">
-          <div className="grid border-b border-slate-200 bg-slate-50/80" style={{ gridTemplateColumns: '76px repeat(7, minmax(0, 1fr))' }}>
-            <div className="border-r border-slate-200 px-2 py-3 text-xs font-medium uppercase tracking-[0.08em] text-slate-400">Hora</div>
-            {days.map((day) => {
-              const isToday = day.isSame(toBrazilTime(), 'day');
-              return (
-                <div key={day.format('YYYY-MM-DD')} className="border-r border-slate-200 px-3 py-3 text-center last:border-r-0">
-                  <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500">{day.format('ddd')}</p>
-                  <p className={cn('mt-1 text-sm font-semibold text-slate-700', isToday && 'text-primary')}>{day.format('DD/MM')}</p>
-                </div>
-              );
-            })}
-          </div>
+          <div className="max-h-[760px] overflow-y-auto [scrollbar-gutter:stable]">
+            <div className="sticky top-0 z-10 grid border-b border-slate-200 bg-slate-50/95 backdrop-blur-sm" style={{ gridTemplateColumns: '76px repeat(7, minmax(0, 1fr))' }}>
+              <div className="border-r border-slate-200 px-2 py-3 text-xs font-medium uppercase tracking-[0.08em] text-slate-400">Hora</div>
+              {days.map((day) => {
+                const isToday = day.isSame(toBrazilTime(), 'day');
+                return (
+                  <div key={day.format('YYYY-MM-DD')} className="border-r border-slate-200 px-3 py-3 text-center last:border-r-0">
+                    <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500">{day.format('ddd')}</p>
+                    <p className={cn('mt-1 text-sm font-semibold text-slate-700', isToday && 'text-primary')}>{day.format('DD/MM')}</p>
+                  </div>
+                );
+              })}
+            </div>
 
-          <div className="max-h-[760px] overflow-y-auto">
             <div className="grid" style={{ gridTemplateColumns: '76px repeat(7, minmax(0, 1fr))' }}>
               <div className="relative border-r border-slate-200 bg-slate-50/50" style={{ height: `${timelineHeight}px` }}>
                 {slots.map((slot, index) => (
                   <div
                     key={slot.minutes}
                     className="absolute inset-x-0 border-t border-slate-100"
-                    style={{ top: `${index * SLOT_HEIGHT_PX}px` }}
+                    style={{ top: `${GRID_TOP_OFFSET_PX + index * SLOT_HEIGHT_PX}px` }}
                   >
                     {slot.isFullHour ? (
-                      <span className="absolute -top-2 left-2 bg-slate-50 px-1 text-[11px] font-medium text-slate-500">
+                      <span className="absolute left-2 top-0 -translate-y-1/2 bg-slate-50 px-1 text-[11px] font-medium text-slate-500">
                         {`${Math.floor(slot.minutes / 60).toString().padStart(2, '0')}:00`}
                       </span>
                     ) : null}
@@ -175,7 +176,7 @@ export default function AppointmentsCalendarView({
                       <div
                         key={`${dayKey}-${slot.minutes}`}
                         className="absolute inset-x-0 border-t border-slate-100"
-                        style={{ top: `${index * SLOT_HEIGHT_PX}px` }}
+                        style={{ top: `${GRID_TOP_OFFSET_PX + index * SLOT_HEIGHT_PX}px` }}
                       />
                     ))}
 
@@ -184,11 +185,11 @@ export default function AppointmentsCalendarView({
                       const minutesInDay = appointmentDate.hour() * 60 + appointmentDate.minute();
                       const minutesFromStart = minutesInDay - START_HOUR * 60;
 
-                      if (minutesFromStart < 0 || minutesFromStart > (END_HOUR - START_HOUR) * 60) {
+                      if (minutesFromStart < 0 || minutesFromStart >= (END_HOUR - START_HOUR) * 60) {
                         return null;
                       }
 
-                      const top = (minutesFromStart / SLOT_INTERVAL_MINUTES) * SLOT_HEIGHT_PX + 4;
+                      const top = GRID_TOP_OFFSET_PX + (minutesFromStart / SLOT_INTERVAL_MINUTES) * SLOT_HEIGHT_PX + 4;
                       const startSlot = Math.floor(minutesFromStart / SLOT_INTERVAL_MINUTES);
                       const overlapIndex = daySlotCount.get(startSlot) ?? 0;
                       daySlotCount.set(startSlot, overlapIndex + 1);

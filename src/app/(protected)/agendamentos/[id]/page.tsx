@@ -88,10 +88,6 @@ export default async function AgendamentoDetalhesPage({ params }: Props) {
                 <Badge variant="outline" className={statusBadgeClassName(currentAppointment)}>
                   {getAppointmentStatusLabel(currentAppointment.status)}
                 </Badge>
-                <Badge variant="outline" className={currentAppointment.paymentConfirmed ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}>
-                  {currentAppointment.paymentConfirmed ? 'Pagamento confirmado' : 'Pagamento pendente'}
-                </Badge>
-                <Badge variant="secondary">{getAppointmentPaymentMethodLabel(currentAppointment.paymentMethod)}</Badge>
               </div>
             </div>
 
@@ -159,8 +155,6 @@ export default async function AgendamentoDetalhesPage({ params }: Props) {
                   <p><span className="font-medium">Última atualização:</span> {formatDateTimeBr(currentAppointment.updatedAt)}</p>
                   <p><span className="font-medium">Cadastrado por:</span> {createdBy?.name ?? 'Usuário da clínica'}</p>
                   <p><span className="font-medium">Pagamento confirmado por:</span> {paymentConfirmedBy?.name ?? 'Ainda não confirmado'}</p>
-                  <p><span className="font-medium">Status atual:</span> {getAppointmentStatusLabel(currentAppointment.status)}</p>
-                  <div className="flex items-center gap-2"><span className="font-medium">Comprovante:</span> <OpenAppointmentReceiptButton appointmentId={currentAppointment.id} label="Abrir comprovante" size="sm" /></div>
                 </div>
                 {currentAppointment.status === 'cancelled' ? (
                   <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-red-700">

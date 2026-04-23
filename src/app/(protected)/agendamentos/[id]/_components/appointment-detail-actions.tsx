@@ -5,7 +5,7 @@ import { useState } from 'react';
 import dayjs from 'dayjs';
 
 import { useAction } from 'next-safe-action/hooks';
-import { Ban, CalendarRange, CheckCircle2, EditIcon, MessageCircle, Printer, Receipt, RotateCcw, TrashIcon, Undo2 } from 'lucide-react';
+import { Ban, CheckCircle2, EditIcon, MessageCircle, Receipt, RotateCcw, TrashIcon, Undo2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { deleteAppointment } from '@/actions/delete-appointment';
@@ -16,7 +16,6 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { appointmentsTable, clinicsTable, doctorsTable, patientsTable, type AppointmentPaymentMethod, type UserRole } from '@/db/schema';
 import { buildAppointmentWhatsappText } from '@/helpers/appointment-message';
-import { openAppointmentPrintPopup } from '@/helpers/open-appointment-print-popup';
 import { canManageFinancialActions, isAdminRole } from '@/lib/access';
 
 import AddAppointmentForm from '../../../appointments/_components/add-appointment-form';
@@ -105,12 +104,6 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
       onClick: () => setEditingOpen(true),
     },
     {
-      key: 'reschedule',
-      label: 'Remarcar horário',
-      icon: CalendarRange,
-      onClick: () => setEditingOpen(true),
-    },
-    {
       key: 'complete',
       label: appointment.status === 'completed' ? 'Reabrir como agendada' : 'Consulta concluída',
       icon: appointment.status === 'completed' ? Undo2 : CheckCircle2,
@@ -144,12 +137,6 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
         setPaymentMethod(appointment.paymentMethod ?? 'pix');
         setPaymentOpen(true);
       },
-    },
-    {
-      key: 'receipt',
-      label: 'Gerar comprovante',
-      icon: Printer,
-      onClick: () => openAppointmentPrintPopup(appointment.id),
     },
     {
       key: 'whatsapp',
