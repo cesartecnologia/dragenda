@@ -1,9 +1,13 @@
+import { Suspense } from 'react';
+
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 
 import DebouncedSearchForm from '@/components/common/debounced-search-form';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PageContainer, PageContent, PageHeader, PageHeaderContent, PageTitle } from '@/components/ui/page-container';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { AppointmentStatus } from '@/db/schema';
 import { normalizeSearchText } from '@/helpers/format';
 import { endOfBrazilDay, formatDateBr, startOfBrazilDay } from '@/helpers/time';
@@ -15,7 +19,6 @@ import {
   listRecentAppointmentsByClinicIdWithRelations,
 } from '@/server/clinic-data';
 
-import AppointmentsCalendarView from './_components/appointments-calendar-view';
 import AppointmentsFiltersSheet from './_components/appointments-filters-sheet';
 import AddAppointmentButton from '../appointments/_components/add-appointment-button';
 import AppointmentsDataTable from '../appointments/_components/appointments-data-table';
@@ -24,11 +27,55 @@ interface Props {
   searchParams: Promise<{ q?: string; doctor?: string; payment?: string; status?: string; from?: string; to?: string; view?: string }>;
 }
 
-export default async function AgendamentosPage({ searchParams }: Props) {
-  const session = await requireSubscribedSession();
+type AgendamentosSearchParams = {
+  q?: string;
+  doctor?: string;
+  payment?: string;
+  status?: string;
+  from?: string;
+  to?: string;
+  view?: string;
+};
+
+const AppointmentsCalendarView = dynamic(() => import('./_components/appointments-calendar-view'));
+
+function AgendamentosContentSkeleton() {
+  return (
+    <>
+      <div className="rounded-2xl border bg-background p-4 shadow-sm">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <Skeleton className="h-11 w-full rounded-xl" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-11 w-44 rounded-xl" />
+            <Skeleton className="h-11 w-28 rounded-xl" />
+            <Skeleton className="h-11 w-24 rounded-xl" />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div key={index} className="rounded-2xl border bg-white p-4 shadow-sm">
+            <Skeleton className="h-6 w-36" />
+            <Skeleton className="mt-2 h-4 w-28" />
+            <Skeleton className="mt-6 h-20 w-full" />
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+async function AgendamentosDataSection({
+  sessionPromise,
+  searchParamsPromise,
+}: {
+  sessionPromise: ReturnType<typeof requireSubscribedSession>;
+  searchParamsPromise: Props['searchParams'];
+}) {
+  const [session, rawSearchParams] = await Promise.all([sessionPromise, searchParamsPromise]);
   const clinicId = session.user.clinic!.id;
   const role = session.user.role;
-  const rawSearchParams = await searchParams;
   const { q = '', doctor = 'all', payment = 'all', status = 'all', from = '', to = '', view = 'cards' } = rawSearchParams;
   const isCalendarView = view === 'calendar';
   const normalizedQuery = normalizeSearchText(q);
@@ -108,15 +155,8 @@ export default async function AgendamentosPage({ searchParams }: Props) {
   })();
 
   return (
-    <PageContainer>
-      <PageHeader>
-        <PageHeaderContent>
-          <PageTitle>Agendamentos</PageTitle>
-        </PageHeaderContent>
-      </PageHeader>
-
-      <PageContent className="w-full space-y-4">
-        <div className="rounded-2xl border bg-background p-4 shadow-sm">
+    <>
+      <div className="rounded-2xl border bg-background p-4 shadow-sm">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0 flex-1">
               <DebouncedSearchForm
@@ -171,11 +211,30 @@ export default async function AgendamentosPage({ searchParams }: Props) {
           ) : null}
         </div>
 
-        {isCalendarView ? (
-          <AppointmentsCalendarView appointments={filteredAppointments} initialDate={from || undefined} />
-        ) : (
-          <AppointmentsDataTable data={filteredAppointments} role={role} clinic={null} variant="cards" />
-        )}
+      {isCalendarView ? (
+        <AppointmentsCalendarView appointments={filteredAppointments} initialDate={from || undefined} />
+      ) : (
+        <AppointmentsDataTable data={filteredAppointments} role={role} clinic={null} variant="cards" />
+      )}
+    </>
+  );
+}
+
+export default async function AgendamentosPage({ searchParams }: Props) {
+  const sessionPromise = requireSubscribedSession();
+
+  return (
+    <PageContainer>
+      <PageHeader>
+        <PageHeaderContent>
+          <PageTitle>Agendamentos</PageTitle>
+        </PageHeaderContent>
+      </PageHeader>
+
+      <PageContent className="w-full space-y-4">
+        <Suspense fallback={<AgendamentosContentSkeleton />}>
+          <AgendamentosDataSection sessionPromise={sessionPromise} searchParamsPromise={searchParams} />
+        </Suspense>
       </PageContent>
     </PageContainer>
   );

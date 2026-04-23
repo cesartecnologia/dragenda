@@ -180,45 +180,55 @@ export const requireSession = cache(async () => {
 export const ensureSessionSubscriptionAccess = async (session: AppSession) => {
   if (session.user.hasSubscriptionAccess || session.user.bypassSubscription) return session;
 
-  try {
-    const summary = await getSubscriptionSummaryForUser(session.user.id);
-    const nextPlan = ['cancelled', 'deleted', 'inactive', 'refunded'].includes(summary.resolvedStatus ?? '')
-      ? null
-      : session.user.plan ?? DEFAULT_SUBSCRIPTION_PLAN;
+  const cacheKey = [
+    'session:subscription-reconcile',
+    session.user.id,
+    session.user.subscriptionStatus ?? 'none',
+    session.user.paidThroughDate?.toISOString() ?? 'none',
+    session.user.plan ?? 'none',
+  ].join(':');
 
-    await updateUserAsaasSubscription(session.user.id, {
-      asaasCustomerId: summary.asaasCustomerId ?? undefined,
-      asaasSubscriptionId: summary.asaasSubscriptionId ?? undefined,
-      subscriptionStatus: summary.resolvedStatus,
-      paidThroughDate: summary.paidThroughDate ?? undefined,
-      plan: nextPlan,
-    }).catch(() => null);
+  return withServerCache(cacheKey, 60_000, async () => {
+    try {
+      const summary = await getSubscriptionSummaryForUser(session.user.id);
+      const nextPlan = ['cancelled', 'deleted', 'inactive', 'refunded'].includes(summary.resolvedStatus ?? '')
+        ? null
+        : session.user.plan ?? DEFAULT_SUBSCRIPTION_PLAN;
 
-    const nextStatus = summary.resolvedStatus ?? session.user.subscriptionStatus;
-    const nextPaidThroughDate = summary.paidThroughDate ?? session.user.paidThroughDate;
-    const hasSubscriptionAccess = hasAccessBySubscription({
-      plan: nextPlan,
-      subscriptionStatus: nextStatus,
-      paidThroughDate: nextPaidThroughDate,
-      bypassSubscription: session.user.bypassSubscription,
-    });
-
-    return {
-      ...session,
-      user: {
-        ...session.user,
+      await updateUserAsaasSubscription(session.user.id, {
+        asaasCustomerId: summary.asaasCustomerId ?? undefined,
+        asaasSubscriptionId: summary.asaasSubscriptionId ?? undefined,
+        subscriptionStatus: summary.resolvedStatus,
+        paidThroughDate: summary.paidThroughDate ?? undefined,
         plan: nextPlan,
-        asaasCustomerId: summary.asaasCustomerId ?? session.user.asaasCustomerId,
-        asaasSubscriptionId: summary.asaasSubscriptionId ?? session.user.asaasSubscriptionId,
+      }).catch(() => null);
+
+      const nextStatus = summary.resolvedStatus ?? session.user.subscriptionStatus;
+      const nextPaidThroughDate = summary.paidThroughDate ?? session.user.paidThroughDate;
+      const hasSubscriptionAccess = hasAccessBySubscription({
+        plan: nextPlan,
         subscriptionStatus: nextStatus,
         paidThroughDate: nextPaidThroughDate,
-        hasSubscriptionAccess,
-      },
-    };
-  } catch (error) {
-    console.error('SESSION_SUBSCRIPTION_RECONCILE_FAILED', error);
-    return session;
-  }
+        bypassSubscription: session.user.bypassSubscription,
+      });
+
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          plan: nextPlan,
+          asaasCustomerId: summary.asaasCustomerId ?? session.user.asaasCustomerId,
+          asaasSubscriptionId: summary.asaasSubscriptionId ?? session.user.asaasSubscriptionId,
+          subscriptionStatus: nextStatus,
+          paidThroughDate: nextPaidThroughDate,
+          hasSubscriptionAccess,
+        },
+      };
+    } catch (error) {
+      console.error('SESSION_SUBSCRIPTION_RECONCILE_FAILED', error);
+      return session;
+    }
+  });
 };
 
 export const requireClinicSession = cache(async () => {

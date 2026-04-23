@@ -1,9 +1,11 @@
 import './globals.css';
 
+import dynamic from 'next/dynamic';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
-import { Toaster } from 'sonner';
 
 import QueryProvider from '@/components/providers/query-provider';
+
+const Toaster = dynamic(() => import('sonner').then((mod) => mod.Toaster));
 
 export default function RootLayout({
   children,

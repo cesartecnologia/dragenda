@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState, type ComponentType } from 'react';
+import { useCallback, useMemo, useRef, useState, type ComponentType } from 'react';
 
 import {
   CalendarDays,
@@ -50,6 +50,7 @@ export function AppSidebar({ session }: { session: AppSession }) {
   const role = session.user.role;
   const hasFullAccess = session.user.hasSubscriptionAccess || session.user.bypassSubscription;
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const prefetchedRoutesRef = useRef(new Set<string>());
 
   const mainMenu = useMemo(
     () =>
@@ -96,10 +97,25 @@ export function AppSidebar({ session }: { session: AppSession }) {
     }
   }, [isSigningOut, router]);
 
+  const handlePrefetch = useCallback(
+    (route: string) => {
+      if (prefetchedRoutesRef.current.has(route)) return;
+      prefetchedRoutesRef.current.add(route);
+      router.prefetch(route);
+    },
+    [router],
+  );
+
   return (
     <Sidebar variant="floating" className="py-3 pl-3 md:py-4 md:pl-4">
       <SidebarHeader className="border-b border-slate-100/80 bg-white/90 px-6 pb-5 pt-7">
-        <Link href="/painel" className="inline-flex items-center">
+        <Link
+          href="/painel"
+          prefetch={false}
+          onMouseEnter={() => handlePrefetch('/painel')}
+          onFocus={() => handlePrefetch('/painel')}
+          className="inline-flex items-center"
+        >
           <Image src="/logo.svg" alt="Dr. Agenda" width={118} height={30} priority className="h-auto w-[118px]" />
         </Link>
       </SidebarHeader>
@@ -112,7 +128,12 @@ export function AppSidebar({ session }: { session: AppSession }) {
               {mainMenu.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url} className={navButtonClass}>
-                    <Link href={item.url}>
+                    <Link
+                      href={item.url}
+                      prefetch={false}
+                      onMouseEnter={() => handlePrefetch(item.url)}
+                      onFocus={() => handlePrefetch(item.url)}
+                    >
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>
@@ -132,7 +153,12 @@ export function AppSidebar({ session }: { session: AppSession }) {
               {managementMenu.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url} className={navButtonClass}>
-                    <Link href={item.url}>
+                    <Link
+                      href={item.url}
+                      prefetch={false}
+                      onMouseEnter={() => handlePrefetch(item.url)}
+                      onFocus={() => handlePrefetch(item.url)}
+                    >
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>
@@ -143,7 +169,12 @@ export function AppSidebar({ session }: { session: AppSession }) {
               {canAccessFinancial(role) || !hasFullAccess ? (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={pathname === '/assinatura'} className={navButtonClass}>
-                    <Link href="/assinatura">
+                    <Link
+                      href="/assinatura"
+                      prefetch={false}
+                      onMouseEnter={() => handlePrefetch('/assinatura')}
+                      onFocus={() => handlePrefetch('/assinatura')}
+                    >
                       <Gem />
                       <span>Assinatura</span>
                     </Link>
