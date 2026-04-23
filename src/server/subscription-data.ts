@@ -49,6 +49,11 @@ const normalizeSubscriptionStatus = (value?: string | null) => value?.trim().toU
 const normalizePaymentStatus = (value?: string | null) => value?.trim().toUpperCase() ?? null;
 const normalizeStoredStatus = (value?: string | null) => value?.trim().toLowerCase() ?? null;
 const normalizeCycle = (value?: string | null) => value?.trim().toUpperCase() ?? 'MONTHLY';
+const todayStart = () => {
+  const value = new Date();
+  value.setHours(0, 0, 0, 0);
+  return value;
+};
 
 const parseAsaasDate = (value?: string | null) => {
   if (!value) return null;
@@ -112,6 +117,27 @@ const firstPaymentByStatuses = (payments: AsaasSubscriptionPayment[], acceptedSt
     const status = normalizePaymentStatus(payment.status);
     return Boolean(status && acceptedStatuses.has(status));
   }) ?? null;
+
+const nearestDueDateByStatuses = (params: {
+  payments: AsaasSubscriptionPayment[];
+  acceptedStatuses: Set<string>;
+  preferFuture?: boolean;
+}) => {
+  const dueDates = params.payments
+    .flatMap((payment) => {
+      const status = normalizePaymentStatus(payment.status);
+      if (!status || !params.acceptedStatuses.has(status)) return [];
+      const dueDate = parseAsaasDate(payment.dueDate);
+      return dueDate ? [dueDate] : [];
+    })
+    .sort((left, right) => left.getTime() - right.getTime());
+
+  if (!dueDates.length) return null;
+  if (!params.preferFuture) return dueDates[0];
+
+  const firstFuture = dueDates.find((date) => date.getTime() >= todayStart().getTime());
+  return firstFuture ?? dueDates[dueDates.length - 1];
+};
 
 const inferResolvedStatus = (params: {
   storedStatus?: string | null;
@@ -207,9 +233,15 @@ const inferPaidThroughDate = (params: {
 }) => {
   const latestPaid = firstPaymentByStatuses(params.payments, ACTIVE_PAYMENT_STATUSES);
   const latestOverdue = firstPaymentByStatuses(params.payments, OVERDUE_PAYMENT_STATUSES);
+  const nearestPendingDueDate = nearestDueDateByStatuses({
+    payments: params.payments,
+    acceptedStatuses: PENDING_PAYMENT_STATUSES,
+    preferFuture: true,
+  });
   const nextDueDate = parseAsaasDate(params.subscription?.nextDueDate);
 
   if (params.resolvedStatus === 'active') {
+    if (nearestPendingDueDate) return nearestPendingDueDate;
     if (nextDueDate) return nextDueDate;
     const latestPaidDueDate = parseAsaasDate(latestPaid?.dueDate);
     return latestPaidDueDate ? addCycle(latestPaidDueDate, params.subscription?.cycle) : null;
@@ -219,9 +251,10 @@ const inferPaidThroughDate = (params: {
     return parseAsaasDate(latestOverdue?.dueDate) ?? nextDueDate ?? null;
   }
 
-  if (params.resolvedStatus === 'pending' && latestPaid) {
+  if (params.resolvedStatus === 'pending') {
+    if (nearestPendingDueDate) return nearestPendingDueDate;
     if (nextDueDate) return nextDueDate;
-    const latestPaidDueDate = parseAsaasDate(latestPaid.dueDate);
+    const latestPaidDueDate = parseAsaasDate(latestPaid?.dueDate);
     return latestPaidDueDate ? addCycle(latestPaidDueDate, params.subscription?.cycle) : null;
   }
 

@@ -10,13 +10,17 @@ import { AutoStartCheckout } from './_components/auto-start-checkout';
 import { CheckoutSuccessSync } from './_components/checkout-success-sync';
 import { PublicSubscriptionView } from './_components/public-subscription-view';
 
-const formatRenewalDate = (value?: string | null) => {
+const formatRenewalDate = (value?: string | Date | null) => {
   if (!value) return null;
 
-  const dateOnlyMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  const date = dateOnlyMatch
-    ? new Date(Number(dateOnlyMatch[1]), Number(dateOnlyMatch[2]) - 1, Number(dateOnlyMatch[3]))
-    : new Date(value);
+  const date = value instanceof Date
+    ? new Date(value)
+    : (() => {
+        const dateOnlyMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        return dateOnlyMatch
+          ? new Date(Number(dateOnlyMatch[1]), Number(dateOnlyMatch[2]) - 1, Number(dateOnlyMatch[3]))
+          : new Date(value);
+      })();
 
   if (Number.isNaN(date.getTime())) return null;
 
@@ -63,7 +67,7 @@ export default async function AssinaturaPage({
   const firstAccess = Array.isArray(params.firstAccess) ? params.firstAccess[0] : params.firstAccess;
   const startCheckout = Array.isArray(params.startCheckout) ? params.startCheckout[0] : params.startCheckout;
   const summary = await getSubscriptionSummaryForUser(session.user.id);
-  const nextRenewal = formatRenewalDate(summary.subscription?.nextDueDate ?? summary.latestPayment?.dueDate ?? null);
+  const nextRenewal = formatRenewalDate(summary.paidThroughDate ?? summary.subscription?.nextDueDate ?? summary.latestPayment?.dueDate ?? null);
 
   return (
     <div className="min-h-screen bg-muted/30 px-4 py-6 sm:px-6 lg:px-8">
