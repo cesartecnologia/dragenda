@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { PageContainer, PageContent, PageHeader, PageHeaderContent, PageTitle } from '@/components/ui/page-container';
 import type { AppointmentStatus } from '@/db/schema';
 import { normalizeSearchText } from '@/helpers/format';
-import { endOfBrazilDay, startOfBrazilDay } from '@/helpers/time';
+import { endOfBrazilDay, formatDateBr, startOfBrazilDay } from '@/helpers/time';
 import { requireSubscribedSession } from '@/lib/auth';
 import {
   listAppointmentsByClinicIdWithRelations,
@@ -15,12 +15,13 @@ import {
   listRecentAppointmentsByClinicIdWithRelations,
 } from '@/server/clinic-data';
 
+import AppointmentsCalendarView from './_components/appointments-calendar-view';
 import AppointmentsFiltersSheet from './_components/appointments-filters-sheet';
 import AddAppointmentButton from '../appointments/_components/add-appointment-button';
 import AppointmentsDataTable from '../appointments/_components/appointments-data-table';
 
 interface Props {
-  searchParams: Promise<{ q?: string; doctor?: string; payment?: string; status?: string; from?: string; to?: string }>;
+  searchParams: Promise<{ q?: string; doctor?: string; payment?: string; status?: string; from?: string; to?: string; view?: string }>;
 }
 
 export default async function AgendamentosPage({ searchParams }: Props) {
@@ -28,7 +29,8 @@ export default async function AgendamentosPage({ searchParams }: Props) {
   const clinicId = session.user.clinic!.id;
   const role = session.user.role;
   const rawSearchParams = await searchParams;
-  const { q = '', doctor = 'all', payment = 'all', status = 'all', from = '', to = '' } = rawSearchParams;
+  const { q = '', doctor = 'all', payment = 'all', status = 'all', from = '', to = '', view = 'cards' } = rawSearchParams;
+  const isCalendarView = view === 'calendar';
   const normalizedQuery = normalizeSearchText(q);
   const hasDateFilter = Boolean(from) || Boolean(to);
   const hasStructuredFilters = doctor !== 'all' || payment !== 'all' || status !== 'all' || hasDateFilter;
@@ -75,6 +77,35 @@ export default async function AgendamentosPage({ searchParams }: Props) {
     : baseAppointments;
 
   const selectedDoctor = doctors.find((item) => item.id === doctor);
+  const viewToggleParams = new URLSearchParams();
+
+  Object.entries(rawSearchParams).forEach(([key, value]) => {
+    if (typeof value === 'string' && value.length > 0) {
+      viewToggleParams.set(key, value);
+    }
+  });
+
+  const cardsViewHref = (() => {
+    const params = new URLSearchParams(viewToggleParams);
+    params.delete('view');
+    const query = params.toString();
+    return query ? `/agendamentos?${query}` : '/agendamentos';
+  })();
+
+  const calendarViewHref = (() => {
+    const params = new URLSearchParams(viewToggleParams);
+    params.set('view', 'calendar');
+    const query = params.toString();
+    return query ? `/agendamentos?${query}` : '/agendamentos?view=calendar';
+  })();
+
+  const clearFiltersHref = (() => {
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (isCalendarView) params.set('view', 'calendar');
+    const query = params.toString();
+    return query ? `/agendamentos?${query}` : '/agendamentos';
+  })();
 
   return (
     <PageContainer>
@@ -91,16 +122,25 @@ export default async function AgendamentosPage({ searchParams }: Props) {
               <DebouncedSearchForm
                 placeholder="Buscar paciente, médico ou especialidade"
                 initialValue={q}
-                preserveParams={['doctor', 'payment', 'status', 'from', 'to']}
+                preserveParams={['doctor', 'payment', 'status', 'from', 'to', 'view']}
               />
             </div>
 
             <div className="flex flex-wrap items-center justify-end gap-2">
+              <div className="inline-flex items-center rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+                <Button type="button" size="sm" variant={isCalendarView ? 'ghost' : 'secondary'} className="rounded-lg px-3" asChild>
+                  <Link href={cardsViewHref}>Cards</Link>
+                </Button>
+                <Button type="button" size="sm" variant={isCalendarView ? 'secondary' : 'ghost'} className="rounded-lg px-3" asChild>
+                  <Link href={calendarViewHref}>Calendario</Link>
+                </Button>
+              </div>
+
               <AddAppointmentButton />
-              <AppointmentsFiltersSheet doctors={doctors} q={q} doctor={doctor} payment={payment} status={status} from={from} to={to} />
+              <AppointmentsFiltersSheet doctors={doctors} q={q} doctor={doctor} payment={payment} status={status} from={from} to={to} view={view} />
               {hasStructuredFilters ? (
                 <Button type="button" variant="ghost" className="rounded-xl" asChild>
-                  <Link href={q ? `/agendamentos?q=${encodeURIComponent(q)}` : '/agendamentos'}>Limpar filtros</Link>
+                  <Link href={clearFiltersHref}>Limpar filtros</Link>
                 </Button>
               ) : null}
             </div>
@@ -131,8 +171,13 @@ export default async function AgendamentosPage({ searchParams }: Props) {
           ) : null}
         </div>
 
-        <AppointmentsDataTable data={filteredAppointments} role={role} clinic={null} variant="cards" />
+        {isCalendarView ? (
+          <AppointmentsCalendarView appointments={filteredAppointments} initialDate={from || undefined} />
+        ) : (
+          <AppointmentsDataTable data={filteredAppointments} role={role} clinic={null} variant="cards" />
+        )}
       </PageContent>
     </PageContainer>
   );
 }
+

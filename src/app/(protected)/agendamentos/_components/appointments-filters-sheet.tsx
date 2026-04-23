@@ -19,6 +19,7 @@ interface AppointmentsFiltersSheetProps {
   status: string;
   from: string;
   to: string;
+  view?: string;
 }
 
 export default function AppointmentsFiltersSheet({
@@ -29,9 +30,18 @@ export default function AppointmentsFiltersSheet({
   status,
   from,
   to,
+  view,
 }: AppointmentsFiltersSheetProps) {
   const activeFiltersCount = [doctor !== 'all', payment !== 'all', status !== 'all', Boolean(from), Boolean(to)].filter(Boolean).length;
-  const clearHref = q ? `/agendamentos?q=${encodeURIComponent(q)}` : '/agendamentos';
+  const clearHref = (() => {
+    const params = new URLSearchParams();
+
+    if (q) params.set('q', q);
+    if (view === 'calendar') params.set('view', 'calendar');
+
+    const query = params.toString();
+    return query ? `/agendamentos?${query}` : '/agendamentos';
+  })();
 
   return (
     <Sheet>
@@ -55,6 +65,7 @@ export default function AppointmentsFiltersSheet({
 
         <form method="get" className="flex h-full flex-col">
           <input type="hidden" name="q" value={q} />
+          {view === 'calendar' ? <input type="hidden" name="view" value="calendar" /> : null}
 
           <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
             <div className="space-y-2">
