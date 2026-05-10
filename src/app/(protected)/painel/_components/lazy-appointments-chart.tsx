@@ -11,7 +11,7 @@ interface DailyAppointment {
   revenue: number | null;
 }
 
-const AppointmentsChart = dynamic(() => import('../../dashboard/_components/revenue-chart'), {
+const AppointmentsChart = dynamic(() => import('./revenue-chart'), {
   ssr: false,
   loading: () => <ChartCardSkeleton />,
 });

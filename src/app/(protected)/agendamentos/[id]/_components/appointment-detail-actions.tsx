@@ -1,25 +1,23 @@
 'use client';
 
-import { useState } from 'react';
-
 import dayjs from 'dayjs';
-
-import { useAction } from 'next-safe-action/hooks';
 import { Ban, CheckCircle2, EditIcon, MessageCircle, Receipt, RotateCcw, TrashIcon, Undo2 } from 'lucide-react';
+import { useAction } from 'next-safe-action/hooks';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { deleteAppointment } from '@/actions/delete-appointment';
 import { changeAppointmentStatus, updateAppointmentPayment } from '@/actions/update-appointment';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { PaymentMethodPicker } from '@/components/payments/payment-method-picker';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { appointmentsTable, clinicsTable, doctorsTable, patientsTable, type AppointmentPaymentMethod, type UserRole } from '@/db/schema';
+import { type AppointmentPaymentMethod, appointmentsTable, clinicsTable, doctorsTable, patientsTable, type UserRole } from '@/db/schema';
 import { buildAppointmentWhatsappText } from '@/helpers/appointment-message';
 import { canManageFinancialActions, isAdminRole } from '@/lib/access';
 
-import AddAppointmentForm from '../../../appointments/_components/add-appointment-form';
-import AppointmentActionsGrid from '../../../appointments/_components/appointment-actions-grid';
+import AddAppointmentForm from '../../_components/add-appointment-form';
+import AppointmentActionsGrid from '../../_components/appointment-actions-grid';
 
 type AppointmentWithRelations = typeof appointmentsTable.$inferSelect & {
   patient: typeof patientsTable.$inferSelect;
@@ -107,7 +105,7 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
       key: 'complete',
       label: appointment.status === 'completed' ? 'Reabrir como agendada' : 'Consulta concluída',
       icon: appointment.status === 'completed' ? Undo2 : CheckCircle2,
-      className: 'border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800',
+      className: 'border-[#d7bf92] text-[#6b552d] hover:bg-[#f6e9d0] hover:text-[#4d3f24]',
       hidden:
         appointment.status === 'cancelled'
         || (appointment.status === 'completed' && !isAdmin)
@@ -181,7 +179,7 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
             <DialogDescription>Escolha a forma de pagamento usada neste atendimento.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <label className="text-sm font-medium text-slate-700">Forma de pagamento</label>
+            <label className="text-sm font-medium text-[#5f5343]">Forma de pagamento</label>
             <PaymentMethodPicker value={paymentMethod} onChange={setPaymentMethod} />
           </div>
           <DialogFooter>

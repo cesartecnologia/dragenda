@@ -10,8 +10,8 @@ import { formatDateTimeBr, getBrazilMonthEndKey, getBrazilMonthStartKey } from '
 import { canAccessDashboard } from '@/lib/access';
 import { requireClinicSession } from '@/lib/auth';
 
-import StatsCards from '../dashboard/_components/stats-card';
-import TopDoctors from '../dashboard/_components/top-doctors';
+import StatsCards from './_components/stats-card';
+import TopDoctors from './_components/top-doctors';
 import LazyAppointmentsChart from './_components/lazy-appointments-chart';
 import LazyDatePicker from './_components/lazy-date-picker';
 import TodayAppointmentsList from './_components/today-appointments-list';

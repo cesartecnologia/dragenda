@@ -1,12 +1,11 @@
-import { Suspense } from 'react';
-
-import dynamic from 'next/dynamic';
+﻿import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
 import DebouncedSearchForm from '@/components/common/debounced-search-form';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PageContainer, PageContent, PageHeader, PageHeaderContent, PageTitle } from '@/components/ui/page-container';
+import { PageContainer, PageContent, PageDescription, PageHeader, PageHeaderContent, PageTitle } from '@/components/ui/page-container';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { AppointmentStatus } from '@/db/schema';
 import { normalizeSearchText } from '@/helpers/format';
@@ -19,30 +18,20 @@ import {
   listRecentAppointmentsByClinicIdWithRelations,
 } from '@/server/clinic-data';
 
+import AddAppointmentButton from './_components/add-appointment-button';
+import AppointmentsDataTable from './_components/appointments-data-table';
 import AppointmentsFiltersSheet from './_components/appointments-filters-sheet';
-import AddAppointmentButton from '../appointments/_components/add-appointment-button';
-import AppointmentsDataTable from '../appointments/_components/appointments-data-table';
 
 interface Props {
   searchParams: Promise<{ q?: string; doctor?: string; payment?: string; status?: string; from?: string; to?: string; view?: string }>;
 }
-
-type AgendamentosSearchParams = {
-  q?: string;
-  doctor?: string;
-  payment?: string;
-  status?: string;
-  from?: string;
-  to?: string;
-  view?: string;
-};
 
 const AppointmentsCalendarView = dynamic(() => import('./_components/appointments-calendar-view'));
 
 function AgendamentosContentSkeleton() {
   return (
     <>
-      <div className="rounded-2xl border bg-background p-4 shadow-sm">
+      <div className="rounded-[14px] border border-[#344056] bg-[linear-gradient(145deg,#2b3445_0%,#242d3b_100%)] p-4 shadow-[0_18px_28px_rgba(13,18,28,0.35)]">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <Skeleton className="h-11 w-full rounded-xl" />
           <div className="flex items-center gap-2">
@@ -156,18 +145,18 @@ async function AgendamentosDataSection({
 
   return (
     <>
-      <div className="rounded-2xl border bg-background p-4 shadow-sm">
+      <div className="rounded-[14px] border border-[#344056] bg-[linear-gradient(145deg,#2b3445_0%,#242d3b_100%)] p-4 shadow-[0_18px_28px_rgba(13,18,28,0.35)]">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0 flex-1">
               <DebouncedSearchForm
-                placeholder="Buscar paciente, médico ou especialidade"
+                placeholder="Buscar paciente, mÃ©dico ou especialidade"
                 initialValue={q}
                 preserveParams={['doctor', 'payment', 'status', 'from', 'to', 'view']}
               />
             </div>
 
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <div className="inline-flex items-center rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+              <div className="inline-flex items-center rounded-[10px] border border-[#445269] bg-[#2f3a4d] p-1">
                 <Button type="button" size="sm" variant={isCalendarView ? 'ghost' : 'secondary'} className="rounded-lg px-3" asChild>
                   <Link href={cardsViewHref}>Cards</Link>
                 </Button>
@@ -187,13 +176,13 @@ async function AgendamentosDataSection({
           </div>
 
           {showResultsSummary ? (
-            <div className="mt-4 flex flex-col gap-3 border-t pt-4 text-sm text-muted-foreground lg:flex-row lg:items-center lg:justify-between">
+            <div className="mt-4 flex flex-col gap-3 border-t border-[#3c495f] pt-4 text-sm text-[#a6b1c5] lg:flex-row lg:items-center lg:justify-between">
               <span>
                 {filteredAppointments.length} {filteredAppointments.length === 1 ? 'agendamento encontrado' : 'agendamentos encontrados'}
               </span>
 
               <div className="flex flex-wrap gap-2">
-                {selectedDoctor ? <Badge variant="secondary">Médico: {selectedDoctor.name}</Badge> : null}
+                {selectedDoctor ? <Badge variant="secondary">MÃ©dico: {selectedDoctor.name}</Badge> : null}
                 {payment !== 'all' ? (
                   <Badge variant="secondary">
                     {payment === 'confirmed' ? 'Pagamento confirmado' : 'Pagamento pendente'}
@@ -201,11 +190,11 @@ async function AgendamentosDataSection({
                 ) : null}
                 {status !== 'all' ? (
                   <Badge variant="secondary">
-                    {status === 'scheduled' ? 'Agendada' : status === 'completed' ? 'Consulta concluída' : 'Cancelada'}
+                    {status === 'scheduled' ? 'Agendada' : status === 'completed' ? 'Consulta concluÃ­da' : 'Cancelada'}
                   </Badge>
                 ) : null}
                 {from ? <Badge variant="secondary">De: {formatDateBr(startOfBrazilDay(from))}</Badge> : null}
-                {to ? <Badge variant="secondary">Até: {formatDateBr(startOfBrazilDay(to))}</Badge> : null}
+                {to ? <Badge variant="secondary">AtÃ©: {formatDateBr(startOfBrazilDay(to))}</Badge> : null}
               </div>
             </div>
           ) : null}
@@ -225,13 +214,14 @@ export default async function AgendamentosPage({ searchParams }: Props) {
 
   return (
     <PageContainer>
-      <PageHeader>
+      <PageHeader className="border-[#2f394d] bg-[linear-gradient(140deg,#2d3748_0%,#242d3b_100%)] text-[#eef3fb]">
         <PageHeaderContent>
-          <PageTitle>Agendamentos</PageTitle>
+          <PageTitle className="text-[#f4f7fd]">Agenda operacional</PageTitle>
+          <PageDescription className="text-[#aeb8cb]">Visualize agenda em cards ou calendário com filtros rápidos de médico, pagamento, status e período.</PageDescription>
         </PageHeaderContent>
       </PageHeader>
 
-      <PageContent className="w-full space-y-4">
+      <PageContent className="w-full space-y-5">
         <Suspense fallback={<AgendamentosContentSkeleton />}>
           <AgendamentosDataSection sessionPromise={sessionPromise} searchParamsPromise={searchParams} />
         </Suspense>
@@ -239,4 +229,6 @@ export default async function AgendamentosPage({ searchParams }: Props) {
     </PageContainer>
   );
 }
+
+
 

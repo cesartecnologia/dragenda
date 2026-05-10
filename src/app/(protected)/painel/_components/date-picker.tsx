@@ -58,19 +58,19 @@ export function DatePicker({ className }: React.HTMLAttributes<HTMLDivElement>) 
           <Button
             id="date"
             variant="outline"
-            className="h-11 min-w-44 justify-start gap-2 rounded-2xl border-white/80 bg-white/92 px-4 text-left font-medium text-slate-700 shadow-[0_10px_24px_rgba(125,160,220,0.10)] hover:bg-white"
+            className="h-11 min-w-44 justify-start gap-2 rounded-2xl border-[#d8c9ad]/90 bg-[#fff9ee] px-4 text-left font-medium text-[#5f5343] shadow-[0_10px_24px_rgba(90,67,36,0.14)] hover:bg-[#fff1dc]"
           >
             <CalendarIcon className="size-4 text-primary" />
             <span>{currentMonthLabel}</span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[300px] rounded-[24px] border border-white/80 bg-white/96 p-4 shadow-[0_24px_50px_rgba(125,160,220,0.16)]" align="end">
+        <PopoverContent className="w-[300px] rounded-[24px] border border-[#d8c9ad]/90 bg-[#fffaf1] p-4 shadow-[0_24px_50px_rgba(90,67,36,0.24)]" align="end">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <Button type="button" variant="ghost" size="icon" className="size-9 rounded-xl" onClick={() => setDisplayYear((current) => current - 1)}>
                 <ChevronLeft className="size-4" />
               </Button>
-              <span className="text-sm font-semibold text-slate-800">{displayYear}</span>
+              <span className="text-sm font-semibold text-[#4f4334]">{displayYear}</span>
               <Button type="button" variant="ghost" size="icon" className="size-9 rounded-xl" onClick={() => setDisplayYear((current) => current + 1)}>
                 <ChevronRight className="size-4" />
               </Button>
@@ -89,7 +89,7 @@ export function DatePicker({ className }: React.HTMLAttributes<HTMLDivElement>) 
                     variant={isActive ? 'default' : 'outline'}
                     className={cn(
                       'h-10 justify-center rounded-xl px-2 text-sm',
-                      !isActive && 'border-slate-200/80 bg-white text-slate-600 hover:bg-[#f5f8ff]',
+                      !isActive && 'border-[#d7c7aa]/85 bg-[#fffdf6] text-[#685b49] hover:bg-[#f2e7d3]',
                     )}
                     onClick={() => handleMonthSelect(monthIndex)}
                   >
@@ -104,3 +104,5 @@ export function DatePicker({ className }: React.HTMLAttributes<HTMLDivElement>) 
     </div>
   );
 }
+
+

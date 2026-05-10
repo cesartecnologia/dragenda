@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 
+import { SubscriptionPlan } from './_components/subscription-plan';
 import { Badge } from '@/components/ui/badge';
-import { SubscriptionPlan } from '@/app/(protected)/subscription/_components/subscription-plan';
 import { canAccessFinancial } from '@/lib/access';
 import { ensureSessionSubscriptionAccess, getServerSession } from '@/lib/auth';
 import { getSubscriptionSummaryForUser } from '@/server/subscription-data';
@@ -75,7 +75,7 @@ export default async function AssinaturaPage({
         {startCheckout === '1' && !summary.accessReleased && !session.user.bypassSubscription ? <AutoStartCheckout /> : null}
 
         {firstAccess === '1' ? (
-          <Badge className="mx-auto w-fit rounded-full bg-blue-100 px-4 py-1.5 text-blue-700 hover:bg-blue-100">
+          <Badge className="mx-auto w-fit rounded-full bg-orange-100 px-4 py-1.5 text-orange-800 hover:bg-orange-100">
             Cadastro concluído. Falta apenas finalizar a assinatura.
           </Badge>
         ) : null}

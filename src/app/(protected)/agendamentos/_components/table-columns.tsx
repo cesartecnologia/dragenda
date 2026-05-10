@@ -1,8 +1,7 @@
 'use client';
 
-import type { ReactNode } from 'react';
-
 import { ColumnDef } from '@tanstack/react-table';
+import type { ReactNode } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { appointmentsTable, doctorsTable, patientsTable } from '@/db/schema';
@@ -28,7 +27,7 @@ export const getAppointmentsTableColumns = (params: {
     cell: ({ row }) => row.original.status === 'cancelled'
       ? <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">Cancelado</Badge>
       : row.original.status === 'completed'
-        ? <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">Consulta concluída</Badge>
+        ? <Badge variant="outline" className="border-[#d7bf92] bg-[#f6e9d0] text-[#6b552d]">Consulta concluída</Badge>
         : <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">Agendado</Badge>,
   },
   {
@@ -41,3 +40,4 @@ export const getAppointmentsTableColumns = (params: {
     ),
   },
 ];
+

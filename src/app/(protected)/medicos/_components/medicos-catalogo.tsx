@@ -15,8 +15,8 @@ import { doctorsTable } from '@/db/schema';
 import { formatCurrencyInCents } from '@/helpers/currency';
 import { normalizeSearchText } from '@/helpers/format';
 
-import AddDoctorButton from '../../doctors/_components/add-doctor-button';
-const UpsertDoctorForm = dynamic(() => import('../../doctors/_components/upsert-doctor-form'), {
+import AddDoctorButton from './add-doctor-button';
+const UpsertDoctorForm = dynamic(() => import('./upsert-doctor-form'), {
   ssr: false,
 });
 

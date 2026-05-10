@@ -75,7 +75,7 @@ export function SubscriptionPlan({
           </div>
 
           {bypassSubscription ? (
-            <Badge className="gap-1 bg-blue-100 text-blue-700 hover:bg-blue-100">
+            <Badge className="gap-1 bg-[#e8dcc6] text-[#6f5730] hover:bg-[#e8dcc6]">
               <ShieldCheck className="size-3.5" />
               Acesso Master
             </Badge>
@@ -86,13 +86,13 @@ export function SubscriptionPlan({
           ) : null}
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-8 sm:px-8">
+        <div className="rounded-3xl border border-[#dccdaf] bg-[#fbf4e8] px-5 py-8 sm:px-8">
           <div className="flex flex-col items-center justify-center text-center">
             <div className="flex items-end justify-center gap-1.5">
-              <span className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">R$ 99,90</span>
-              <span className="pb-1 text-sm text-slate-500 sm:text-base">/mês</span>
+              <span className="text-4xl font-bold tracking-tight text-[#3f352b] sm:text-5xl">R$ 99,90</span>
+              <span className="pb-1 text-sm text-[#7f725f] sm:text-base">/mês</span>
             </div>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-[#746856] sm:text-base">
               Ideal para clínicas que querem concentrar agenda, pacientes, equipe e visão do negócio em uma única plataforma.
             </p>
             {nextRenewal ? (
@@ -105,12 +105,12 @@ export function SubscriptionPlan({
       </CardHeader>
 
       <CardContent className="space-y-6">
-        <div className="border-t border-gray-200 pt-6">
+        <div className="border-t border-[#e1d3b9] pt-6">
           <div className="mx-auto grid max-w-3xl gap-4 sm:grid-cols-2">
             {features.map((feature) => (
               <div key={feature} className="flex items-start gap-3 rounded-xl">
-                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-500" />
-                <p className="text-gray-700">{feature}</p>
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                <p className="text-[#5f5343]">{feature}</p>
               </div>
             ))}
           </div>
@@ -141,3 +141,5 @@ export function SubscriptionPlan({
     </Card>
   );
 }
+
+

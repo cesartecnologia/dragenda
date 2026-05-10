@@ -24,17 +24,17 @@ interface StatsCardsProps {
 }
 
 const primaryCardTone = [
-  'from-[#eef4ff] via-[#f7faff] to-white text-[#4a6fa8]',
-  'from-[#edf5ff] via-[#f8fbff] to-white text-[#5678b5]',
-  'from-[#f2f6ff] via-[#fbfcff] to-white text-[#6478b8]',
-  'from-[#eef7ff] via-[#f8fbff] to-white text-[#5d83be]',
+  'from-[#2b3445] via-[#2f3a4d] to-[#35445d] text-[#e3ad67]',
+  'from-[#2c3648] via-[#303c50] to-[#38475f] text-[#b8c7de]',
+  'from-[#2b3841] via-[#32444f] to-[#395765] text-[#8fd7af]',
+  'from-[#3a2e3f] via-[#463552] to-[#594062] text-[#e6b5d2]',
 ] as const;
 
 const compactTone = [
-  'bg-[#eef4ff] text-[#5f76ab]',
-  'bg-[#f3f7ff] text-[#7486ba]',
-  'bg-[#eef4ff] text-[#5f76ab]',
-  'bg-[#f3f7ff] text-[#7486ba]',
+  'bg-[#2f3a4d] text-[#d2a061]',
+  'bg-[#34495a] text-[#9fd7b1]',
+  'bg-[#44324b] text-[#ddb7d3]',
+  'bg-[#2e3f52] text-[#a9bfdc]',
 ] as const;
 
 const StatsCards = ({
@@ -106,20 +106,20 @@ const StatsCards = ({
             <Card
               key={stat.title}
               className={cn(
-                'relative overflow-hidden border-white/80 bg-gradient-to-br shadow-[0_14px_30px_rgba(125,160,220,0.12)]',
+                'relative overflow-hidden border-[#3b4660] bg-gradient-to-br shadow-[0_16px_28px_rgba(8,12,20,0.3)]',
                 primaryCardTone[index],
               )}
               style={{ animationDelay: `${index * 80}ms` }}
             >
-              <div className="pointer-events-none absolute right-[-18px] top-[-24px] h-28 w-28 rounded-full bg-white/40 blur-2xl" />
+              <div className="pointer-events-none absolute right-[-18px] top-[-24px] h-28 w-28 rounded-full bg-white/15 blur-2xl" />
               <CardContent className="relative px-6 py-6">
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-2.5">
-                    <div className="text-sm font-medium text-slate-600">{stat.title}</div>
-                    <div className="text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">{stat.value}</div>
-                    <div className="text-sm text-slate-500">{stat.note}</div>
+                    <div className="text-sm font-medium text-[#c1ccdf]">{stat.title}</div>
+                    <div className="text-[2rem] font-semibold tracking-[-0.04em] text-[#f4f8ff]">{stat.value}</div>
+                    <div className="text-sm text-[#aab7cd]">{stat.note}</div>
                   </div>
-                  <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white/90 shadow-[0_8px_18px_rgba(125,160,220,0.10)]">
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#212a38]/70 shadow-[0_8px_18px_rgba(0,0,0,0.22)]">
                     <Icon className="size-5" />
                   </div>
                 </div>
@@ -133,13 +133,13 @@ const StatsCards = ({
         {compactStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={stat.title} className="bg-white/92">
+            <Card key={stat.title} className="border-[#d5c4a5] bg-[linear-gradient(180deg,#f9ecd2_0%,#f3e0bc_100%)]">
               <CardContent className="flex items-center justify-between gap-4 px-5 py-5">
                 <div>
-                  <p className="text-sm text-slate-500">{stat.title}</p>
-                  <p className="mt-1 text-2xl font-semibold tracking-[-0.03em] text-slate-900">{stat.value}</p>
+                  <p className="text-sm text-[#6e5940]">{stat.title}</p>
+                  <p className="mt-1 text-2xl font-semibold tracking-[-0.03em] text-[#2f261c]">{stat.value}</p>
                 </div>
-                <div className={cn('flex size-11 items-center justify-center rounded-2xl', compactTone[index])}>
+                <div className={cn('flex size-11 items-center justify-center rounded-xl', compactTone[index])}>
                   <Icon className="size-5" />
                 </div>
               </CardContent>
@@ -152,3 +152,4 @@ const StatsCards = ({
 };
 
 export default StatsCards;
+
