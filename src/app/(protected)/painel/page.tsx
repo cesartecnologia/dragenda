@@ -1,4 +1,4 @@
-import { Calendar, ChevronRight, Clock3, LineChart } from 'lucide-react';
+﻿import { Calendar, ChevronRight, Clock3, LineChart } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 
@@ -29,15 +29,15 @@ function EmptyChartCard() {
             <LineChart className="size-5" />
           </div>
           <div>
-            <CardTitle className="text-xl text-[#f4f7fd]">Movimento do período</CardTitle>
-            <div className="text-sm text-[#a9b4c8]">Os números vão aparecer aqui assim que houver movimentação.</div>
+            <CardTitle className="text-xl text-[#f4f7fd]">Movimento do perÃ­odo</CardTitle>
+            <div className="text-sm text-[#a9b4c8]">Os nÃºmeros vÃ£o aparecer aqui assim que houver movimentaÃ§Ã£o.</div>
           </div>
         </div>
       </CardHeader>
       <CardContent className="flex min-h-[320px] items-center justify-center">
         <div className="space-y-2 text-center">
-          <p className="font-medium text-[#e9edf6]">Ainda não há movimentação neste período.</p>
-          <p className="text-sm text-[#a9b4c8]">Quando os agendamentos começarem, o painel será atualizado automaticamente.</p>
+          <p className="font-medium text-[#e9edf6]">Ainda nÃ£o hÃ¡ movimentaÃ§Ã£o neste perÃ­odo.</p>
+          <p className="text-sm text-[#a9b4c8]">Quando os agendamentos comeÃ§arem, o painel serÃ¡ atualizado automaticamente.</p>
         </div>
       </CardContent>
     </Card>
@@ -99,7 +99,7 @@ async function PainelDataSection({ clinicId, from, to }: { clinicId: string; fro
               <Clock3 className="size-4 text-[#d7ab6e]" />
               <span className="text-sm font-medium">Em seguida</span>
             </div>
-            <CardTitle className="mt-1 text-xl text-[#2d241a]">Próximos horários</CardTitle>
+            <CardTitle className="mt-1 text-xl text-[#2d241a]">PrÃ³ximos horÃ¡rios</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 px-5 py-5">
             {dashboard.upcomingAppointments.length ? dashboard.upcomingAppointments.map((appointment) => (
@@ -107,7 +107,7 @@ async function PainelDataSection({ clinicId, from, to }: { clinicId: string; fro
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <strong className="block truncate text-[#f4f7fd]">{appointment.patient.name}</strong>
-                    <p className="mt-1 truncate text-sm text-[#b3bdd0]">{appointment.doctor.name} • {appointment.doctor.specialty}</p>
+                    <p className="mt-1 truncate text-sm text-[#b3bdd0]">{appointment.doctor.name} â€¢ {appointment.doctor.specialty}</p>
                   </div>
                   <ChevronRight className="size-4 shrink-0 text-[#d1a367]" />
                 </div>
@@ -115,7 +115,7 @@ async function PainelDataSection({ clinicId, from, to }: { clinicId: string; fro
                   {formatDateTimeBr(appointment.date)}
                 </div>
               </div>
-            )) : <p className="text-sm text-[#a9b4c8]">Sem horários futuros cadastrados.</p>}
+            )) : <p className="text-sm text-[#a9b4c8]">Sem horÃ¡rios futuros cadastrados.</p>}
           </CardContent>
         </Card>
       </div>
@@ -191,12 +191,12 @@ export default async function PainelPage({ searchParams }: DashboardPageProps) {
 
   return (
     <PageContainer>
-      <PageHeader className="border-[#2f394d] bg-[linear-gradient(140deg,#2d3748_0%,#242d3b_100%)] text-[#eef3fb]">
-        <PageHeaderContent>
-          <PageTitle className="text-[#f4f7fd]">Central de operações</PageTitle>
-          <PageDescription className="text-[#aeb8cb]">Acompanhe agenda, faturamento e equipe em um único painel executivo.</PageDescription>
+      <PageHeader className="rounded-[18px] border-[#2f394d] bg-[linear-gradient(140deg,#2d3748_0%,#242d3b_100%)] px-6 py-5 pl-8 text-[#eef3fb] md:px-7 md:py-6 md:pl-10 lg:items-center">
+        <PageHeaderContent className="space-y-1.5">
+          <PageTitle className="text-[2rem] leading-none tracking-[0.01em] text-[#f4f7fd]">Central de operaÃ§Ãµes</PageTitle>
+          <PageDescription className="text-[1rem] leading-snug text-[#aeb8cb]">Veja agendamentos, recebimentos e sua equipe em um so lugar.</PageDescription>
         </PageHeaderContent>
-        <PageActions>
+        <PageActions className="lg:self-center">
           <LazyDatePicker />
         </PageActions>
       </PageHeader>
@@ -209,6 +209,7 @@ export default async function PainelPage({ searchParams }: DashboardPageProps) {
     </PageContainer>
   );
 }
+
 
 
 
