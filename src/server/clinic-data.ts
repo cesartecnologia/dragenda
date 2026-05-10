@@ -276,6 +276,76 @@ export const upsertUserProfile = async (params: {
   return userProfile;
 };
 
+const LOGIN_LOCK_TTL_IN_MS = 1000 * 60 * 60 * 12;
+
+export const acquireUserLoginLock = async (params: {
+  userId: string;
+  lockId: string;
+}) => {
+  const now = new Date();
+  const lockExpiresAt = new Date(now.getTime() + LOGIN_LOCK_TTL_IN_MS);
+  const userRef = getFirestoreDb().collection(COLLECTIONS.users).doc(params.userId);
+
+  const lockResult = await getFirestoreDb().runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(userRef);
+    const user = fromDoc<AppUser>(snapshot);
+    if (!user) {
+      return { ok: false as const, reason: 'USER_NOT_FOUND' as const };
+    }
+
+    const hasActiveForeignLock =
+      Boolean(user.loginLockId) &&
+      user.loginLockId !== params.lockId &&
+      Boolean(user.loginLockExpiresAt && user.loginLockExpiresAt.getTime() > now.getTime());
+
+    if (hasActiveForeignLock) {
+      return { ok: false as const, reason: 'DUPLICATE_LOGIN' as const };
+    }
+
+    const nextUser: AppUser = {
+      ...user,
+      loginLockId: params.lockId,
+      loginLockAt: now,
+      loginLockExpiresAt: lockExpiresAt,
+      updatedAt: now,
+    };
+
+    transaction.set(userRef, sanitizeFirestoreValue(nextUser) as DocumentData);
+    return { ok: true as const };
+  });
+
+  invalidateUserScopedCache(params.userId);
+  return lockResult;
+};
+
+export const releaseUserLoginLock = async (params: {
+  userId: string;
+  lockId: string;
+}) => {
+  const now = new Date();
+  const userRef = getFirestoreDb().collection(COLLECTIONS.users).doc(params.userId);
+
+  await getFirestoreDb().runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(userRef);
+    const user = fromDoc<AppUser>(snapshot);
+    if (!user) return;
+
+    if (user.loginLockId && user.loginLockId !== params.lockId) return;
+
+    const nextUser: AppUser = {
+      ...user,
+      loginLockId: null,
+      loginLockAt: null,
+      loginLockExpiresAt: null,
+      updatedAt: now,
+    };
+
+    transaction.set(userRef, sanitizeFirestoreValue(nextUser) as DocumentData);
+  });
+
+  invalidateUserScopedCache(params.userId);
+};
+
 export const getClinicById = async (clinicId: string): Promise<Clinic | null> => {
   return withServerCache(`clinic:${clinicId}`, 60_000, async () => {
     const snapshot = await getFirestoreDb().collection(COLLECTIONS.clinics).doc(clinicId).get();
@@ -1246,32 +1316,37 @@ export const getDashboardData = async (params: { clinicId: string; from: string;
       return buildEmptyDashboard(0, 0);
     }
 
-    const [appointmentsInRangeRaw, upcomingAppointmentsRaw, todayAppointmentsFallbackRaw] = await Promise.all([
+    const [appointmentsInRangeRaw, upcomingAppointmentsRaw, todayAppointmentsFallbackRaw, doctors] = await Promise.all([
       listAppointmentsByClinicIdInRange(params.clinicId, fromDate, toDate),
       listUpcomingAppointmentsByClinicId(params.clinicId, 8),
       todayInRange ? Promise.resolve([] as Appointment[]) : listAppointmentsByClinicIdInRange(params.clinicId, todayStart, todayEnd),
+      listDoctorsByClinicId(params.clinicId),
     ]);
 
-    const relationSeed = [
-      ...appointmentsInRangeRaw,
-      ...upcomingAppointmentsRaw,
-      ...todayAppointmentsFallbackRaw,
-    ];
+    const activeAppointments = appointmentsInRangeRaw.filter(isActiveAppointment);
+    const todayAppointmentsRaw = todayInRange
+      ? activeAppointments.filter((appointment) => inDateRange(appointment.date, todayStart, todayEnd))
+      : todayAppointmentsFallbackRaw.filter(isActiveAppointment);
+
+    const relationSeed = [...todayAppointmentsRaw, ...upcomingAppointmentsRaw];
     const relations = await loadAppointmentRelations(relationSeed);
 
-    const appointmentsWithRelations = attachAppointmentRelationsFromMaps(appointmentsInRangeRaw, relations);
-    const todayAppointmentsRaw = todayInRange
-      ? appointmentsWithRelations.filter((appointment) => inDateRange(appointment.date, todayStart, todayEnd))
-      : attachAppointmentRelationsFromMaps(todayAppointmentsFallbackRaw, relations);
+    const doctorsById = doctors.reduce<Record<string, Doctor>>((acc, doctor) => {
+      acc[doctor.id] = doctor;
+      return acc;
+    }, {});
+
+    const todayAppointmentsRawWithRelations = attachAppointmentRelationsFromMaps(todayAppointmentsRaw, relations);
     const upcomingAppointmentsRawWithRelations = attachAppointmentRelationsFromMaps(upcomingAppointmentsRaw, relations);
 
-    const activeAppointments = appointmentsWithRelations.filter(isActiveAppointment);
-    const todayAppointments = todayAppointmentsRaw.filter(isActiveAppointment);
+    const todayAppointments = todayAppointmentsRawWithRelations.filter(isActiveAppointment);
     const upcomingAppointments = upcomingAppointmentsRawWithRelations.filter(isActiveAppointment);
     const paidAppointmentsInRange = activeAppointments.filter((appointment) => appointment.paymentConfirmed && appointment.paymentDate && inDateRange(appointment.paymentDate, fromDate, toDate));
     const completedAppointmentsInRange = activeAppointments.filter((appointment) => appointment.status === 'completed');
 
     const doctorStats = activeAppointments.reduce<Record<string, { id: string; name: string; avatarImageUrl: string | null; specialty: string; appointments: number }>>((acc, appointment) => {
+      const doctor = doctorsById[appointment.doctorId];
+      if (!doctor) return acc;
       const current = acc[appointment.doctorId];
       if (current) {
         current.appointments += 1;
@@ -1279,10 +1354,10 @@ export const getDashboardData = async (params: { clinicId: string; from: string;
       }
 
       acc[appointment.doctorId] = {
-        id: appointment.doctor.id,
-        name: appointment.doctor.name,
-        avatarImageUrl: appointment.doctor.avatarImageUrl,
-        specialty: appointment.doctor.specialty,
+        id: doctor.id,
+        name: doctor.name,
+        avatarImageUrl: doctor.avatarImageUrl,
+        specialty: doctor.specialty,
         appointments: 1,
       };
 
@@ -1294,7 +1369,9 @@ export const getDashboardData = async (params: { clinicId: string; from: string;
       .slice(0, 6);
 
     const specialtyMap = activeAppointments.reduce<Record<string, number>>((acc, appointment) => {
-      acc[appointment.doctor.specialty] = (acc[appointment.doctor.specialty] ?? 0) + 1;
+      const specialty = doctorsById[appointment.doctorId]?.specialty;
+      if (!specialty) return acc;
+      acc[specialty] = (acc[specialty] ?? 0) + 1;
       return acc;
     }, {});
 

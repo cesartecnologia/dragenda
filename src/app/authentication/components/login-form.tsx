@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRight, KeyRound, Loader2, Mail } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -77,8 +77,7 @@ const LoginForm = () => {
       },
       {
         onSuccess: () => {
-          router.push('/pos-login');
-          router.refresh();
+          router.replace('/pos-login');
         },
         onError: (ctx) => {
           switch (ctx.error.code) {
@@ -93,6 +92,9 @@ const LoginForm = () => {
                 duration: 10000,
               });
               return;
+            case 'DUPLICATE_LOGIN_BLOCKED':
+              toast.error('Este usuário já está logado em outro dispositivo ou caixa.');
+              return;
             default:
               toast.error(ctx.error.message || 'Não foi possível entrar.', {
                 duration: 8000,
@@ -103,8 +105,12 @@ const LoginForm = () => {
     );
   };
 
+  useEffect(() => {
+    router.prefetch('/pos-login');
+  }, [router]);
+
   return (
-    <Card className="flex h-full min-h-[540px] w-full overflow-hidden border-sky-100 bg-white shadow-[0_24px_80px_rgba(14,165,233,0.10)]">
+    <Card className="flex h-full min-h-[540px] w-full overflow-hidden border-amber-200 bg-white shadow-[0_24px_80px_rgba(120,53,15,0.14)]">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="flex h-full w-full flex-col">
           <CardHeader className="space-y-2 pb-4">
@@ -126,7 +132,7 @@ const LoginForm = () => {
                   <FormLabel className="text-slate-700">E-mail</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Mail className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-sky-600" />
+                      <Mail className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-amber-700" />
                       <Input
                         className="h-12 rounded-xl border-slate-200 pl-11 text-[15px] placeholder:text-slate-400"
                         placeholder="voce@clinica.com"
@@ -146,7 +152,7 @@ const LoginForm = () => {
                   <FormLabel className="text-slate-700">Senha</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-sky-600" />
+                      <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-amber-700" />
                       <Input
                         className="h-12 rounded-xl border-slate-200 pl-11 text-[15px] placeholder:text-slate-400"
                         placeholder="Digite sua senha"
@@ -164,7 +170,7 @@ const LoginForm = () => {
                 type="button"
                 onClick={handleForgotPassword}
                 disabled={isSendingReset}
-                className="text-sm font-medium text-sky-700 transition hover:text-sky-800 disabled:cursor-not-allowed disabled:opacity-70"
+                className="text-sm font-medium text-amber-800 transition hover:text-amber-900 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {isSendingReset ? 'Enviando...' : 'Esqueceu sua senha?'}
               </button>

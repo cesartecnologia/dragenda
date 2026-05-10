@@ -1,16 +1,16 @@
 import { redirect } from 'next/navigation';
 
-import { ensureSessionSubscriptionAccess, getDefaultPostLoginRoute, requireSession } from '@/lib/auth';
+import { getDefaultPostLoginRoute, requireSession } from '@/lib/auth';
 import { getClinicById } from '@/server/clinic-data';
 
 export default async function PosLoginPage() {
-  const session = await ensureSessionSubscriptionAccess(await requireSession());
+  const session = await requireSession();
 
   if (session.user.mustChangePassword) {
     redirect('/primeiro-login');
   }
 
-  if (!session.user.hasSubscriptionAccess) {
+  if (!session.user.hasSubscriptionAccess && !session.user.bypassSubscription) {
     redirect('/assinatura');
   }
 

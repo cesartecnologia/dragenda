@@ -45,6 +45,8 @@ const normalizeErrorCode = (code?: string) => {
       return 'ACCOUNT_CREATED_BUT_SESSION_FAILED';
     case 'FIRST_LOGIN_COMPLETE_FAILED':
       return 'FIRST_LOGIN_COMPLETE_FAILED';
+    case 'DUPLICATE_LOGIN_BLOCKED':
+      return 'DUPLICATE_LOGIN_BLOCKED';
     default:
       return code ?? 'UNKNOWN_ERROR';
   }
@@ -92,7 +94,7 @@ const exchangeIdTokenForSession = async (user: User) => {
     throw new Error(details ? `${code}:${details}` : code);
   }
 
-  await firebaseSignOut(firebaseAuth);
+  void firebaseSignOut(firebaseAuth);
 };
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

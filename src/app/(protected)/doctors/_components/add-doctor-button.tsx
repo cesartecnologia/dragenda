@@ -1,12 +1,15 @@
 'use client';
 
 import { Plus } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 
-import UpsertDoctorForm from './upsert-doctor-form';
+const UpsertDoctorForm = dynamic(() => import('./upsert-doctor-form'), {
+  ssr: false,
+});
 
 export default function AddDoctorButton({ specialties = [] }: { specialties?: string[] }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,7 +22,7 @@ export default function AddDoctorButton({ specialties = [] }: { specialties?: st
           Adicionar médico
         </Button>
       </DialogTrigger>
-      <UpsertDoctorForm specialties={specialties} onSuccess={() => setIsOpen(false)} />
+      {isOpen ? <UpsertDoctorForm specialties={specialties} onSuccess={() => setIsOpen(false)} /> : null}
     </Dialog>
   );
 }
