@@ -9,8 +9,12 @@ import ClinicSettingsForm from './_components/clinic-settings-form';
 
 export default async function ConfiguracoesClinicaPage() {
   const session = await requireSession();
-  if (!canAccessClinicSettings(session.user.role)) redirect('/agendamentos');
-  const clinic = session.user.clinic?.id ? await getClinicById(session.user.clinic.id) : null;
+  const hasClinic = Boolean(session.user.clinic?.id);
+
+  // During onboarding (no clinic yet), allow access regardless of role to avoid redirect loops.
+  if (hasClinic && !canAccessClinicSettings(session.user.role)) redirect('/agendamentos');
+
+  const clinic = hasClinic ? await getClinicById(session.user.clinic!.id) : null;
   return (
     <PageContainer>
       <PageHeader>
