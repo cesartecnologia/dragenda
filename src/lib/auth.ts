@@ -13,6 +13,7 @@ import { getClinicById, getUserProfileById, updateUserAsaasSubscription, upsertU
 import { getSubscriptionSummaryForUser } from '@/server/subscription-data';
 
 export const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME ?? '__clinic_smart_session';
+export const SESSION_LOCK_COOKIE_NAME = process.env.SESSION_LOCK_COOKIE_NAME ?? '__clinic_smart_lock';
 
 const ACCESS_RELEASING_STATUSES = new Set(['active']);
 const SUBSCRIPTION_OVERDUE_GRACE_DAYS = Number(process.env.SUBSCRIPTION_OVERDUE_GRACE_DAYS ?? '3');

@@ -1,13 +1,15 @@
-import { randomUUID } from 'crypto';
+﻿import { randomUUID } from 'crypto';
 
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { SESSION_COOKIE_NAME, SESSION_LOCK_COOKIE_NAME } from '@/lib/auth';
+import { resolvePrivilegedAccess } from '@/lib/access';
 import { getAdminAuth } from '@/lib/firebase-admin';
-import { acquireUserLoginLock, upsertUserProfile } from '@/server/clinic-data';
+import { acquireUserLoginLock, getUserProfileById, upsertUserProfile } from '@/server/clinic-data';
 
 const SESSION_DURATION_IN_MS = 1000 * 60 * 60 * 24 * 5;
+const LOGIN_LOCK_STALE_AFTER_MS = Number(process.env.LOGIN_LOCK_STALE_AFTER_MINUTES ?? '120') * 60 * 1000;
 
 const buildResponseError = (message: string, status = 500) =>
   NextResponse.json(
@@ -19,6 +21,7 @@ const buildResponseError = (message: string, status = 500) =>
   );
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const getTime = (value: unknown) => (value instanceof Date ? value.getTime() : null);
 
 export const POST = async (request: Request) => {
   try {
@@ -44,20 +47,56 @@ export const POST = async (request: Request) => {
       return NextResponse.json({ error: 'MISSING_EMAIL' }, { status: 400 });
     }
 
-    const lockId = randomUUID();
-    const lockResult = await acquireUserLoginLock({
-      userId: decodedToken.uid,
-      lockId,
-    });
+    const existingUserProfile = await getUserProfileById(decodedToken.uid);
+    const access = resolvePrivilegedAccess(email, existingUserProfile);
+    const shouldBypassLoginLock =
+      access.bypassSubscription ||
+      access.role === 'master' ||
+      access.role === 'support';
 
-    if (!lockResult.ok) {
-      return NextResponse.json(
-        {
-          error: 'DUPLICATE_LOGIN_BLOCKED',
-          details: 'Usuário já está ativo em outro acesso.',
-        },
-        { status: 409 },
-      );
+    const lockId = randomUUID();
+
+    if (!shouldBypassLoginLock) {
+      let lockResult = await acquireUserLoginLock({
+        userId: decodedToken.uid,
+        lockId,
+      });
+
+      const userWithLock = existingUserProfile as
+        | {
+            loginLockId?: string | null;
+            loginLockAt?: Date | null;
+          }
+        | null;
+
+      const lockStartedAt = getTime(userWithLock?.loginLockAt ?? null);
+      const isStaleLock =
+        !lockResult.ok &&
+        Boolean(userWithLock?.loginLockId) &&
+        Boolean(lockStartedAt) &&
+        Date.now() - (lockStartedAt ?? 0) > LOGIN_LOCK_STALE_AFTER_MS;
+
+      if (!lockResult.ok && isStaleLock && userWithLock?.loginLockId) {
+        const { releaseUserLoginLock } = await import('@/server/clinic-data');
+        await releaseUserLoginLock({
+          userId: decodedToken.uid,
+          lockId: userWithLock.loginLockId,
+        });
+        lockResult = await acquireUserLoginLock({
+          userId: decodedToken.uid,
+          lockId,
+        });
+      }
+
+      if (!lockResult.ok) {
+        return NextResponse.json(
+          {
+            error: 'DUPLICATE_LOGIN_BLOCKED',
+            details: 'Usuario ja esta ativo em outro acesso.',
+          },
+          { status: 409 },
+        );
+      }
     }
 
     const sessionCookie = await adminAuth.createSessionCookie(body.idToken, {
@@ -72,13 +111,16 @@ export const POST = async (request: Request) => {
       sameSite: 'lax',
       path: '/',
     });
-    cookieStore.set(SESSION_LOCK_COOKIE_NAME, lockId, {
-      maxAge: SESSION_DURATION_IN_MS / 1000,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-    });
+
+    if (!shouldBypassLoginLock) {
+      cookieStore.set(SESSION_LOCK_COOKIE_NAME, lockId, {
+        maxAge: SESSION_DURATION_IN_MS / 1000,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+      });
+    }
 
     const profileSyncPromise = upsertUserProfile({
       id: decodedToken.uid,
