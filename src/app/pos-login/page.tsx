@@ -15,6 +15,9 @@ export default async function PosLoginPage() {
   }
 
   if (!session.user.clinic?.id) {
+    if (session.user.bypassSubscription || session.user.role === 'master' || session.user.role === 'support') {
+      redirect(getDefaultPostLoginRoute(session.user.role));
+    }
     redirect('/configuracoes/clinica?onboarding=1');
   }
 
@@ -30,7 +33,7 @@ export default async function PosLoginPage() {
       clinic?.province,
   );
 
-  if (!onboardingComplete) {
+  if (!onboardingComplete && !session.user.bypassSubscription && session.user.role !== 'master' && session.user.role !== 'support') {
     redirect('/configuracoes/clinica?onboarding=1');
   }
 

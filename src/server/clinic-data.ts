@@ -353,6 +353,21 @@ export const getClinicById = async (clinicId: string): Promise<Clinic | null> =>
   });
 };
 
+export const getDefaultClinic = async (): Promise<Clinic | null> => {
+  return withServerCache('clinic:default', 60_000, async () => {
+    const configuredClinicId = process.env.DEFAULT_MASTER_CLINIC_ID?.trim();
+
+    if (configuredClinicId) {
+      const configuredClinic = await getClinicById(configuredClinicId);
+      if (configuredClinic) return configuredClinic;
+    }
+
+    const snapshot = await getFirestoreDb().collection(COLLECTIONS.clinics).limit(1).get();
+    const [firstClinic] = fromQuery<Clinic>(snapshot);
+    return firstClinic ?? null;
+  });
+};
+
 export const createClinicForUser = async (params: { userId: string; name: string }) => {
   const user = await getUserProfileById(params.userId);
   if (!user) throw new Error('User not found');

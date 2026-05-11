@@ -9,7 +9,14 @@ import type { UserRole } from '@/db/schema';
 import { getDefaultPostLoginRoute, resolvePrivilegedAccess } from '@/lib/access';
 import { adminAuth } from '@/lib/firebase-admin';
 import { withServerCache } from '@/lib/server-cache';
-import { getClinicById, getUserProfileById, updateUserAsaasSubscription, upsertUserProfile } from '@/server/clinic-data';
+import {
+  createClinicForUser,
+  getClinicById,
+  getDefaultClinic,
+  getUserProfileById,
+  updateUserAsaasSubscription,
+  upsertUserProfile,
+} from '@/server/clinic-data';
 import { getSubscriptionSummaryForUser } from '@/server/subscription-data';
 
 export const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME ?? '__clinic_smart_session';
@@ -130,6 +137,8 @@ export const getServerSession = cache(async (): Promise<AppSession | null> => {
       return buildFallbackSession(decodedToken);
     }
 
+    const access = resolvePrivilegedAccess(userProfile.email, userProfile);
+    const isPrivileged = access.bypassSubscription || access.role === 'master' || access.role === 'support';
     let clinic = null;
 
     if (userProfile.clinicId) {
@@ -139,7 +148,30 @@ export const getServerSession = cache(async (): Promise<AppSession | null> => {
         console.error('SESSION_CLINIC_READ_FAILED', error);
       }
     }
-    const access = resolvePrivilegedAccess(userProfile.email, userProfile);
+
+    if (!clinic && isPrivileged) {
+      try {
+        const defaultClinic = await getDefaultClinic();
+        if (defaultClinic) {
+          clinic = defaultClinic;
+          userProfile = {
+            ...userProfile,
+            clinicId: defaultClinic.id,
+          };
+        } else {
+          clinic = await createClinicForUser({
+            userId: userProfile.id,
+            name: process.env.DEFAULT_MASTER_CLINIC_NAME?.trim() || 'Clinica Padrao',
+          });
+          userProfile = {
+            ...userProfile,
+            clinicId: clinic.id,
+          };
+        }
+      } catch (error) {
+        console.error('SESSION_PRIVILEGED_DEFAULT_CLINIC_FAILED', error);
+      }
+    }
     const plan = clinic?.plan ?? userProfile.plan;
     const subscriptionStatus = clinic?.subscriptionStatus ?? userProfile.subscriptionStatus ?? null;
 
