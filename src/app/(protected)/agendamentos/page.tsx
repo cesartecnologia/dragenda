@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 import DebouncedSearchForm from '@/components/common/debounced-search-form';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PageContainer, PageContent, PageDescription, PageHeader, PageHeaderContent, PageTitle } from '@/components/ui/page-container';
+import { PageContainer, PageContent, PageHeader, PageHeaderContent, PageTitle } from '@/components/ui/page-container';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { AppointmentStatus } from '@/db/schema';
 import { normalizeSearchText } from '@/helpers/format';
@@ -216,8 +216,7 @@ export default async function AgendamentosPage({ searchParams }: Props) {
     <PageContainer>
       <PageHeader className="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-sm">
         <PageHeaderContent>
-          <PageTitle>Agenda operacional</PageTitle>
-          <PageDescription>Visualize agenda em cards ou calendário com filtros rápidos de médico, pagamento, status e período.</PageDescription>
+          <PageTitle>Agenda</PageTitle>
         </PageHeaderContent>
       </PageHeader>
 

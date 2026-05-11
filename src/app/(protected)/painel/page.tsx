@@ -193,7 +193,7 @@ export default async function PainelPage({ searchParams }: DashboardPageProps) {
     <PageContainer>
       <PageHeader className="rounded-[26px] border border-slate-200 bg-white px-5 py-5 shadow-[0_6px_18px_rgba(15,23,42,0.05)] md:px-6 lg:items-center">
         <PageHeaderContent>
-          <PageTitle>Central de operações</PageTitle>
+          <PageTitle>Dashboard</PageTitle>
           <PageDescription>Veja agendamentos, recebimentos e sua equipe em um só lugar.</PageDescription>
         </PageHeaderContent>
         <PageActions>
