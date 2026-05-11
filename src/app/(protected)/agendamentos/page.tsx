@@ -31,7 +31,7 @@ const AppointmentsCalendarView = dynamic(() => import('./_components/appointment
 function AgendamentosContentSkeleton() {
   return (
     <>
-      <div className="rounded-[14px] border border-[#344056] bg-[linear-gradient(145deg,#2b3445_0%,#242d3b_100%)] p-4 shadow-[0_18px_28px_rgba(13,18,28,0.35)]">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <Skeleton className="h-11 w-full rounded-xl" />
           <div className="flex items-center gap-2">
@@ -145,18 +145,18 @@ async function AgendamentosDataSection({
 
   return (
     <>
-      <div className="rounded-[14px] border border-[#344056] bg-[linear-gradient(145deg,#2b3445_0%,#242d3b_100%)] p-4 shadow-[0_18px_28px_rgba(13,18,28,0.35)]">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0 flex-1">
               <DebouncedSearchForm
-                placeholder="Buscar paciente, mÃ©dico ou especialidade"
+                placeholder="Buscar paciente, médico ou especialidade"
                 initialValue={q}
                 preserveParams={['doctor', 'payment', 'status', 'from', 'to', 'view']}
               />
             </div>
 
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <div className="inline-flex items-center rounded-[10px] border border-[#445269] bg-[#2f3a4d] p-1">
+              <div className="inline-flex items-center rounded-[10px] border border-slate-200 bg-slate-50 p-1">
                 <Button type="button" size="sm" variant={isCalendarView ? 'ghost' : 'secondary'} className="rounded-lg px-3" asChild>
                   <Link href={cardsViewHref}>Cards</Link>
                 </Button>
@@ -176,13 +176,13 @@ async function AgendamentosDataSection({
           </div>
 
           {showResultsSummary ? (
-            <div className="mt-4 flex flex-col gap-3 border-t border-[#3c495f] pt-4 text-sm text-[#a6b1c5] lg:flex-row lg:items-center lg:justify-between">
+            <div className="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-4 text-sm text-slate-500 lg:flex-row lg:items-center lg:justify-between">
               <span>
                 {filteredAppointments.length} {filteredAppointments.length === 1 ? 'agendamento encontrado' : 'agendamentos encontrados'}
               </span>
 
               <div className="flex flex-wrap gap-2">
-                {selectedDoctor ? <Badge variant="secondary">MÃ©dico: {selectedDoctor.name}</Badge> : null}
+                {selectedDoctor ? <Badge variant="secondary">Médico: {selectedDoctor.name}</Badge> : null}
                 {payment !== 'all' ? (
                   <Badge variant="secondary">
                     {payment === 'confirmed' ? 'Pagamento confirmado' : 'Pagamento pendente'}
@@ -190,11 +190,11 @@ async function AgendamentosDataSection({
                 ) : null}
                 {status !== 'all' ? (
                   <Badge variant="secondary">
-                    {status === 'scheduled' ? 'Agendada' : status === 'completed' ? 'Consulta concluÃ­da' : 'Cancelada'}
+                    {status === 'scheduled' ? 'Agendada' : status === 'completed' ? 'Consulta concluída' : 'Cancelada'}
                   </Badge>
                 ) : null}
                 {from ? <Badge variant="secondary">De: {formatDateBr(startOfBrazilDay(from))}</Badge> : null}
-                {to ? <Badge variant="secondary">AtÃ©: {formatDateBr(startOfBrazilDay(to))}</Badge> : null}
+                {to ? <Badge variant="secondary">Até: {formatDateBr(startOfBrazilDay(to))}</Badge> : null}
               </div>
             </div>
           ) : null}
@@ -214,10 +214,10 @@ export default async function AgendamentosPage({ searchParams }: Props) {
 
   return (
     <PageContainer>
-      <PageHeader className="border-[#2f394d] bg-[linear-gradient(140deg,#2d3748_0%,#242d3b_100%)] text-[#eef3fb]">
+      <PageHeader className="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-sm">
         <PageHeaderContent>
-          <PageTitle className="text-[#f4f7fd]">Agenda operacional</PageTitle>
-          <PageDescription className="text-[#aeb8cb]">Visualize agenda em cards ou calendário com filtros rápidos de médico, pagamento, status e período.</PageDescription>
+          <PageTitle>Agenda operacional</PageTitle>
+          <PageDescription>Visualize agenda em cards ou calendário com filtros rápidos de médico, pagamento, status e período.</PageDescription>
         </PageHeaderContent>
       </PageHeader>
 
@@ -229,6 +229,7 @@ export default async function AgendamentosPage({ searchParams }: Props) {
     </PageContainer>
   );
 }
+
 
 
 

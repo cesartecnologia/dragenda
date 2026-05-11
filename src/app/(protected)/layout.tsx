@@ -33,7 +33,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
 
   return (
     <SidebarProvider>
-      <div className="relative min-h-screen w-screen max-w-none overflow-x-hidden bg-[linear-gradient(180deg,#eef5ff_0%,#e7f1ff_38%,#edf4ff_100%)]">
+      <div className="relative min-h-screen w-screen max-w-none overflow-x-hidden bg-slate-50">
         <div className="relative flex min-h-screen w-full max-w-none">
           <AppSidebar session={session} />
 

@@ -1,4 +1,4 @@
-﻿import { Calendar, ChevronRight, Clock3, LineChart } from 'lucide-react';
+import { Calendar, ChevronRight, Clock3, LineChart } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 
@@ -10,11 +10,11 @@ import { formatDateTimeBr, getBrazilMonthEndKey, getBrazilMonthStartKey } from '
 import { canAccessDashboard } from '@/lib/access';
 import { requireClinicSession } from '@/lib/auth';
 
-import StatsCards from './_components/stats-card';
-import TopDoctors from './_components/top-doctors';
 import LazyAppointmentsChart from './_components/lazy-appointments-chart';
 import LazyDatePicker from './_components/lazy-date-picker';
+import StatsCards from './_components/stats-card';
 import TodayAppointmentsList from './_components/today-appointments-list';
+import TopDoctors from './_components/top-doctors';
 
 interface DashboardPageProps {
   searchParams: Promise<{ from: string; to: string }>;
@@ -22,22 +22,22 @@ interface DashboardPageProps {
 
 function EmptyChartCard() {
   return (
-    <Card className="overflow-hidden border-[#3b465a] bg-[linear-gradient(160deg,#2c3648_0%,#252e3d_100%)] text-[#eef3fb]">
-      <CardHeader className="border-b border-[#3d4860] pb-5">
+    <Card className="overflow-hidden">
+      <CardHeader className="border-b border-slate-100 pb-5">
         <div className="flex items-center gap-3">
-          <div className="flex size-11 items-center justify-center rounded-xl bg-[#39465b] text-[#e3c18d]">
+          <div className="flex size-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
             <LineChart className="size-5" />
           </div>
           <div>
-            <CardTitle className="text-xl text-[#f4f7fd]">Movimento do perÃ­odo</CardTitle>
-            <div className="text-sm text-[#a9b4c8]">Os nÃºmeros vÃ£o aparecer aqui assim que houver movimentaÃ§Ã£o.</div>
+            <CardTitle className="text-xl text-slate-900">Movimento do período</CardTitle>
+            <div className="text-sm text-slate-500">Os números vão aparecer aqui assim que houver movimentação.</div>
           </div>
         </div>
       </CardHeader>
       <CardContent className="flex min-h-[320px] items-center justify-center">
         <div className="space-y-2 text-center">
-          <p className="font-medium text-[#e9edf6]">Ainda nÃ£o hÃ¡ movimentaÃ§Ã£o neste perÃ­odo.</p>
-          <p className="text-sm text-[#a9b4c8]">Quando os agendamentos comeÃ§arem, o painel serÃ¡ atualizado automaticamente.</p>
+          <p className="font-medium text-slate-800">Ainda não há movimentação neste período.</p>
+          <p className="text-sm text-slate-500">Quando os agendamentos começarem, o painel será atualizado automaticamente.</p>
         </div>
       </CardContent>
     </Card>
@@ -78,14 +78,14 @@ async function PainelDataSection({ clinicId, from, to }: { clinicId: string; fro
       </div>
 
       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.75fr)_minmax(280px,320px)]">
-        <Card className="min-w-0 overflow-hidden border-[#3a4559] bg-[linear-gradient(165deg,#2a3344_0%,#232c3a_100%)] text-[#edf2fb]">
-          <CardHeader className="flex flex-col gap-4 border-b border-[#eadfcd] bg-[linear-gradient(90deg,#f5e6cb_0%,#f2e2c4_100%)] pb-5 lg:flex-row lg:items-center lg:justify-between">
+        <Card className="min-w-0 overflow-hidden">
+          <CardHeader className="flex flex-col gap-4 border-b border-slate-100 pb-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <div className="flex items-center gap-2 text-[#adb8cc]">
-                <Calendar className="size-4 text-[#d7ab6e]" />
+              <div className="flex items-center gap-2 text-slate-500">
+                <Calendar className="size-4 text-primary" />
                 <span className="text-sm font-medium">Hoje</span>
               </div>
-              <CardTitle className="mt-1 text-xl text-[#2d241a]">Agenda do dia</CardTitle>
+              <CardTitle className="mt-1 text-xl text-slate-900">Agenda do dia</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="min-w-0 px-5 py-5 md:px-6">
@@ -93,29 +93,29 @@ async function PainelDataSection({ clinicId, from, to }: { clinicId: string; fro
           </CardContent>
         </Card>
 
-        <Card className="min-w-0 overflow-hidden border-[#3a4559] bg-[linear-gradient(165deg,#2a3344_0%,#232c3a_100%)] text-[#edf2fb]">
-          <CardHeader className="border-b border-[#3a4559] pb-5">
-            <div className="flex items-center gap-2 text-[#adb8cc]">
-              <Clock3 className="size-4 text-[#d7ab6e]" />
+        <Card className="min-w-0 overflow-hidden">
+          <CardHeader className="border-b border-slate-100 pb-5">
+            <div className="flex items-center gap-2 text-slate-500">
+              <Clock3 className="size-4 text-primary" />
               <span className="text-sm font-medium">Em seguida</span>
             </div>
-            <CardTitle className="mt-1 text-xl text-[#2d241a]">PrÃ³ximos horÃ¡rios</CardTitle>
+            <CardTitle className="mt-1 text-xl text-slate-900">Próximos horários</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 px-5 py-5">
             {dashboard.upcomingAppointments.length ? dashboard.upcomingAppointments.map((appointment) => (
-              <div key={appointment.id} className="rounded-xl border border-[#445167] bg-[#303a4d] p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#d2a061]">
+              <div key={appointment.id} className="rounded-[22px] border border-slate-100 bg-white p-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(125,160,220,0.12)]">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <strong className="block truncate text-[#f4f7fd]">{appointment.patient.name}</strong>
-                    <p className="mt-1 truncate text-sm text-[#b3bdd0]">{appointment.doctor.name} â€¢ {appointment.doctor.specialty}</p>
+                    <strong className="block truncate text-slate-900">{appointment.patient.name}</strong>
+                    <p className="mt-1 truncate text-sm text-slate-500">{appointment.doctor.name} • {appointment.doctor.specialty}</p>
                   </div>
-                  <ChevronRight className="size-4 shrink-0 text-[#d1a367]" />
+                  <ChevronRight className="size-4 shrink-0 text-slate-300" />
                 </div>
-                <div className="mt-3 rounded-lg bg-[#232c3a] px-3 py-2 text-xs font-semibold text-[#d7ab6e]">
+                <div className="mt-3 rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700">
                   {formatDateTimeBr(appointment.date)}
                 </div>
               </div>
-            )) : <p className="text-sm text-[#a9b4c8]">Sem horÃ¡rios futuros cadastrados.</p>}
+            )) : <p className="text-sm text-slate-500">Sem horários futuros cadastrados.</p>}
           </CardContent>
         </Card>
       </div>
@@ -191,12 +191,12 @@ export default async function PainelPage({ searchParams }: DashboardPageProps) {
 
   return (
     <PageContainer>
-      <PageHeader className="rounded-[18px] border-[#2f394d] bg-[linear-gradient(140deg,#2d3748_0%,#242d3b_100%)] px-6 py-5 pl-8 text-[#eef3fb] md:px-7 md:py-6 md:pl-10 lg:items-center">
-        <PageHeaderContent className="space-y-1.5">
-          <PageTitle className="text-[2rem] leading-none tracking-[0.01em] text-[#f4f7fd]">Central de operaÃ§Ãµes</PageTitle>
-          <PageDescription className="text-[1rem] leading-snug text-[#aeb8cb]">Veja agendamentos, recebimentos e sua equipe em um so lugar.</PageDescription>
+      <PageHeader className="rounded-[26px] border border-slate-200 bg-white px-5 py-5 shadow-[0_6px_18px_rgba(15,23,42,0.05)] md:px-6 lg:items-center">
+        <PageHeaderContent>
+          <PageTitle>Central de operações</PageTitle>
+          <PageDescription>Veja agendamentos, recebimentos e sua equipe em um só lugar.</PageDescription>
         </PageHeaderContent>
-        <PageActions className="lg:self-center">
+        <PageActions>
           <LazyDatePicker />
         </PageActions>
       </PageHeader>
@@ -209,7 +209,3 @@ export default async function PainelPage({ searchParams }: DashboardPageProps) {
     </PageContainer>
   );
 }
-
-
-
-

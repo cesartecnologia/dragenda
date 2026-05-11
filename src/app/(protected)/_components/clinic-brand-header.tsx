@@ -32,7 +32,7 @@ export default function ClinicBrandHeader({ clinic }: Props) {
 
   return (
     <div className="px-4 pt-4 md:px-6 md:pt-5">
-      <div className="rounded-[28px] border border-slate-200/80 bg-[#f7fbfa] px-4 py-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)] md:px-5">
+      <div className="rounded-[28px] border border-slate-200/80 bg-white px-4 py-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)] md:px-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-4">
             <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-[22px] border border-white bg-white shadow-[0_10px_18px_rgba(15,23,42,0.06)]">

@@ -145,7 +145,7 @@ export default function MedicosCatalogo({
             <Button variant="outline" className="h-10 rounded-xl border-slate-200 bg-white px-4 text-slate-700 hover:bg-slate-50" asChild>
               <Link href="/especialidades">Especialidades</Link>
             </Button>
-            <div className="[&>button]:h-10 [&>button]:rounded-xl [&>button]:border-0 [&>button]:bg-[#79aee3] [&>button]:px-4 [&>button]:font-semibold [&>button]:normal-case [&>button]:tracking-normal [&>button]:text-white [&>button]:shadow-none [&>button:hover]:bg-[#669fd8]">
+            <div className="[&>button]:h-10 [&>button]:rounded-xl [&>button]:border-0 [&>button]:bg-primary [&>button]:px-4 [&>button]:font-semibold [&>button]:normal-case [&>button]:tracking-normal [&>button]:text-primary-foreground [&>button]:shadow-none [&>button:hover]:bg-primary/90">
               <AddDoctorButton specialties={specialties} />
             </div>
           </div>
@@ -190,7 +190,7 @@ export default function MedicosCatalogo({
                 <div className="flex items-center gap-2"><Wallet className="size-4 text-slate-400" /><span>{formatCurrencyInCents(doctor.appointmentPriceInCents)}</span></div>
               </div>
               <div className="border-t border-slate-100 p-4">
-                <Button className="w-full border-0 bg-[#79aee3] font-semibold normal-case tracking-normal text-white shadow-none hover:bg-[#669fd8]" onClick={() => setSelectedDoctor(doctor)}>
+                <Button className="w-full border-0 bg-primary font-semibold normal-case tracking-normal text-primary-foreground shadow-none hover:bg-primary/90" onClick={() => setSelectedDoctor(doctor)}>
                   <Pencil className="mr-2 size-4" />
                   Ver detalhes
                 </Button>

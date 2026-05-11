@@ -105,7 +105,7 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
       key: 'complete',
       label: appointment.status === 'completed' ? 'Reabrir como agendada' : 'Consulta concluída',
       icon: appointment.status === 'completed' ? Undo2 : CheckCircle2,
-      className: 'border-[#d7bf92] text-[#6b552d] hover:bg-[#f6e9d0] hover:text-[#4d3f24]',
+      className: 'border-amber-200 text-amber-700 hover:bg-amber-50 hover:text-amber-800',
       hidden:
         appointment.status === 'cancelled'
         || (appointment.status === 'completed' && !isAdmin)
@@ -179,7 +179,7 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
             <DialogDescription>Escolha a forma de pagamento usada neste atendimento.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <label className="text-sm font-medium text-[#5f5343]">Forma de pagamento</label>
+            <label className="text-sm font-medium text-slate-700">Forma de pagamento</label>
             <PaymentMethodPicker value={paymentMethod} onChange={setPaymentMethod} />
           </div>
           <DialogFooter>
@@ -242,3 +242,5 @@ export default function AppointmentDetailActions({ appointment, patients, doctor
     </>
   );
 }
+
+

@@ -42,7 +42,7 @@ type NavItem = {
 };
 
 const navButtonClass =
-  "group min-h-[50px] gap-3 rounded-2xl border border-transparent px-3.5 py-3 text-[15px] font-medium text-slate-600 transition-all duration-300 hover:bg-[#f5f8ff] hover:text-slate-900 data-[active=true]:bg-[linear-gradient(135deg,#edf4ff_0%,#f7faff_100%)] data-[active=true]:text-slate-950 data-[active=true]:shadow-[0_12px_24px_rgba(125,160,220,0.12)] [&>svg]:size-[18px]";
+  "group min-h-[50px] gap-3 rounded-2xl border border-transparent px-3.5 py-3 text-[15px] font-medium text-slate-600 transition-all duration-300 hover:bg-slate-100 hover:text-slate-900 data-[active=true]:bg-slate-100 data-[active=true]:text-slate-950 [&>svg]:size-[18px]";
 
 export function AppSidebar({ session }: { session: AppSession }) {
   const router = useRouter();
@@ -189,9 +189,9 @@ export function AppSidebar({ session }: { session: AppSession }) {
       <SidebarFooter className="mt-auto border-t border-slate-100/80 bg-white/90 p-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex w-full items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition-colors hover:bg-[#f5f8ff]">
+            <button className="flex w-full items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition-colors hover:bg-slate-100">
               <Avatar className="size-11 rounded-2xl border border-white bg-white shadow-[0_10px_20px_rgba(125,160,220,0.10)]">
-                <AvatarFallback className="rounded-2xl bg-[#eef4ff] text-sm font-semibold text-slate-700">
+                <AvatarFallback className="rounded-2xl bg-slate-100 text-sm font-semibold text-slate-700">
                   {session.user.name?.charAt(0)?.toUpperCase() ?? 'U'}
                 </AvatarFallback>
               </Avatar>

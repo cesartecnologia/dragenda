@@ -11,12 +11,12 @@ import { listDoctorsByClinicId, listSpecialtiesByClinicId } from '@/server/clini
 function MedicosPageSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="space-y-2 rounded-3xl border border-[#dfd0b4]/80 bg-[#fffef8] px-5 py-5 md:px-6">
+      <div className="space-y-2 rounded-3xl border border-slate-200 bg-white px-5 py-5 md:px-6">
         <Skeleton className="h-9 w-44" />
         <Skeleton className="h-4 w-96 max-w-full" />
       </div>
 
-      <Card className="border-[#dfd0b4]/85">
+      <Card className="border-slate-200">
         <CardContent className="space-y-3 p-5">
           <Skeleton className="h-10 w-full" />
           <div className="flex gap-2">
@@ -30,8 +30,8 @@ function MedicosPageSkeleton() {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {Array.from({ length: 8 }).map((_, index) => (
-          <Card key={index} className="overflow-hidden border-[#dfd0b4]/90 bg-[#fffef8]">
-            <CardHeader className="space-y-3 border-b border-[#eadfcd] bg-[#faf3e6] p-5">
+          <Card key={index} className="overflow-hidden border-slate-200 bg-white">
+            <CardHeader className="space-y-3 border-b border-slate-100 bg-slate-50 p-5">
               <Skeleton className="h-6 w-44 max-w-full" />
               <Skeleton className="h-5 w-28 rounded-full" />
             </CardHeader>

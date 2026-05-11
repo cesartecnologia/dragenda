@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import dayjs from 'dayjs';
 import { Ban, CalendarRange, CheckCircle2, EditIcon, MessageCircle, Printer, Receipt, RotateCcw, Stethoscope, TrashIcon, Undo2, UserRound, Wallet } from 'lucide-react';
@@ -212,14 +212,14 @@ export default function AppointmentsDataTable({
       <div className={cardsGridClassName}>
         {orderedAppointments.map((appointment) => {
           const statusBadge = appointment.status === 'cancelled'
-            ? <span className="inline-flex min-h-9 items-center rounded-lg border border-[#7f3a3a] bg-[#5e2a2a] px-4 py-2 text-sm font-medium text-[#ffd8d8]">Cancelado</span>
+            ? <span className="inline-flex min-h-9 items-center rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700">Cancelado</span>
             : appointment.status === 'completed'
-              ? <span className="inline-flex min-h-9 items-center rounded-lg border border-[#7f6640] bg-[#5f4a2d] px-4 py-2 text-sm font-medium text-[#ffe5b8]">Consulta concluída</span>
-              : <span className="inline-flex min-h-9 items-center rounded-lg border border-[#2e6a54] bg-[#204a3b] px-4 py-2 text-sm font-medium text-[#bbf0dd]">Agendado</span>;
+              ? <span className="inline-flex min-h-9 items-center rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700">Consulta concluída</span>
+              : <span className="inline-flex min-h-9 items-center rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">Agendado</span>;
 
           return (
-            <Card key={appointment.id} className="h-full w-full overflow-hidden border-[#37465d] bg-[linear-gradient(150deg,#2b3446_0%,#232c3a_100%)] text-[#eef3fb] shadow-[0_16px_28px_rgba(13,18,28,0.28)] transition hover:-translate-y-0.5 hover:border-[#d0a168]">
-              <CardHeader className="border-b border-[#3d4b61] bg-[#313d52] px-4 py-2.5">
+            <Card key={appointment.id} className="h-full w-full overflow-hidden border-slate-200 bg-white text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300">
+              <CardHeader className="border-b border-slate-200 bg-slate-50 px-4 py-2.5">
                 <div className="flex items-start justify-between gap-2.5">
                   <div className="flex min-w-0 flex-1 items-start gap-2.5">
                     <div className="flex h-12 w-10 shrink-0 items-center justify-center overflow-hidden">
@@ -233,8 +233,8 @@ export default function AppointmentsDataTable({
                     </div>
                     <div className="min-w-0 flex-1 pt-0.5">
                       <div className="space-y-1">
-                        <h3 className="truncate text-[1.45rem] font-semibold leading-tight tracking-[-0.02em] text-[#f4f8ff]">{appointment.patient.name}</h3>
-                        <p className="truncate text-sm font-medium text-[#aeb8cb]">{appointment.patient.phoneNumber ? formatPhoneNumber(appointment.patient.phoneNumber) : 'Telefone não informado'}</p>
+                        <h3 className="truncate text-[1.45rem] font-semibold leading-tight tracking-[-0.02em] text-slate-900">{appointment.patient.name}</h3>
+                        <p className="truncate text-sm font-medium text-slate-500">{appointment.patient.phoneNumber ? formatPhoneNumber(appointment.patient.phoneNumber) : 'Telefone não informado'}</p>
                       </div>
                     </div>
                   </div>
@@ -243,9 +243,9 @@ export default function AppointmentsDataTable({
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3 px-4 py-3.5 text-sm text-[#b1bbcd]">
+              <CardContent className="space-y-3 px-4 py-3.5 text-sm text-slate-600">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex min-h-9 items-center gap-2 rounded-full bg-[#f6e9d0] px-4 py-2 text-sm font-medium text-[#6b552d]">
+                  <span className="inline-flex min-h-9 items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700">
                     <UserRound className="size-4" />
                     {appointment.doctor.name}
                   </span>
@@ -256,11 +256,11 @@ export default function AppointmentsDataTable({
                   <div className="flex items-center gap-2"><CalendarRange className="size-4 text-slate-400" /><span>{formatDateTimeBr(appointment.date)}</span></div>
                   <div className="flex items-center gap-2 md:col-span-2"><Wallet className="size-4 text-slate-400" /><span>{formatCurrencyInCents(appointment.appointmentPriceInCents)}</span></div>
                 </div>
-                <div className="rounded-lg border border-[#40506a] bg-[#2c3648] px-3 py-2 text-xs text-[#c3cde0]">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
                   {appointment.paymentConfirmed ? 'Pagamento confirmado' : 'Pagamento pendente'}
                 </div>
               </CardContent>
-              <CardFooter className="border-t border-[#3d4b61] px-4 py-3.5 text-sm text-[#aab4c8]">
+              <CardFooter className="border-t border-slate-200 px-4 py-3.5 text-sm text-slate-500">
                 {appointment.notes ? (
                   <p className="line-clamp-2">{appointment.notes}</p>
                 ) : (
@@ -357,6 +357,8 @@ export default function AppointmentsDataTable({
     </>
   );
 }
+
+
 
 
 

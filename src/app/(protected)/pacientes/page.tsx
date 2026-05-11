@@ -20,10 +20,10 @@ export default async function PacientesPage({ searchParams }: Props) {
 
   return (
     <PageContainer>
-      <PageHeader className="border-[#2f394d] bg-[linear-gradient(140deg,#2d3748_0%,#242d3b_100%)] text-[#eef3fb]">
+      <PageHeader className="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-sm">
         <PageHeaderContent>
-          <PageTitle className="text-[#f4f7fd]">Base de pacientes</PageTitle>
-          <PageDescription className="text-[#aeb8cb]">Centralize cadastro, contato e histórico com visão rápida da sua base ativa.</PageDescription>
+          <PageTitle>Base de pacientes</PageTitle>
+          <PageDescription>Centralize cadastro, contato e histórico com visão rápida da sua base ativa.</PageDescription>
         </PageHeaderContent>
         <PageActions>
           <AddPatientButton />
@@ -31,20 +31,20 @@ export default async function PacientesPage({ searchParams }: Props) {
       </PageHeader>
 
       <PageContent className="space-y-5">
-        <div className="rounded-[14px] border border-[#334056] bg-[linear-gradient(150deg,#2b3547_0%,#232c3a_100%)] px-5 py-4 text-[#eef3fb] shadow-[0_16px_28px_rgba(13,18,28,0.3)]">
+        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
           <div>
-            <p className="section-title !text-[10px] !text-[#aab5c8]">Pacientes listados</p>
-            <p className="mt-1 text-3xl font-bold tracking-[0.02em] text-[#f5f8ff]">{patients.length}</p>
+            <p className="section-title !text-[10px] !text-slate-500">Pacientes listados</p>
+            <p className="mt-1 text-3xl font-bold tracking-[0.02em] text-slate-900">{patients.length}</p>
           </div>
-          <div className="flex size-10 items-center justify-center rounded-xl bg-[#36435a] text-[#d6ab70]">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
             <UsersRound className="size-5" />
           </div>
         </div>
 
         <Card>
-          <CardHeader className="border-b border-[#d8c7aa]/90 bg-[linear-gradient(180deg,#f5e6ca_0%,#f1dfbf_100%)]">
-            <CardTitle className="flex items-center gap-2 text-base text-[#2e241a]">
-              <Search className="size-4 text-[#8f6330]" />
+          <CardHeader className="border-b border-slate-200 bg-slate-50">
+            <CardTitle className="flex items-center gap-2 text-base text-slate-900">
+              <Search className="size-4 text-slate-500" />
               Busca rapida
             </CardTitle>
           </CardHeader>
@@ -57,7 +57,7 @@ export default async function PacientesPage({ searchParams }: Props) {
 
         {!patients.length ? (
           <Card>
-            <CardContent className="py-12 text-center text-sm text-[#7f725f]">Nenhum paciente encontrado para os filtros atuais.</CardContent>
+            <CardContent className="py-12 text-center text-sm text-slate-500">Nenhum paciente encontrado para os filtros atuais.</CardContent>
           </Card>
         ) : null}
       </PageContent>
